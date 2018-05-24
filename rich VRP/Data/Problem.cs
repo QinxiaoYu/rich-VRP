@@ -6,7 +6,7 @@ using System.Linq;
 namespace OP.Data
 {
     public class Problem
-    {
+    {   //数据集名称
         public string Abbr { get; set; }
         public double Tmax { get; set; }
         public int VehicleNum { get; set; }
