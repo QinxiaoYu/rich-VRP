@@ -6,7 +6,7 @@ using System.Linq;
 namespace OP.Data
 {
     public class Problem
-    {
+    {   //数据集名称
         public string Abbr { get; set; }
         public double Tmax { get; set; }
         public int VehicleNum { get; set; }
@@ -80,116 +80,117 @@ namespace OP.Data
     }
     
     public class NodeInfo
+    {
+        public int Id { get; set; }
+        public int Type { get; set; }
+        public double X { get; set; }
+        public double Y { get; set; }
+        public double Weight { get; set; }
+        public double Volume { get; set; }
+        public double ReadyTime { get; set; }
+        public double DueDate { get; set; }
+        public double ServiceTime { get; set; }
+    }
+
+
+
+    public abstract class AbsNode
+    {
+        public NodeInfo Info;
+
+
+        public double Distance(AbsNode destination)
         {
-            public int Id { get; set; }
-            public int Type { get; set; }
-            public double X { get; set; }
-            public double Y { get; set; }
-            public double Weight { get; set; }
-            public double Volume { get; set; }
-            public double ReadyTime { get; set; }
-            public double DueDate { get; set; }
-            public double ServiceTime { get; set; }
+
+            //var xDist = Info.X - destination.Info.X;
+            //var yDist = Info.Y - destination.Info.Y;
+            //return Math.Sqrt(xDist * xDist + yDist * yDist);
+            return Problem.GetDistanceIJ(Info.Id, destination.Info.Id);
+        }
+
+        public double TravelTime(AbsNode destination)
+        {
+            return Distance(destination);
         }
 
 
-
-        public abstract class AbsNode
+        public virtual AbsNode ShallowCopy()
         {
-            public NodeInfo Info;
-
-
-            public double Distance(AbsNode destination)
-            {
-
-                //var xDist = Info.X - destination.Info.X;
-                //var yDist = Info.Y - destination.Info.Y;
-                //return Math.Sqrt(xDist * xDist + yDist * yDist);
-                return Problem.GetDistanceIJ(Info.Id, destination.Info.Id);
-            }
-
-            public double TravelTime(AbsNode destination)
-            {
-                return Distance(destination);
-            }
-
-
-            public virtual AbsNode ShallowCopy()
-            {
-                throw new Exception("You cannot copy abstract node");
-            }
-
-
+            throw new Exception("You cannot copy abstract node");
         }
 
 
+    }
 
-        public class Depot : AbsNode
+
+
+    public class Depot : AbsNode
+    {
+        public Depot(NodeInfo info)
         {
-            public Depot(NodeInfo info)
-            {
-                Info = info;
-            }
-
-
-            public override AbsNode ShallowCopy()
-            {
-                return new Depot(Info);
-            }
-        }
-
-        public class Station : AbsNode
-        {
-            public Station(NodeInfo info)
-            {
-                Info = info;
-            }
-
-            public override AbsNode ShallowCopy()
-            {
-                return new Station(Info);
-            }
+            Info = info;
         }
 
 
-
-        public class Customer : AbsNode
+        public override AbsNode ShallowCopy()
         {
-            public Route Route { get; set; }
-
-            public Customer(NodeInfo info)
-            {
-                Info = info;
-                Route = null;
-            }
-
-
-            public override AbsNode ShallowCopy()
-            {
-                return DeepCopy();
-            }
-
-            public Customer DeepCopy()
-            {
-                return new Customer(Info)
-                {
-                    Route = Route
-                };
-            }
-
-
-            /// <summary>
-            /// Find the position that customer in route.
-            /// </summary>
-            /// <returns>The position of customer in route.</returns>
-            public int Index()
-            {
-                for (var i = 0; i < Route.RouteList.Count; ++i)
-                    if (Route.RouteList[i].Info.Id == Info.Id)
-                        return i;
-                return -1;
-            }
+            return new Depot(Info);
         }
     }
-        
+
+    public class Station : AbsNode
+    {
+        public Station(NodeInfo info)
+        {
+            Info = info;
+        }
+
+        public override AbsNode ShallowCopy()
+        {
+            return new Station(Info);
+        }
+    }
+
+
+
+    public class Customer : AbsNode
+    {
+        public Route Route { get; set; }
+
+        public Customer(NodeInfo info)
+        {
+            Info = info;
+            Route = null;
+        }
+
+
+        public override AbsNode ShallowCopy()
+        {
+            return DeepCopy();
+        }
+
+        public Customer DeepCopy()
+        {
+            return new Customer(Info)
+            {
+                Route = Route
+            };
+        }
+
+
+        /// <summary>
+        /// Find the position that customer in route.
+        /// </summary>
+        /// <returns>The position of customer in route.</returns>
+        public int Index()
+        {
+            for (var i = 0; i < Route.RouteList.Count; ++i)
+                if (Route.RouteList[i].Info.Id == Info.Id)
+                    return i;
+            return -1;
+        }
+    }
+    
+
 }
+
