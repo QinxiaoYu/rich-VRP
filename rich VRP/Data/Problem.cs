@@ -77,8 +77,9 @@ namespace OP.Data
             foreach (var customer in Customers)
                 AllNodes.Add(customer.Info);
         }
-
-        public class NodeInfo
+    }
+    
+    public class NodeInfo
         {
             public int Id { get; set; }
             public int Type { get; set; }
@@ -190,4 +191,5 @@ namespace OP.Data
             }
         }
     }
+        
 }
