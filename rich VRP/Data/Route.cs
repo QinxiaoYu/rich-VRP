@@ -15,34 +15,47 @@ namespace OP.Data
         /// 路径的ID
         /// </summary>
         public string RouteId { get; set; }
+        /// <summary>
+        /// The vehicle assigned to this route
+        /// </summary>
+        public Vehicle Vehicle { get; set; }
 
-        
         /// <summary>
         /// 路径上的顾客集合，首尾包含仓库
         /// </summary>
         public List<AbsNode> RouteList { get; set; }
-        
+        public int RouteIndexofVeh { get; set; }
         /// <summary>
         /// 路径上各个节点的服务开始时间
         /// </summary>
         public List<double> ServiceBeginingTimes { get; set; }
         public List<double> ServiceTimes { get; set; }
+
+        /// <summary>
+        /// The time departure from depot
+        /// </summary>
+        public double DepatureTime { get; set; }
+        /// <summary>
+        /// The time return to depot
+        /// </summary>
+        public double ArrivalTime { get; set; }
         /// <summary>
         /// 对应的解
         /// </summary>
-        public Solution Solution { get; set; }
+        //public Solution Solution { get; set; }
 
 
         /// <summary>
         /// 初始化一条路径，该路径为空
         /// </summary>
         /// <param name="problem"></param>
-        public Route(Problem problem)
+        public Route(Problem problem, Vehicle veh)
         {
             Depot startdepot = problem.StartDepot;
             Depot enddepot = problem.EndDepot;
             Problem = problem;
-            Solution = null;
+            Vehicle = veh;
+            //Solution = null;
             RouteList = new List<AbsNode>();
             ServiceBeginingTimes = new List<double>();
             ServiceTimes = new List<double>();
@@ -60,7 +73,7 @@ namespace OP.Data
             Depot startdepot = problem.StartDepot;
             Depot enddepot = problem.EndDepot;
             Problem = problem;
-            Solution = null;
+            //Solution = null;
             RouteList = new List<AbsNode>();
             ServiceBeginingTimes = new List<double>();
             ServiceTimes = new List<double>();
@@ -68,17 +81,40 @@ namespace OP.Data
             AddNode(seedCustomer);
             AddNode(enddepot);
         }
-        /////// <summary>
-        /////// 插入新顾客到路径尾，有问题，无引用
-        /////// </summary>
-        /////// <param name="newCustomer"></param>
-        ////public void AddCustomer(Customer newCustomer)
-        ////{
-        ////    newCustomer = (Customer)newCustomer.ShallowCopy();
-        ////    newCustomer.Route = this;
-        ////    AddNode(newCustomer);
-        ////}
 
+        public void RouteAssign2Veh(Vehicle veh)
+        {
+            this.Vehicle = veh;
+            int numRouteofVeh = veh.VehRouteList.Count(); //当前车辆已经行驶的趟数
+            this.RouteIndexofVeh = numRouteofVeh;
+
+        }
+        /// <summary>
+        /// 计算当前路径能从起点出发的最早时刻
+        /// </summary>
+        /// <returns></returns>
+        public double GetEarliestDepartureTime()
+        {
+            if (this.RouteIndexofVeh==0)
+            {
+                return Problem.StartDepot.Info.ReadyTime;
+            }
+            else
+            {
+                double ArrivalTimeofpreRoute = this.Vehicle.VehRouteList[this.RouteIndexofVeh - 1].ArrivalTime;
+                return ArrivalTimeofpreRoute + Problem.MinWaitTimeAtDepot;
+            }
+        }
+        /// <summary>
+        /// 计算当前路径达到终点的时刻
+        /// </summary>
+        /// <returns></returns>
+        public double GetArrivalTime()
+        {
+            int numNodesinRoute = this.RouteList.Count();
+            this.ArrivalTime = ServiceBeginingTimes[numNodesinRoute - 1];
+            return ArrivalTime;
+        }
 
         /// <summary>
         /// 插入新节点到路径末尾，并更新路径各节点的服务时间；
@@ -89,7 +125,7 @@ namespace OP.Data
             //线路上最后一个点
             AbsNode lastCustomer = RouteList.Count == 0 ? newNode : RouteList[RouteList.Count - 1];
             //线路上最后一个点 可以开始游览的时间 （如果到达时间小于时间窗的开始时间，则为时间窗开始时间；否则为实际达到时间）
-            double lastServiceTime = RouteList.Count == 0 ? newNode.Info.ReadyTime : ServiceBeginingTimes[ServiceBeginingTimes.Count - 1];
+            double lastServiceTime = RouteList.Count == 0 ? Math.Max(GetEarliestDepartureTime(), newNode.Info.ReadyTime) : ServiceBeginingTimes[ServiceBeginingTimes.Count - 1];
             //新景点 可以开始游览的时间
             double serviceBegins = NextServiceBeginTime(newNode, lastCustomer, lastServiceTime);
             RouteList.Add(newNode);
@@ -167,6 +203,21 @@ namespace OP.Data
             UpdateId();
         }
 
+        public void InsertStation(Station newStation,int position)
+        {
+            
+            RouteList.Insert(position, newStation);
+            ServiceBeginingTimes.Insert(position, 0);
+            //更新插入顾客及其之后顾客的服务开始时间
+            for (int i = position; i < RouteList.Count; ++i)
+            {
+                double newTime = NextServiceBeginTime(RouteList[i], RouteList[i - 1], ServiceBeginingTimes[i - 1]);
+                ServiceBeginingTimes[i] = newTime;
+            }
+            ServiceTimes.Insert(position, newStation.Info.ServiceTime);
+            UpdateId();
+        }
+
         /// <summary>
         /// 删除某一位置上的顾客，更新服务时间
         /// </summary>
@@ -188,6 +239,14 @@ namespace OP.Data
         {
             for (var i = 0; i < this.RouteList.Count; ++i)
                 if (this.RouteList[i].Info.Id == cus.Info.Id)
+                    RemoveAt(i);
+
+        }
+
+        public void Remove(Station station)
+        {
+            for (var i = 0; i < this.RouteList.Count; ++i)
+                if (this.RouteList[i].Info.Id == station.Info.Id)
                     RemoveAt(i);
 
         }
@@ -235,46 +294,112 @@ namespace OP.Data
                     return false;
             }
 
-            if (this.Problem.Threashold>0)
-            {
-                return IsRepeat(this.Problem.Threashold);
-            }
             return true;
         }
-
-        public bool IsRepeat(int threashold)
+        /// <summary>
+        /// 判断是否违反体积约束
+        /// </summary>
+        /// <returns>0：不违反; >0:违反的量</returns>
+        public double ViolationOfVolume()
         {
-            for (int i = 1; i < RouteList.Count - 1; i++)
+            double Violation = 0;
+            double CurrentVolume = GetTotalVolume();
+            double CapacityVolume = GetRouteVolumeCap();
+            Violation = Math.Max(0, CurrentVolume - CapacityVolume);
+            return Violation;
+        }
+        /// <summary>
+        /// 获得当前路径上的所有货物的总体积
+        /// </summary>
+        /// <returns></returns>
+        public double GetTotalVolume()
+        {
+            double CurrentVolume = 0;        
+            for (int i = 0; i < RouteList.Count; i++)
             {
-                int type_i = RouteList[i].Info.Type;
-                int cnt_repeat = 1;
-                for (int j = i + 1; j < RouteList.Count - 1; j++)
+                if (RouteList[i].Info.Type == 2) //商家
                 {
-                    int type_j = RouteList[j].Info.Type;
-                    if (type_j == type_i)
-                    {
-                        cnt_repeat++;
-                    }
-                }
-                if (cnt_repeat > threashold)
-                {
-                    return false;
+                    CurrentVolume += RouteList[i].Info.Volume;
                 }
             }
-            return true;
+            return CurrentVolume;
+        }
+        /// <summary>
+        /// 获得当前路径的体积上限（车的体积容量）
+        /// </summary>
+        /// <returns></returns>
+        public double GetRouteVolumeCap()
+        {
+            int vehType = this.Vehicle.TypeId;
+            double CapacityVolume = Problem.fleet.GetVehTypebyID(vehType).Volume;
+            return CapacityVolume;
+        }
+        /// <summary>
+        /// 判断是否违反重量约束
+        /// </summary>
+        /// <returns>0：不违反; >0:违反的量</returns>
+        public double ViolationOfWeight()
+        {
+            double Violation = 0;
+            double CurrentWeight = GetTotalWeight();
+            double CapacityWeight = GetRouteWeightCap();
+            Violation = Math.Max(0, CurrentWeight - CapacityWeight);
+            return Violation;
+        }
+        /// <summary>
+        /// 获得当前路径上的所有货物的总体积
+        /// </summary>
+        /// <returns></returns>
+        public double GetTotalWeight()
+        {
+            double CurrentWeight = 0;
+            for (int i = 0; i < RouteList.Count; i++)
+            {
+                if (RouteList[i].Info.Type == 2) //商家
+                {
+                    CurrentWeight += RouteList[i].Info.Weight;
+                }
+            }
+            return CurrentWeight;
+        }
+        public double GetRouteWeightCap()
+        {
+            int vehType = this.Vehicle.TypeId;
+            double CapacityWeight = Problem.fleet.GetVehTypebyID(vehType).Weight;
+            return CapacityWeight;
+        }
+        public double ViolationOfRange()
+        {
+            double CapacityRange = GetRouteRangeCap();
+            double currentRange = CapacityRange;
+            for (int i = 0; i < RouteList.Count-1; i++)
+            {
+                double dis_ij = RouteList[i].Distance(RouteList[i + 1]);
+                currentRange -= dis_ij;
+            }
+        }
+        public double GetRouteRangeCap()
+        {
+            int vehType = this.Vehicle.TypeId;
+            double CapacityRange = Problem.fleet.GetVehTypebyID(vehType).MaxRange;
+            return CapacityRange;
+        }
+        public double ViolationOfTimeWindow()
+        {
+
         }
 
         /// <summary>
-        /// 到达下一个景点的达到时间
+        /// 下一个点的实际服务开始时间
         /// </summary>
         /// <param name="newCustomer">下一个景点（新景点）</param>
         /// <param name="prevCustomer">当前景点</param>
         /// <param name="prevTime">当前景点可以开始游览的时间</param>
-        /// <returns>下一个景点的可以开始游览时间</returns>
+        /// <returns>下一个点的实际服务开始时间</returns>
         public double NextServiceBeginTime(AbsNode newCustomer, AbsNode prevCustomer, double prevTime)
         {
             double travelTime = prevCustomer.TravelTime(newCustomer);
-            double serviceTime = prevCustomer.Info.ServiceTime;
+            double serviceTime = prevCustomer.Info.ServiceTime;  //起终点的servicetime=0
             double readyTime = newCustomer.Info.ReadyTime;
             return Math.Max(readyTime, prevTime + serviceTime + travelTime);
         }
@@ -324,7 +449,7 @@ namespace OP.Data
         {
             var newRouteList = new List<AbsNode>(RouteList.Count);
             newRouteList.AddRange(RouteList.Select(node => node.ShallowCopy()));
-            var r = new Route(Problem)
+            var r = new Route(Problem,this.Vehicle)
             {
                 RouteList = newRouteList,
                 ServiceBeginingTimes = new List<double>(ServiceBeginingTimes),
@@ -383,7 +508,7 @@ namespace OP.Data
             //string routeText = "";
             //string serviceText = "";
             //string serviceBeginText = "";
-            string TourInfo = string.Format("{0} 点 从 {1} 出发：\n", ServiceBeginingTimes[0], RouteList[0].Info.Name);
+            string TourInfo = string.Format("{0} 点 从 {1} 出发：\n", ServiceBeginingTimes[0], RouteList[0].Info.Id);
             for (int i = 1; i < RouteList.Count-1; ++i)
             {
                 //routeText += RouteList[i].Info.Name;
@@ -394,7 +519,7 @@ namespace OP.Data
                 double arrivetime = departuretime + RouteList[i - 1].TravelTime(RouteList[i]);
                 double waittime = Math.Max(0, ServiceBeginingTimes[i] - arrivetime);
                 double servicetime = RouteList[i].Info.ServiceTime;
-                TourInfo += string.Format("第{0}站：{1}, 出发时间 {2}, 到达时间 {3}, 等待时间 {4}, 游览时长 {5}, 时间窗：({6},{7}), 类型 {8} \n", i , RouteList[i].Info.Name,departuretime,arrivetime,waittime,servicetime,RouteList[i].Info.ReadyTime,RouteList[i].Info.DueDate, RouteList[i].Info.Type);
+                TourInfo += string.Format("第{0}站：{1}, 出发时间 {2}, 到达时间 {3}, 等待时间 {4}, 游览时长 {5}, 时间窗：({6},{7}), 类型 {8} \n", i , RouteList[i].Info.Id,departuretime,arrivetime,waittime,servicetime,RouteList[i].Info.ReadyTime,RouteList[i].Info.DueDate, RouteList[i].Info.Type);
                 //if (i != RouteList.Count - 1)
                 //{
                 //    routeText += "-";
@@ -402,7 +527,7 @@ namespace OP.Data
                 //    serviceBeginText += " ";
                 //}
             }
-            TourInfo += string.Format("{0} 点 到达 {1} ,旅途结束。\n", ServiceBeginingTimes[RouteList.Count-1],RouteList[RouteList.Count-1].Info.Name);
+            TourInfo += string.Format("{0} 点 到达 {1} ,旅途结束。\n", ServiceBeginingTimes[RouteList.Count-1],RouteList[RouteList.Count-1].Info.Id);
             //if (printTime)
             //{
             //    return (routeText + "\n" + serviceText+"\n");
@@ -429,17 +554,7 @@ namespace OP.Data
         }
 
 
-        /// <summary>
-        /// 路径在解中的下标
-        /// </summary>
-        /// <returns></returns>
-        public int Index()
-        {
-            for (int i = 0; i < Solution.Routes.Count; ++i)
-                if (Solution.Routes[i] == this)
-                    return i;
-            return 0;
-        }
+
 
 
         private void UpdateId()

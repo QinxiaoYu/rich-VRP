@@ -7,6 +7,7 @@ namespace OP.Data
 	public class VehicleType
 	{
 		public int VehTypeID { get; set; }
+        public string Name { get; set; }
 		/// <summary>
 		/// 体积
 		/// </summary>
@@ -37,6 +38,14 @@ namespace OP.Data
 		/// </summary>
 		/// <value>The charge time.</value>
 		public double ChargeTime { get; set;}
+        /// <summary>
+        /// Gets or sets the charge cost per hour (RMB/min)
+        /// </summary>
+        public double ChargeCostRate { get; set; }
+        /// <summary>
+        /// Gets or sets the maximal number of vehicles of this type
+        /// </summary>
+        public int MaxNum { get; set; }
 	}
 
 	public class Vehicle 
@@ -58,10 +67,10 @@ namespace OP.Data
 		{
 			this.TypeId = _typeid;
 			this.VehId = _vehid;
-			VehRouteList = null;
+			VehRouteList = new List<Route>();
 		}
 
-		public int addRoute2Veh(Route _r)
+		public void addRoute2Veh(Route _r)
 		{
 			this.VehRouteList.Add (_r);
 			///to do 
@@ -80,12 +89,14 @@ namespace OP.Data
 	/// </summary>
 	public class Fleet
 	{
-
+        public List<VehicleType> VehTypes;
 		public List<Vehicle> VehFleet;
 
-		public Fleet()
+		public Fleet(List<VehicleType> _vehtypes)
 		{
 			VehFleet = new List<Vehicle> ();
+            VehTypes = _vehtypes;
+
 		}
 
 		public int GetNumOfUsedVeh()
@@ -98,7 +109,7 @@ namespace OP.Data
 		/// <param name="_vehtypeid">VehTypeid.</param>
 		public void addNewVeh(int _vehtypeid)
 		{
-			int numofVeh = GetNumOfUsedVeh;
+			int numofVeh = GetNumOfUsedVeh();
 			Vehicle veh = new Vehicle(_vehtypeid, numofVeh);
 			VehFleet.Add (veh);		
 		}
@@ -144,7 +155,13 @@ namespace OP.Data
 			return null;
 		}
 
+        public VehicleType GetVehTypebyID(int _vehtypeid)
+        {
+            foreach (VehicleType vehtype in VehicleType)
+            {
 
+            }
+        }
 
 
 	}

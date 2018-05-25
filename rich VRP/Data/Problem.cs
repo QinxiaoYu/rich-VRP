@@ -16,13 +16,13 @@ namespace OP.Data
         public List<Customer> Customers { get; set; }
         public List<Station> Stations { get; set; }
         public List<NodeInfo> AllNodes { get; set; }
-
-        public int Threashold { get; set; }
+      
+        public Fleet fleet { get; set; }
 
         public static int[,] DistanceBetween { get; set; }
         public static double[,] AngelBetween { get; set; }
 
-
+        public double MinWaitTimeAtDepot { get; set; }
 
 
         public void SetNodes(List<NodeInfo> nodes, string abbr, double t_max, int numV, int numD, int numC, int numS)
@@ -44,6 +44,11 @@ namespace OP.Data
             }
             int NodeNumber = AllNodes.Count;
             DistanceBetween = new int[NodeNumber, NodeNumber];
+        }
+
+        public void SetVehicleTypes(List<VehicleType> _types)
+        {
+            fleet = new Fleet(_types);
         }
 
         public void SetDistanceIJ(int i, int j, int dis)
