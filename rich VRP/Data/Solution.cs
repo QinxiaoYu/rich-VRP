@@ -10,18 +10,18 @@ namespace OP.Data
     
         public List<Route> Routes { get; set; }
         public Problem Problem { get; set; }
-        public double Phi { get; set; }
+        public double ObjVal { get; set; }
 
         public Solution(Problem problem)
         {
             Routes = new List<Route>();
             Problem = problem;
-            Phi = 0.0;
+            ObjVal = 0.0;
         }
         public void AddRoute(Route route)
         {
             Route newRoute = route.Copy();
-            newRoute.Solution = this;
+            //newRoute.Solution = this;
             Routes.Add(newRoute);
         }
 
