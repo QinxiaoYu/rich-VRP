@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 
+// Analysis disable once CheckNamespace
 namespace OP.Data
 {
     public class Problem
@@ -13,7 +14,6 @@ namespace OP.Data
         public Depot StartDepot { get; set; }
         public Depot EndDepot { get; set; }
         public List<Customer> Customers { get; set; }
-
         public List<Station> Stations { get; set; }
         public List<NodeInfo> AllNodes { get; set; }
 
