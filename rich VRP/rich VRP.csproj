@@ -44,11 +44,6 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constructive\CW.cs" />
-    <Compile Include="Data\Problem.cs" />
-    <Compile Include="Data\Reader.cs" />
-    <Compile Include="Data\Route.cs" />
-    <Compile Include="Data\Solution.cs" />
-    <Compile Include="Data\Writer.cs" />
     <Compile Include="MetaHeuristic\ALNS.cs" />
     <Compile Include="MetaHeuristic\ILS.cs" />
     <Compile Include="MetaHeuristic\SA.cs" />
@@ -62,6 +57,12 @@
     <Compile Include="ObjectiveFunc\OriginObjFunc.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
+    <Compile Include="Data\Reader.cs" />
+    <Compile Include="Data\Route.cs" />
+    <Compile Include="Data\Solution.cs" />
+    <Compile Include="Data\VehicleType.cs" />
+    <Compile Include="Data\Writer.cs" />
+    <Compile Include="Data\Problem.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
