@@ -157,10 +157,14 @@ namespace OP.Data
 
         public VehicleType GetVehTypebyID(int _vehtypeid)
         {
-            foreach (VehicleType vehtype in VehicleType)
+            foreach (VehicleType vehtype in this.VehTypes)
             {
-
+                if (vehtype.VehTypeID == _vehtypeid)
+                {
+                    return vehtype;
+                }
             }
+            return null;
         }
 
 

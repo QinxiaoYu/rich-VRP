@@ -30,7 +30,7 @@ namespace OP.Data
         {
             double totalDistance = 0;
             foreach (Route route in Routes)
-                totalDistance += route.Length();
+                totalDistance += route.GetRouteLength();
             return totalDistance;
         }
 
@@ -69,11 +69,11 @@ namespace OP.Data
                     solution += i.ToString(CultureInfo.InvariantCulture);
                     solution += ") ";
                     solution += Routes[i].PrintToString() + "; ";
-                    solution += "(dist: " + ((int)Routes[i].Length()).ToString(CultureInfo.InvariantCulture) + ")";
+                    solution += "(dist: " + ((int)Routes[i].GetRouteLength()).ToString(CultureInfo.InvariantCulture) + ")";
                     solution += "\r\n";
                 }
                 solution += "\r\n";
-                solution += "total distance: " + TotalDistance().ToString(CultureInfo.InvariantCulture) + " (gain: " + (-1 * Phi).ToString(CultureInfo.InvariantCulture) + ")";
+                solution += "total distance: " + TotalDistance().ToString(CultureInfo.InvariantCulture) + " (OBJ: " + (ObjVal).ToString(CultureInfo.InvariantCulture) + ")";
             }
                       
             return solution;

@@ -1,7 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.IO;
-using System.Linq;
 
 // Analysis disable once CheckNamespace
 namespace OP.Data
@@ -81,6 +79,11 @@ namespace OP.Data
             AllNodes = new List<NodeInfo> { StartDepot.Info, EndDepot.Info };
             foreach (var customer in Customers)
                 AllNodes.Add(customer.Info);
+        }
+
+        internal void SetDistanceIJ(int i, int j, double tt_ij, double dis_ij)
+        {
+            throw new NotImplementedException();
         }
     }
     
