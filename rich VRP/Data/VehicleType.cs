@@ -187,7 +187,7 @@ namespace OP.Data
 
 
         //尝试在master分支上进行修改，再推送到GitHub
-
+        //第二次尝试：只提交更改到本地master分支，不推送到远程，而是选择pull requests
 	}
 }
 
