@@ -9,6 +9,24 @@ namespace OP.Data
 {
     public class Route
     {
+        ///////////////////添加的方法与属性////////////////////
+        public List<double> battery_level = new List<double>();//在某点处剩余电量可行驶的距离，插入新的点后需要更新
+
+
+        /// <summary>
+        /// which station should be inesrt after a certain customer?
+        /// </summary>
+        /// <param name="cus"></param>
+        /// <returns></returns>
+        public Station insert_sta(Customer cus)
+        {
+            Station sta = null;
+            return sta;
+        }
+        ///////////////////////////////////////////////////////////
+
+
+
         public Problem Problem;
             
         /// <summary>
