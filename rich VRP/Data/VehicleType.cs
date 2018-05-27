@@ -157,6 +157,7 @@ namespace OP.Data
             }
             return vehs;
         }
+
 		/// <summary>
 		/// Gets the vehicle by its ID.
 		/// </summary>
