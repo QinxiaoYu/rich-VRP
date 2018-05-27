@@ -91,7 +91,7 @@ namespace OP.Data
 	{
         public List<VehicleType> VehTypes;
 		public List<Vehicle> VehFleet;
-
+       
 		public Fleet(List<VehicleType> _vehtypes)
 		{
 			VehFleet = new List<Vehicle> ();
@@ -140,6 +140,24 @@ namespace OP.Data
 			}
 			return count;
 		}
+        /// <summary>
+        /// 获得某个车型对应的所有车辆
+        /// </summary>
+        /// <param name="_vehtypeid">车型id</param>
+        /// <returns></returns>
+        public List<Vehicle> GetVehsOfType(int _vehtypeid)
+        {
+            List<Vehicle> vehs = new List<Vehicle>();
+            foreach (var veh in VehFleet)
+            {
+                if (_vehtypeid == veh.TypeId)
+                {
+                    vehs.Add(veh);
+                }
+            }
+            return vehs;
+        }
+
 		/// <summary>
 		/// Gets the vehicle by its ID.
 		/// </summary>
