@@ -50,11 +50,19 @@ namespace OP.Data
 
 	public class Vehicle 
 	{
-		/// <summary>
-		/// Gets or sets the type identifier.
-		/// </summary>
-		/// <value>The VehType identifier.</value>
-		public int TypeId { get; set; }
+        //////////////////////新增方法与属性/////////////////////////
+        public double Late_time = 1440;//车辆最晚结束时间（分钟）24：00
+        public double Early_time = 480;//车辆最早开始时间（分钟）8：00
+
+        ///////////////////////////////////////////////////////////
+
+
+
+        /// <summary>
+        /// Gets or sets the type identifier.
+        /// </summary>
+        /// <value>The VehType identifier.</value>
+        public int TypeId { get; set; }
 		/// <summary>
 		/// Gets or sets the veh identifier.
 		/// </summary>
