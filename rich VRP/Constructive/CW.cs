@@ -14,7 +14,7 @@ namespace rich_VRP.Constructive
     ////////////在route类和vehicle类增加了几个方法和属性
     class Initialization
     {
-        Problem problem { get; set; }
+        Problem problem;
         Random rand = new Random();//随机operter
         List<Customer> unrouted_Cus = new List<Customer>();
         List<Station> charge_sta = new List<Station>();
@@ -87,7 +87,7 @@ namespace rich_VRP.Constructive
                     Route cur_route = route.Copy();
                     for (int j = 1; j < route.RouteList.Count; j++)//第一个位置和最后一个位置不能插入
                     {
-                        cur_route.InsertCustomer(insert_cus, j);//插入
+                        cur_route.InsertNode(insert_cus, j);//插入
                         double add_distance = insert_cus.Distance(cur_route.RouteList[j - 1]) + insert_cus.Distance(cur_route.RouteList[j + 1])
                                               - cur_route.RouteList[j - 1].Distance(cur_route.RouteList[j + 1]);//增加的距离（dik + dkj - dij）
 
@@ -101,7 +101,7 @@ namespace rich_VRP.Constructive
                         double after_dis = insert_cus.Distance(cur_route.RouteList[j + 1]) + cur_route.RouteList[j + 1].Distance(after_sta1);
                         if (cur_route.battery_level[j] < after_dis)//如果剩余电量不能坚持到下次充电
                         {
-                            cur_route.InsertStation(after_sta, j + 1);//在insert-cus后插入电站
+                            cur_route.InsertNode(after_sta, j + 1);//在insert-cus后插入电站
                             add_distance += after_sta.Distance(insert_cus) + after_sta.Distance(cur_route.RouteList[j + 2])
                                             - insert_cus.Distance(cur_route.RouteList[j + 2]); //插入电站后增加的行驶距离
                         }
@@ -111,7 +111,7 @@ namespace rich_VRP.Constructive
                         double before_dis = insert_cus.Distance(cur_route.RouteList[j - 1]) + insert_cus.Distance(after_sta);
                         if (cur_route.battery_level[j - 1] < before_dis)
                         {
-                            cur_route.InsertStation(before_sta, j);//在insert-cus前插入电站
+                            cur_route.InsertNode(before_sta, j);//在insert-cus前插入电站
                             add_distance += before_sta.Distance(cur_route.RouteList[j - 1]) + before_sta.Distance(insert_cus)
                                             - insert_cus.Distance(cur_route.RouteList[j - 1]);//插入电站后增加的行驶距离
                         }

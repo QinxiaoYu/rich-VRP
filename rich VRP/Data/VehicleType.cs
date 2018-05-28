@@ -49,29 +49,26 @@ namespace OP.Data
 	}
 
 	public class Vehicle 
-	{ 
-        /// <summary>
-        /// Gets or sets the type identifier.
-        /// </summary>
-        /// <value>The VehType identifier.</value>
-        public int TypeId { get; set; }
-
-
+	{
         //////////////////////新增方法与属性/////////////////////////
         public double Late_time = 1440;//车辆最晚结束时间（分钟）24：00
         public double Early_time = 480;//车辆最早开始时间（分钟）8：00
 
         ///////////////////////////////////////////////////////////
 
-
-
-       
+        /// <summary>
+        /// Gets or sets the type identifier.
+        /// </summary>
+        /// <value>The VehType identifier.</value>
+        public int TypeId { get; set; }
 		/// <summary>
 		/// Gets or sets the veh identifier.
 		/// </summary>
 		/// <value>The veh identifier.</value>
 		public int VehId{ get; set; }
-
+        /// <summary>
+        /// 某辆车跑过的所有路线的集合
+        /// </summary>
 		public List<Route> VehRouteList;
 
 		public Vehicle(int _typeid, int _vehid)
@@ -197,6 +194,8 @@ namespace OP.Data
         }
 
 
+        //尝试在master分支上进行修改，再推送到GitHub
+        //第二次尝试：只提交更改到本地master分支，不推送到远程，而是选择pull requests
 	}
 }
 

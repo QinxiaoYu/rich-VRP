@@ -7,10 +7,10 @@ namespace OP.Data
 {
     public class Solution
     {
-    
-        public List<Route> Routes { get; set; }
-        public Problem Problem { get; set; }
-        public double ObjVal { get; set; }
+
+        public List<Route> Routes;
+        public Problem Problem;
+        public double ObjVal;
 
         public Solution(Problem problem)
         {

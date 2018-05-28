@@ -21,7 +21,7 @@ namespace OP.Data
         public static double[,] AngelBetween { get; set; }
 
         public double MinWaitTimeAtDepot { get; set; }
-
+        public double WaitCostRate { get; set; }
 
         public void SetNodes(List<NodeInfo> nodes, string abbr, double t_max, int numV, int numD, int numC, int numS)
         {
@@ -115,18 +115,29 @@ namespace OP.Data
             //return Math.Sqrt(xDist * xDist + yDist * yDist);
             return Problem.GetDistanceIJ(Info.Id, destination.Info.Id);
         }
-
+        /// <summary>
+        /// 计算行驶时间，用来计算时间窗
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <returns></returns>
         public double TravelTime(AbsNode destination)
         {
             return Distance(destination);
         }
 
-
+        /// <summary>
+        /// 计算行驶距离，用力计算电量
+        /// </summary>
+        /// <param name="newNode"></param>
+        /// <returns></returns>
+        internal double TravelDistance(AbsNode destination)
+        {
+            /// 陈鹏写
+        }
         public virtual AbsNode ShallowCopy()
         {
             throw new Exception("You cannot copy abstract node");
         }
-
 
     }
 
