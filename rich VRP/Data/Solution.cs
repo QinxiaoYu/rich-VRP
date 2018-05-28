@@ -34,24 +34,6 @@ namespace OP.Data
             return totalDistance;
         }
 
-		public double[] getSolutionInfo()
-		{
-			double traveltime = 0;
-			double loadViol = 0;
-			double twViol = 0;
-			double watingtime = 0;
-			for (int i = 0; i < this.Routes.Count; i++)
-			{
-				Route r = this.Routes[i];
-				double[] routeInfo = r.getRouteInfo ();
-				traveltime += routeInfo [0];
-				loadViol += routeInfo[1];
-				twViol += routeInfo[2];
-				watingtime += routeInfo[3];
-			}
-            
-			return new double[] { traveltime, loadViol, twViol, watingtime };
-		}
 
 
         public string PrintToString()
