@@ -271,7 +271,7 @@ namespace OP.Data
                 Customer neighbor = (Customer)this.RouteList[i];
                 if (neighbor.Info.Id != v.Info.Id)
                 {              
-                    double distance = v.Distance(neighbor);
+                    double distance = v.TravelDistance(neighbor);
                     ht.Add(neighbor, distance);
                 }
             }
@@ -387,7 +387,7 @@ namespace OP.Data
             double currentRange = CapacityRange; //车辆离开某点时的剩余里程
             for (int i = 0; i < RouteList.Count-1; i++)
             {
-                double dis_ij = RouteList[i].Distance(RouteList[i + 1]);
+                double dis_ij = RouteList[i].TravelDistance(RouteList[i + 1]);
                 currentRange -= dis_ij; //达到j点时的剩余里程
 
                 if (currentRange<0) //如果达到j点时的剩余里程小于0，则返回j点所在点位置
@@ -418,7 +418,7 @@ namespace OP.Data
         {
             double totalDist = 0;
             for (int i = 0; i < RouteList.Count - 1; ++i)
-                totalDist += RouteList[i].Distance(RouteList[i + 1]);
+                totalDist += RouteList[i].TravelDistance(RouteList[i + 1]);
             return totalDist;
         }
         /// <summary>
@@ -431,7 +431,7 @@ namespace OP.Data
             {
                 double ArrivalTimeAtj = ServiceBeginingTimes[i]
                                         + RouteList[i].Info.ServiceTime
-                                                      + RouteList[i].Distance(RouteList[i + 1]);
+                                                      + RouteList[i].TravelDistance(RouteList[i + 1]);
                 if (ArrivalTimeAtj>RouteList[i+1].Info.DueDate)
                 {
                     return i + 1;
@@ -593,26 +593,7 @@ namespace OP.Data
             else
                 RouteId = "<EMPTY>";
         }
-        /// <summary>
-        /// 计算路径的信息
-        /// </summary>
-        /// <returns>返回路径[0旅行时间（行驶距离）,1容量约束,2时间约束,3等待时间]</returns>
-        public double[] getRouteInfo()
-        {
-            double traveltime = 0;
-            double loadViol = 0;
-            double twViol = 0;
-            double watingtime = 0;
-            for (int i = 0; i < this.RouteList.Count-1; i++)
-            {
-                traveltime += RouteList[i].Distance(RouteList[i + 1]);
-                //loadViol += RouteList[i].Info.Demand;
-                twViol += Math.Max(0, ServiceBeginingTimes[i] - RouteList[i].Info.DueDate);
-                watingtime += i == 0 ? 0 : Math.Max(0, RouteList[i].Info.ReadyTime - (ServiceBeginingTimes[i - 1] + RouteList[i - 1].Distance(RouteList[i]) + RouteList[i - 1].Info.ServiceTime));
-            }
-            loadViol = Math.Max(loadViol-Problem.Tmax,0);
-            return new double[] { traveltime, loadViol, twViol, watingtime };
-        }
+       
 
         public bool isEqual(Route route2)
         {

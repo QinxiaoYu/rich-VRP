@@ -47,8 +47,21 @@ namespace OP.Data
                     double _w = _type==2? double.Parse(paras[4]):0;//重量
                     double _v = _type==2? double.Parse(paras[5]):0;//体积
                     double _s_t = _type==1? 0:0.5 * 60;//卸货时间，恒定为0.5h，换算成30min
-                    double _r_t = _type==2?double.Parse(paras[6]):480; //商家最早收货时间 换算成从0点开始的分钟，如8:00，则为480；24:00，则为1440
-                    double _d_t = _type==2?double.Parse(paras[7]):1440; //商家最晚收货时间
+                    int _r_t = 480; //商家最早收货时间 换算成从0点开始的分钟，如8:00，则为480；24:00，则为1440
+                    int _d_t = 1440;//商家最晚收货时间
+                    if (_type == 2)
+                    {
+                        DateTime _r_t1 = DateTime.Parse(paras[6]);
+                        int min = _r_t1.Minute;
+                        int hour = _r_t1.Hour;
+                        _r_t = hour * 60 + min; //商家最早收货时间 换算成从0点开始的分钟，如8:00，则为480；24:00，则为1440
+                        DateTime _d_t1 = DateTime.Parse(paras[7]);
+                        int min_d_t = _d_t1.Minute;
+                        int hour_d_t = _d_t1.Hour;
+                        _d_t = hour_d_t * 60 + min_d_t;//商家最晚收货时间
+                    }
+            
+                                 
                     switch (_type)
                     {
                         case 1:
@@ -89,14 +102,15 @@ namespace OP.Data
             {
                 string str_Dis = string.Empty;
                 str_Dis = Dreader.ReadLine();
+                str_Dis = Dreader.ReadLine();
                 while (!string.IsNullOrWhiteSpace(str_Dis))
                 {
-                    string[] paras = str_Dis.Split(new char[1] { '	' }, StringSplitOptions.RemoveEmptyEntries);
+                    string[] paras = str_Dis.Split(new char[1] { ',' }, StringSplitOptions.RemoveEmptyEntries);
                     int _i = int.Parse(paras[1]);
                     int _j = int.Parse(paras[2]);
-                    double _dis_ij = double.Parse(paras[3]);
-                    double _tt_ij = double.Parse(paras[4]);
-                    p.SetDistanceIJ(_i, _j, _tt_ij, _dis_ij); //陈鹏写
+                    int _dis_ij = int.Parse(paras[3]);
+                    int _tt_ij = int.Parse(paras[4]);
+                    p.SetDistanceANDTravelIJ(_i, _j, _tt_ij, _dis_ij); 
                     str_Dis = Dreader.ReadLine();
                 }
                 Dreader.Close();
@@ -113,9 +127,9 @@ namespace OP.Data
                     string _name = paras[1];
                     double _v = double.Parse(paras[2]);
                     double _w = double.Parse(paras[3]);
-                    int _maxnum = paras[4] == "不限" ? numC : int.Parse(paras[4]);
-                    double _maxrange = double.Parse(paras[5]);
-                    double _chargetime = double.Parse(paras[6])*60;
+                    int _maxnum = paras[4] == "unlimited" ? numC : int.Parse(paras[4]);
+                    double _maxrange = double.Parse(paras[5]); //按照米算
+                    double _chargetime = double.Parse(paras[6]); //按照小时算
                     double _vcost = double.Parse(paras[7]);
                     double _fcost = double.Parse(paras[8]);
 
@@ -127,11 +141,12 @@ namespace OP.Data
                         Weight = _w,
                         MaxRange = _maxrange,
                         MaxNum = _maxnum,
-                        ChargeTime = _chargetime,
-                        ChargeCostRate = 50, //直接计算一次充电费用为50 = 100*0.5
+                        ChargeTime = _chargetime, //0.5h
+                        ChargeCostRate = 100, // 100RMB/h
                         VariableCost = _vcost,
                         FixedCost = _fcost,
                     });
+                    str_VehType = Vreader.ReadLine();
                 }
                 Vreader.Close();
             }
