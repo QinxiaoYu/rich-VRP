@@ -9,22 +9,6 @@ namespace OP.Data
 {
     public class Route
     {
-        ///////////////////添加的方法与属性////////////////////
-        public List<double> battery_level = new List<double>();//在某点处剩余电量可行驶的距离，插入新的点后需要更新
-
-
-        /// <summary>
-        /// which station should be inesrt after a certain customer?
-        /// </summary>
-        /// <param name="cus"></param>
-        /// <returns></returns>
-        public Station insert_sta(Customer cus)
-        {
-            Station sta = null;
-            return sta;
-        }
-        ///////////////////////////////////////////////////////////
-
 
 
         public Problem Problem;
@@ -56,9 +40,10 @@ namespace OP.Data
         /// </summary>
         public double ArrivalTime { get; set; }
         /// <summary>
-        /// 对应的解
+        /// 在某点处剩余电量可行驶的距离，插入新的点后需要更新
         /// </summary>
-        //public Solution Solution { get; set; }
+        public List<double> battery_level { get; set; }
+
 
 
         /// <summary>
@@ -75,6 +60,7 @@ namespace OP.Data
             //Solution = null;
             RouteList = new List<AbsNode>();
             ServiceBeginingTimes = new List<double>();
+            battery_level = new List<double>();
             AddNode(startdepot);
             AddNode(enddepot);
         }
@@ -92,6 +78,7 @@ namespace OP.Data
             //Solution = null;
             RouteList = new List<AbsNode>();
             ServiceBeginingTimes = new List<double>();
+            battery_level = new List<double>();
             AddNode(startdepot);
             AddNode(seedCustomer);
             AddNode(enddepot);
@@ -116,7 +103,7 @@ namespace OP.Data
             }
             else
             {
-                double ArrivalTimeofpreRoute = this.AssignedVeh.VehRouteList[this.RouteIndexofVeh - 1].ArrivalTime;
+                double ArrivalTimeofpreRoute = this.AssignedVeh.VehRouteList[this.RouteIndexofVeh - 1].GetArrivalTime();
                 return ArrivalTimeofpreRoute + Problem.MinWaitTimeAtDepot;
             }
         }
@@ -143,9 +130,26 @@ namespace OP.Data
             double lastServiceTime = RouteList.Count == 0 ? Math.Max(GetEarliestDepartureTime(), newNode.Info.ReadyTime) : ServiceBeginingTimes[ServiceBeginingTimes.Count - 1];
             //新景点 可以开始游览的时间
             double serviceBegins = NextServiceBeginTime(newNode, lastCustomer, lastServiceTime);
+            //线路上最后一个点的剩余电量
+            double lastRemainBattery = RouteList.Count == 0 ? this.GetRouteRangeCap() : battery_level[battery_level.Count - 1];
+            //新点 的剩余电量 
+            double RemainBattery = NextRemainBattery(newNode, lastCustomer, lastRemainBattery);
             RouteList.Add(newNode);
             ServiceBeginingTimes.Add(serviceBegins);
+            battery_level.Add(RemainBattery);
             UpdateId();
+        }
+
+        private double NextRemainBattery(AbsNode newNode, AbsNode lastCustomer, double lastRemainBattery)
+        {
+            double travelDistance = lastCustomer.TravelDistance(newNode); //两点之间用电量=行驶距离
+            double remainBattery = lastRemainBattery - travelDistance;
+
+            if (newNode.Info.Type == 3) //新点是一个充电站
+            {
+                remainBattery = this.GetRouteRangeCap();
+            }         
+            return remainBattery;
         }
 
         public List<AbsNode> getSubRoute(AbsNode fromNode, AbsNode toNode)
@@ -190,45 +194,34 @@ namespace OP.Data
             for (int i = 0; i < unroutedCustomers.Count; i++)
             {
                 Customer cusToInsert = unroutedCustomers.ElementAt(i);
-                InsertCustomer(cusToInsert, this.RouteList.Count - 1);
+                InsertNode(cusToInsert, this.RouteList.Count - 1);
             }            
 
         }
 
 
         /// <summary>
-        /// 在路径中任意位置插入新顾客
+        /// 在路径中任意位置插入新点（商家或充电站）
         /// </summary>
-        /// <param name="newCustomer">待插入的新顾客</param>
+        /// <param name="newCustomer">待插入的新点</param>
         /// <param name="position">插入位置</param>
-        public void InsertCustomer(Customer newCustomer, int position)
+        public void InsertNode(AbsNode newNode, int position)
         {
-            newCustomer = (Customer)newCustomer.ShallowCopy();
-            newCustomer.Route = this;
-            RouteList.Insert(position, newCustomer);
+            newNode = newNode.ShallowCopy();           
+            RouteList.Insert(position, newNode);
             ServiceBeginingTimes.Insert(position,0);
-            //更新插入顾客及其之后顾客的服务开始时间
+            battery_level.Insert(position, 0);
+            //更新插入顾客及其之后顾客的服务开始时间与电量
             for (int i = position; i < RouteList.Count; ++i)
             {
                 double newTime = NextServiceBeginTime(RouteList[i], RouteList[i - 1], ServiceBeginingTimes[i - 1]);
                 ServiceBeginingTimes[i] = newTime;
+                double newBattey = NextRemainBattery(RouteList[i], RouteList[i - 1], battery_level[i - 1]);
+                battery_level[i] = newBattey;
             }
             UpdateId();
         }
 
-        public void InsertStation(Station newStation,int position)
-        {
-            
-            RouteList.Insert(position, newStation);
-            ServiceBeginingTimes.Insert(position, 0);
-            //更新插入顾客及其之后顾客的服务开始时间
-            for (int i = position; i < RouteList.Count; ++i)
-            {
-                double newTime = NextServiceBeginTime(RouteList[i], RouteList[i - 1], ServiceBeginingTimes[i - 1]);
-                ServiceBeginingTimes[i] = newTime;
-            }
-            UpdateId();
-        }
 
         /// <summary>
         /// 删除某一位置上的顾客，更新服务时间
@@ -477,7 +470,7 @@ namespace OP.Data
             return this.RouteList[vi_index + 1];
         }
 
-        internal double WaitTime()
+        internal double GetWaitTime()
         {
             double waittime = 0;
             for (int i = 1; i < this.RouteList.Count; i++)
@@ -490,6 +483,17 @@ namespace OP.Data
                 }
             }
             return waittime;
+        }
+
+        /// <summary>
+        /// which station should be inesrt after a certain customer?
+        /// </summary>
+        /// <param name="cus"></param>
+        /// <returns></returns>
+        public Station insert_sta(Customer cus)
+        {
+            Station sta = null;
+            return sta;
         }
 
         internal AbsNode getPrevious(AbsNode vi)
