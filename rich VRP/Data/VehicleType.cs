@@ -56,8 +56,6 @@ namespace OP.Data
 
         ///////////////////////////////////////////////////////////
 
-
-
         /// <summary>
         /// Gets or sets the type identifier.
         /// </summary>
@@ -68,7 +66,9 @@ namespace OP.Data
 		/// </summary>
 		/// <value>The veh identifier.</value>
 		public int VehId{ get; set; }
-
+        /// <summary>
+        /// 某辆车跑过的所有路线的集合
+        /// </summary>
 		public List<Route> VehRouteList;
 
 		public Vehicle(int _typeid, int _vehid)
