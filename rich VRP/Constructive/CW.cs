@@ -30,21 +30,14 @@ namespace rich_VRP.Constructive
             Solution solution = new Solution(problem);
             var unroute_cus = new List<Customer>(problem.Customers); //没有访问的点
             Vehicle veh = null;
-            int veh0_ID = 0;
-            int veh1_ID = 0;
+            int veh_ID = 0;
+            
             while (unroute_cus.Count > 0)
             {
                 int type = rand.Next(0, 2); //随机产生一辆车（类型随机）
-                if (type == 0)
-                {
-                    veh = new Vehicle(type, veh0_ID);
-                    veh0_ID += 1;
-                }
-                else
-                {
-                    veh = new Vehicle(type, veh1_ID);
-                    veh1_ID += 1;
-                }
+
+                veh = new Vehicle(type, veh_ID);
+                veh_ID += 1;
 
 
                 Route newRoute = new Route(problem, veh); ////////产生一条该车的路径
@@ -80,12 +73,12 @@ namespace rich_VRP.Constructive
             //有总的行驶里程约束吗？？？？
 
             double insert_feasible = violation_volume + violation_weight;//只有体积和重量限制没有违反才能继续往路径里插入新的点
-            Route best_route = route;
+            Route best_route = route.Copy();
             while (insert_feasible == 0)
             {
                 double best_cost = double.MaxValue; //一个无穷大的数
                 double alefa = rand.Next(1, 101) / 100; //产生0~1的随机数，评价标准的参数
-                route = best_route;
+                route = best_route.Copy();
                 bool inserted = false;//记录本次循环是否插入了点
                 Customer inserted_cus = null;//最终确定要插入的点
                 for (int i = 0; i < unroute_cus.Count; i++)
@@ -133,7 +126,7 @@ namespace rich_VRP.Constructive
                             if (cost < best_cost)
                             {
                                 best_cost = cost;
-                                best_route = cur_route;
+                                best_route = cur_route.Copy();
                                 inserted = true;
                                 inserted_cus = insert_cus;
                             }
