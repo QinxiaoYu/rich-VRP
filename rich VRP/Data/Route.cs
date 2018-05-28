@@ -298,9 +298,9 @@ namespace OP.Data
             double vW = ViolationOfWeight();
             if (vW > 0) return false;
             int vR = ViolationOfRange();
-            if (vR == -1) return false;
+            if (vR > -1) return false;
             int vTW = ViolationOfTimeWindow();
-            if (vTW == -1) return false;
+            if (vTW > -1) return false;
 
             return true;
         }
@@ -427,11 +427,11 @@ namespace OP.Data
         /// <returns>如果有，则返回第一个违反点所在位置，否则返回-1.</returns>
         public int ViolationOfTimeWindow()
         {
-            for (int i = 0; i < RouteList.Count-1; ++i)
+            for (int i = 1 ; i < RouteList.Count-1; ++i)
             {
                 double ArrivalTimeAtj = ServiceBeginingTimes[i]
                                         + RouteList[i].Info.ServiceTime
-                                                      + RouteList[i].TravelDistance(RouteList[i + 1]);
+                                                      + RouteList[i].TravelTime(RouteList[i + 1]);
                 if (ArrivalTimeAtj>RouteList[i+1].Info.DueDate)
                 {
                     return i + 1;
@@ -485,14 +485,30 @@ namespace OP.Data
             return waittime;
         }
 
+       
         /// <summary>
         /// which station should be inesrt after a certain customer?
         /// </summary>
         /// <param name="cus"></param>
         /// <returns></returns>
-        public Station insert_sta(Customer cus)
+        public Station insert_sta(AbsNode node)
         {
+            int min_distance = int.MaxValue;
             Station sta = null;
+            foreach (var station in Problem.Stations)
+            {
+                if (station.Info.Id == node.Info.Id)
+                {
+                    continue;
+                }
+                int distance = node.TravelDistance(station);
+                if (distance < min_distance)
+                {
+                    min_distance = distance;
+                    sta = station;
+                }
+            }
+
             return sta;
         }
 
@@ -511,14 +527,13 @@ namespace OP.Data
         {
             var newRouteList = new List<AbsNode>(RouteList.Count);
             newRouteList.AddRange(RouteList.Select(node => node.ShallowCopy()));
-            var r = new Route(Problem,this.AssignedVeh)
+            var r = new Route(Problem, this.AssignedVeh)
             {
                 RouteList = newRouteList,
                 ServiceBeginingTimes = new List<double>(ServiceBeginingTimes),
+                battery_level = new List<double>(battery_level),
 
             };
-            for (int i = 1; i < RouteList.Count - 1; ++i)
-                ((Customer)r.RouteList[i]).Route = r;
             r.UpdateId();
             return r;
         }

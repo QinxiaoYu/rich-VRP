@@ -5,6 +5,7 @@ using System.Text;
 using System.Threading.Tasks;
 using OP.Data;
 using System.IO;
+using rich_VRP.Constructive;
 
 namespace rich_VRP
 {
@@ -16,6 +17,18 @@ namespace rich_VRP
             string dir = Directory.GetCurrentDirectory();
             
             Problem problem = reader.Read(dir);
+
+            ///初始化
+            Initialization initial = new Initialization(problem);
+            Solution ini_solution = initial.initial_construct();
+            string result = ini_solution.PrintToString();
+
+            string outfilename = null;
+            StringBuilder sb = new StringBuilder();
+            outfilename = dir + "//" + "test.txt";
+            StreamWriter sw = new StreamWriter(outfilename, true);
+            sb.AppendLine(result);
+            sw.Write(sb);
 
         }
     }

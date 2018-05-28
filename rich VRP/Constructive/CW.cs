@@ -15,30 +15,28 @@ namespace rich_VRP.Constructive
     class Initialization
     {
         Problem problem;
+        Fleet fleet;
         Random rand = new Random();//随机operter
         List<Customer> unrouted_Cus = new List<Customer>();
         List<Station> charge_sta = new List<Station>();
         public Initialization(Problem p)//把带初始化的问题传进来
         {
             this.problem = p;
+            fleet = p.fleet;
         }
 
 
         public Solution initial_construct()
         {
-
             Solution solution = new Solution(problem);
             var unroute_cus = new List<Customer>(problem.Customers); //没有访问的点
             Vehicle veh = null;
-            int veh_ID = 0;
             
             while (unroute_cus.Count > 0)
             {
-                int type = rand.Next(0, 2); //随机产生一辆车（类型随机）
-
-                veh = new Vehicle(type, veh_ID);
-                veh_ID += 1;
-
+                int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机）
+                veh = fleet.addNewVeh(type);
+               
 
                 Route newRoute = new Route(problem, veh); ////////产生一条该车的路径
                 newRoute.RouteAssign2Veh(veh);//将路径分配给该车
@@ -77,7 +75,7 @@ namespace rich_VRP.Constructive
             while (insert_feasible == 0)
             {
                 double best_cost = double.MaxValue; //一个无穷大的数
-                double alefa = rand.Next(1, 101) / 100; //产生0~1的随机数，评价标准的参数
+                double alefa = rand.NextDouble() / 100; //产生0~1的随机数，评价标准的参数
                 route = best_route.Copy();
                 bool inserted = false;//记录本次循环是否插入了点
                 Customer inserted_cus = null;//最终确定要插入的点
@@ -85,17 +83,27 @@ namespace rich_VRP.Constructive
                 {
                     Customer insert_cus = unroute_cus[i];
                     Route cur_route = route.Copy();
+                    int num_cus = route.RouteList.Count;
                     for (int j = 1; j < route.RouteList.Count; j++)//第一个位置和最后一个位置不能插入
                     {
                         cur_route.InsertNode(insert_cus, j);//插入
                         double add_distance = insert_cus.TravelDistance(cur_route.RouteList[j - 1]) + insert_cus.TravelDistance(cur_route.RouteList[j + 1])
                                               - cur_route.RouteList[j - 1].TravelDistance(cur_route.RouteList[j + 1]);//增加的距离（dik + dkj - dij）
-
-
+                        
                         ///////////////插入电站:在插入点前、后、前和后或者都不插入四种情况////////////////////////////////////
+                        
                         Station after_sta = cur_route.insert_sta(insert_cus);//若要在insert_cus后插入电站，应该插入哪个？
-                        Station after_sta1 = cur_route.insert_sta((Customer)cur_route.RouteList[j + 1]);//若要在insert_cus后一个客户后面插入电站，应该插入哪个？
-                        Station before_sta = cur_route.insert_sta((Customer)cur_route.RouteList[j - 1]);//若要在insert_cus前插入电站，应该插入哪个？
+                        AbsNode after_sta1 = null;
+                        if (j == num_cus - 1)
+                        {
+                            after_sta1 = problem.EndDepot;
+                        }
+                        else
+                        {
+                            after_sta1 = cur_route.insert_sta(cur_route.RouteList[j + 1]);//若要在insert_cus后一个客户后面插入电站，应该插入哪个？
+                        }
+                        
+                        Station before_sta = cur_route.insert_sta(cur_route.RouteList[j - 1]);//若要在insert_cus前插入电站，应该插入哪个？
                         ///判断是否需要在insert-cus后插入充电站
                         ///如果剩余电量能够维持车辆行驶至下custoner后再充电
                         double after_dis = insert_cus.TravelDistance(cur_route.RouteList[j + 1]) + cur_route.RouteList[j + 1].TravelDistance(after_sta1);
@@ -116,6 +124,9 @@ namespace rich_VRP.Constructive
                                             - insert_cus.TravelDistance(cur_route.RouteList[j - 1]);//插入电站后增加的行驶距离
                         }
 
+                       
+                        
+                        
 
                         ////////////////选择最优的一次插入////////////////////////////////////////////////////
                         if (cur_route.IsFeasible())//如果插入customer和相应的station后满足所有约束
