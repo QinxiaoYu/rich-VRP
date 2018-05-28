@@ -18,6 +18,7 @@ namespace OP.Data
         public Fleet fleet { get; set; }
 
         public static int[,] DistanceBetween { get; set; }
+        public static int[,] TravelTimeBetween { get; set; }
         public static double[,] AngelBetween { get; set; }
 
         public double MinWaitTimeAtDepot { get; set; }
@@ -30,8 +31,9 @@ namespace OP.Data
             Abbr = abbr;
             AllNodes = nodes;
             StartDepot = new Depot(nodes[0]);
-            EndDepot = new Depot(nodes[1]);
+            EndDepot = new Depot(nodes[0]);
             Customers = new List<Customer>();
+            Stations = new List<Station>();
             for (var i = numD; i < numC + 1; ++i)
             {
                 Customers.Add(new Customer(nodes[i]));
@@ -42,6 +44,7 @@ namespace OP.Data
             }
             int NodeNumber = AllNodes.Count;
             DistanceBetween = new int[NodeNumber, NodeNumber];
+            TravelTimeBetween = new int[NodeNumber, NodeNumber];
         }
 
         public void SetVehicleTypes(List<VehicleType> _types)
@@ -54,12 +57,22 @@ namespace OP.Data
             DistanceBetween[i, j] = dis;
         }
 
+        public void SetTravelTimeIJ(int i, int j, int tt)
+        {
+            TravelTimeBetween[i, j] = tt;
+        }
 
 
-        public static double GetDistanceIJ(int i, int j)
+
+        public static int GetDistanceIJ(int i, int j)
         {
             return DistanceBetween[i, j];
         }
+        public static int GetTravelTimeIJ(int i, int j)
+        {
+            return TravelTimeBetween[i, j];
+        }
+
         public static double GetAngelIJ(int i, int j)
         {
             return AngelBetween[i, j];
@@ -81,9 +94,11 @@ namespace OP.Data
                 AllNodes.Add(customer.Info);
         }
 
-        internal void SetDistanceIJ(int i, int j, double tt_ij, double dis_ij)
+        internal void SetDistanceANDTravelIJ(int i, int j, int tt_ij, int dis_ij)
         {
-            throw new NotImplementedException();
+            SetDistanceIJ(i, j, dis_ij);
+            SetTravelTimeIJ(i, j, tt_ij);
+
         }
     }
     
@@ -106,8 +121,12 @@ namespace OP.Data
     {
         public NodeInfo Info;
 
-
-        public double Distance(AbsNode destination)
+        /// <summary>
+        /// 计算行驶距离，用力计算电量
+        /// </summary>
+        /// <param name="destination"></param>
+        /// <returns></returns>
+        public int TravelDistance(AbsNode destination)
         {
 
             //var xDist = Info.X - destination.Info.X;
@@ -115,25 +134,19 @@ namespace OP.Data
             //return Math.Sqrt(xDist * xDist + yDist * yDist);
             return Problem.GetDistanceIJ(Info.Id, destination.Info.Id);
         }
+
+
         /// <summary>
         /// 计算行驶时间，用来计算时间窗
         /// </summary>
         /// <param name="destination"></param>
         /// <returns></returns>
-        public double TravelTime(AbsNode destination)
+        public int TravelTime(AbsNode destination)
         {
-            return Distance(destination);
+            return Problem.GetTravelTimeIJ(Info.Id, destination.Info.Id);
         }
 
-        /// <summary>
-        /// 计算行驶距离，用力计算电量
-        /// </summary>
-        /// <param name="newNode"></param>
-        /// <returns></returns>
-        internal double TravelDistance(AbsNode destination)
-        {
-            /// 陈鹏写
-        }
+        
         public virtual AbsNode ShallowCopy()
         {
             throw new Exception("You cannot copy abstract node");

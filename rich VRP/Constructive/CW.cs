@@ -88,8 +88,8 @@ namespace rich_VRP.Constructive
                     for (int j = 1; j < route.RouteList.Count; j++)//第一个位置和最后一个位置不能插入
                     {
                         cur_route.InsertNode(insert_cus, j);//插入
-                        double add_distance = insert_cus.Distance(cur_route.RouteList[j - 1]) + insert_cus.Distance(cur_route.RouteList[j + 1])
-                                              - cur_route.RouteList[j - 1].Distance(cur_route.RouteList[j + 1]);//增加的距离（dik + dkj - dij）
+                        double add_distance = insert_cus.TravelDistance(cur_route.RouteList[j - 1]) + insert_cus.TravelDistance(cur_route.RouteList[j + 1])
+                                              - cur_route.RouteList[j - 1].TravelDistance(cur_route.RouteList[j + 1]);//增加的距离（dik + dkj - dij）
 
 
                         ///////////////插入电站:在插入点前、后、前和后或者都不插入四种情况////////////////////////////////////
@@ -98,29 +98,29 @@ namespace rich_VRP.Constructive
                         Station before_sta = cur_route.insert_sta((Customer)cur_route.RouteList[j - 1]);//若要在insert_cus前插入电站，应该插入哪个？
                         ///判断是否需要在insert-cus后插入充电站
                         ///如果剩余电量能够维持车辆行驶至下custoner后再充电
-                        double after_dis = insert_cus.Distance(cur_route.RouteList[j + 1]) + cur_route.RouteList[j + 1].Distance(after_sta1);
+                        double after_dis = insert_cus.TravelDistance(cur_route.RouteList[j + 1]) + cur_route.RouteList[j + 1].TravelDistance(after_sta1);
                         if (cur_route.battery_level[j] < after_dis)//如果剩余电量不能坚持到下次充电
                         {
                             cur_route.InsertNode(after_sta, j + 1);//在insert-cus后插入电站
-                            add_distance += after_sta.Distance(insert_cus) + after_sta.Distance(cur_route.RouteList[j + 2])
-                                            - insert_cus.Distance(cur_route.RouteList[j + 2]); //插入电站后增加的行驶距离
+                            add_distance += after_sta.TravelDistance(insert_cus) + after_sta.TravelDistance(cur_route.RouteList[j + 2])
+                                            - insert_cus.TravelDistance(cur_route.RouteList[j + 2]); //插入电站后增加的行驶距离
                         }
 
                         ///判断是否需要在插入点前插入充电站
                         //如果剩余电量不能保证下次抵达充电桩,就在insert_cus前插入充电站
-                        double before_dis = insert_cus.Distance(cur_route.RouteList[j - 1]) + insert_cus.Distance(after_sta);
+                        double before_dis = insert_cus.TravelDistance(cur_route.RouteList[j - 1]) + insert_cus.TravelDistance(after_sta);
                         if (cur_route.battery_level[j - 1] < before_dis)
                         {
                             cur_route.InsertNode(before_sta, j);//在insert-cus前插入电站
-                            add_distance += before_sta.Distance(cur_route.RouteList[j - 1]) + before_sta.Distance(insert_cus)
-                                            - insert_cus.Distance(cur_route.RouteList[j - 1]);//插入电站后增加的行驶距离
+                            add_distance += before_sta.TravelDistance(cur_route.RouteList[j - 1]) + before_sta.TravelDistance(insert_cus)
+                                            - insert_cus.TravelDistance(cur_route.RouteList[j - 1]);//插入电站后增加的行驶距离
                         }
 
 
                         ////////////////选择最优的一次插入////////////////////////////////////////////////////
                         if (cur_route.IsFeasible())//如果插入customer和相应的station后满足所有约束
                         {
-                            double insertcus_dis = insert_cus.Distance(problem.StartDepot) + insert_cus.Distance(problem.EndDepot);
+                            double insertcus_dis = insert_cus.TravelDistance(problem.StartDepot) + insert_cus.TravelDistance(problem.EndDepot);
 
                             double cost = add_distance - alefa * insertcus_dis;//评价插入质量的标准
                             if (cost < best_cost)
