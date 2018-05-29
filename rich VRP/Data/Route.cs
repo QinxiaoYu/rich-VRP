@@ -61,6 +61,10 @@ namespace OP.Data
             RouteList = new List<AbsNode>();
             ServiceBeginingTimes = new List<double>();
             battery_level = new List<double>();
+
+            int numRouteofVeh = veh.VehRouteList.Count(); //当前车辆已经行驶的趟数
+            this.RouteIndexofVeh = numRouteofVeh;
+
             AddNode(startdepot);
             AddNode(enddepot);
         }
@@ -95,18 +99,26 @@ namespace OP.Data
         /// 计算当前路径能从起点出发的最早时刻
         /// </summary>
         /// <returns></returns>
+        /// <summary>
+        /// 计算当前路径能从起点出发的最早时刻
+        /// </summary>
+        /// <returns></returns>
         public double GetEarliestDepartureTime()
         {
-            if (this.RouteIndexofVeh==0)
+            if (this.RouteIndexofVeh == 0) //如果该线路为首趟线路，则其最早开始时间既为起点上班时间
             {
                 return Problem.StartDepot.Info.ReadyTime;
             }
-            else
+            else //如果该线路非首趟线路，则其最早开始时间依赖于其前一趟的结束时间
             {
                 double ArrivalTimeofpreRoute = this.AssignedVeh.VehRouteList[this.RouteIndexofVeh - 1].GetArrivalTime();
                 return ArrivalTimeofpreRoute + Problem.MinWaitTimeAtDepot;
             }
         }
+
+
+
+
         /// <summary>
         /// 计算当前路径达到终点的时刻
         /// </summary>
@@ -128,6 +140,7 @@ namespace OP.Data
             AbsNode lastCustomer = RouteList.Count == 0 ? newNode : RouteList[RouteList.Count - 1];
             //线路上最后一个点 可以开始游览的时间 （如果到达时间早于时间窗的开始时间，则为时间窗开始时间；否则为实际达到时间）
             double lastServiceTime = RouteList.Count == 0 ? Math.Max(GetEarliestDepartureTime(), newNode.Info.ReadyTime) : ServiceBeginingTimes[ServiceBeginingTimes.Count - 1];
+            
             //新景点 可以开始游览的时间
             double serviceBegins = NextServiceBeginTime(newNode, lastCustomer, lastServiceTime);
             //线路上最后一个点的剩余电量
@@ -298,9 +311,9 @@ namespace OP.Data
             double vW = ViolationOfWeight();
             if (vW > 0) return false;
             int vR = ViolationOfRange();
-            if (vR == -1) return false;
+            if (vR > -1) return false;
             int vTW = ViolationOfTimeWindow();
-            if (vTW == -1) return false;
+            if (vTW > -1) return false;
 
             return true;
         }
@@ -427,11 +440,11 @@ namespace OP.Data
         /// <returns>如果有，则返回第一个违反点所在位置，否则返回-1.</returns>
         public int ViolationOfTimeWindow()
         {
-            for (int i = 0; i < RouteList.Count-1; ++i)
+            for (int i = 1 ; i < RouteList.Count-1; ++i)
             {
                 double ArrivalTimeAtj = ServiceBeginingTimes[i]
                                         + RouteList[i].Info.ServiceTime
-                                                      + RouteList[i].TravelDistance(RouteList[i + 1]);
+                                                      + RouteList[i].TravelTime(RouteList[i + 1]);
                 if (ArrivalTimeAtj>RouteList[i+1].Info.DueDate)
                 {
                     return i + 1;
@@ -485,14 +498,30 @@ namespace OP.Data
             return waittime;
         }
 
+       
         /// <summary>
         /// which station should be inesrt after a certain customer?
         /// </summary>
         /// <param name="cus"></param>
         /// <returns></returns>
-        public Station insert_sta(Customer cus)
+        public Station insert_sta(AbsNode node)
         {
+            int min_distance = int.MaxValue;
             Station sta = null;
+            foreach (var station in Problem.Stations)
+            {
+                if (station.Info.Id == node.Info.Id)
+                {
+                    continue;
+                }
+                int distance = node.TravelDistance(station);
+                if (distance < min_distance)
+                {
+                    min_distance = distance;
+                    sta = station;
+                }
+            }
+
             return sta;
         }
 
@@ -511,14 +540,13 @@ namespace OP.Data
         {
             var newRouteList = new List<AbsNode>(RouteList.Count);
             newRouteList.AddRange(RouteList.Select(node => node.ShallowCopy()));
-            var r = new Route(Problem,this.AssignedVeh)
+            var r = new Route(Problem, this.AssignedVeh)
             {
                 RouteList = newRouteList,
                 ServiceBeginingTimes = new List<double>(ServiceBeginingTimes),
+                battery_level = new List<double>(battery_level),
 
             };
-            for (int i = 1; i < RouteList.Count - 1; ++i)
-                ((Customer)r.RouteList[i]).Route = r;
             r.UpdateId();
             return r;
         }
