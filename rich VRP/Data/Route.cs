@@ -61,6 +61,10 @@ namespace OP.Data
             RouteList = new List<AbsNode>();
             ServiceBeginingTimes = new List<double>();
             battery_level = new List<double>();
+
+            int numRouteofVeh = veh.VehRouteList.Count(); //当前车辆已经行驶的趟数
+            this.RouteIndexofVeh = numRouteofVeh;
+
             AddNode(startdepot);
             AddNode(enddepot);
         }

@@ -6,6 +6,7 @@ using System.Threading.Tasks;
 using OP.Data;
 using System.IO;
 using rich_VRP.Constructive;
+using rich_VRP.ObjectiveFunc;
 
 namespace rich_VRP
 {
@@ -30,7 +31,14 @@ namespace rich_VRP
             outfilename = dir + "//" + "test.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
             sb.AppendLine(result);
+
+            OriginObjFunc evaluate = new OriginObjFunc();
+            double cost = evaluate.CalObjCost(ini_solution);
+            
+            sb.AppendLine(cost.ToString("0.00"));
+
             sw.Write(sb);
+
 
         }
     }

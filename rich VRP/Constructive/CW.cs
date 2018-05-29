@@ -36,7 +36,7 @@ namespace rich_VRP.Constructive
             {
                 int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机）
                 veh = fleet.addNewVeh(type);
-               
+
 
                 Route newRoute = new Route(problem, veh); ////////产生一条该车的路径
                 //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
@@ -47,14 +47,6 @@ namespace rich_VRP.Constructive
                     newRoute = BIA(newRoute, unroute_cus, out unroute_cus);
                     veh.addRoute2Veh(newRoute);//将路径加入到vehicle中
                     solution.AddRoute(newRoute);
-
-                    //调试
-                    int a = veh.VehRouteList.Count;
-                    int b = newRoute.RouteList.Count;
-                    double c = newRoute.ServiceBeginingTimes[0];
-                    double d = newRoute.ServiceBeginingTimes[b-1];
-                    //
-
                     newRoute = new Route(problem, veh);
                     //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
                     earliest_departure_time = newRoute.GetEarliestDepartureTime();
