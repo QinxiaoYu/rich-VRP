@@ -39,7 +39,7 @@ namespace rich_VRP.Constructive
                
 
                 Route newRoute = new Route(problem, veh); ////////产生一条该车的路径
-                newRoute.RouteAssign2Veh(veh);//将路径分配给该车
+                //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
                 double earliest_departure_time = newRoute.GetEarliestDepartureTime();//该路径的最早出发时间
                 //只要新产生路径的最早出发时间小于最晚时间限制就可以为其分配customer
                 while (earliest_departure_time < veh.Late_time)
@@ -47,9 +47,18 @@ namespace rich_VRP.Constructive
                     newRoute = BIA(newRoute, unroute_cus, out unroute_cus);
                     veh.addRoute2Veh(newRoute);//将路径加入到vehicle中
                     solution.AddRoute(newRoute);
+
+                    //调试
+                    int a = veh.VehRouteList.Count;
+                    int b = newRoute.RouteList.Count;
+                    double c = newRoute.ServiceBeginingTimes[0];
+                    double d = newRoute.ServiceBeginingTimes[b-1];
+                    //
+
                     newRoute = new Route(problem, veh);
-                    newRoute.RouteAssign2Veh(veh);//将路径分配给该车
+                    //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
                     earliest_departure_time = newRoute.GetEarliestDepartureTime();
+   
                 }
             }
             return solution;
@@ -71,21 +80,21 @@ namespace rich_VRP.Constructive
             //有总的行驶里程约束吗？？？？
 
             double insert_feasible = violation_volume + violation_weight;//只有体积和重量限制没有违反才能继续往路径里插入新的点
-            Route best_route = route.Copy();
+            Route best_route = route;
             while (insert_feasible == 0)
             {
                 double best_cost = double.MaxValue; //一个无穷大的数
                 double alefa = rand.NextDouble() / 100; //产生0~1的随机数，评价标准的参数
-                route = best_route.Copy();
+                route = best_route;
                 bool inserted = false;//记录本次循环是否插入了点
                 Customer inserted_cus = null;//最终确定要插入的点
                 for (int i = 0; i < unroute_cus.Count; i++)
                 {
                     Customer insert_cus = unroute_cus[i];
-                    Route cur_route = route.Copy();
                     int num_cus = route.RouteList.Count;
                     for (int j = 1; j < route.RouteList.Count; j++)//第一个位置和最后一个位置不能插入
                     {
+                        Route cur_route = route.Copy();
                         cur_route.InsertNode(insert_cus, j);//插入
                         double add_distance = insert_cus.TravelDistance(cur_route.RouteList[j - 1]) + insert_cus.TravelDistance(cur_route.RouteList[j + 1])
                                               - cur_route.RouteList[j - 1].TravelDistance(cur_route.RouteList[j + 1]);//增加的距离（dik + dkj - dij）
@@ -137,7 +146,7 @@ namespace rich_VRP.Constructive
                             if (cost < best_cost)
                             {
                                 best_cost = cost;
-                                best_route = cur_route.Copy();
+                                best_route = cur_route;
                                 inserted = true;
                                 inserted_cus = insert_cus;
                             }

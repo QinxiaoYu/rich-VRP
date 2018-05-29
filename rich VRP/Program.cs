@@ -17,6 +17,8 @@ namespace rich_VRP
             string dir = Directory.GetCurrentDirectory();
             
             Problem problem = reader.Read(dir);
+            problem.MinWaitTimeAtDepot = 60;
+      
 
             ///初始化
             Initialization initial = new Initialization(problem);

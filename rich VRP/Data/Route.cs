@@ -95,18 +95,26 @@ namespace OP.Data
         /// 计算当前路径能从起点出发的最早时刻
         /// </summary>
         /// <returns></returns>
+        /// <summary>
+        /// 计算当前路径能从起点出发的最早时刻
+        /// </summary>
+        /// <returns></returns>
         public double GetEarliestDepartureTime()
         {
-            if (this.RouteIndexofVeh==0)
+            if (this.RouteIndexofVeh == 0) //如果该线路为首趟线路，则其最早开始时间既为起点上班时间
             {
                 return Problem.StartDepot.Info.ReadyTime;
             }
-            else
+            else //如果该线路非首趟线路，则其最早开始时间依赖于其前一趟的结束时间
             {
                 double ArrivalTimeofpreRoute = this.AssignedVeh.VehRouteList[this.RouteIndexofVeh - 1].GetArrivalTime();
                 return ArrivalTimeofpreRoute + Problem.MinWaitTimeAtDepot;
             }
         }
+
+
+
+
         /// <summary>
         /// 计算当前路径达到终点的时刻
         /// </summary>
@@ -128,6 +136,7 @@ namespace OP.Data
             AbsNode lastCustomer = RouteList.Count == 0 ? newNode : RouteList[RouteList.Count - 1];
             //线路上最后一个点 可以开始游览的时间 （如果到达时间早于时间窗的开始时间，则为时间窗开始时间；否则为实际达到时间）
             double lastServiceTime = RouteList.Count == 0 ? Math.Max(GetEarliestDepartureTime(), newNode.Info.ReadyTime) : ServiceBeginingTimes[ServiceBeginingTimes.Count - 1];
+            
             //新景点 可以开始游览的时间
             double serviceBegins = NextServiceBeginTime(newNode, lastCustomer, lastServiceTime);
             //线路上最后一个点的剩余电量
