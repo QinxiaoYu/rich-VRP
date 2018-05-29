@@ -28,30 +28,29 @@ namespace rich_VRP.Constructive
 
         public Solution initial_construct()
         {
-
             Solution solution = new Solution(problem);
-            unrouted_Cus = new List<Customer>(problem.Customers); //没有访问的点
-            Vehicle veh = null;        
+            var unroute_cus = new List<Customer>(problem.Customers); //没有访问的点
+            Vehicle veh = null;
             
-            while (unrouted_Cus.Count > 0)
+            while (unroute_cus.Count > 0)
             {
-                int type = rand.Next(0, 2)+1; //随机产生一辆车（类型随机）
+                int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机）
                 veh = fleet.addNewVeh(type);
-              
+
+
                 Route newRoute = new Route(problem, veh); ////////产生一条该车的路径
-                newRoute.RouteAssign2Veh(veh);//将路径分配给该车
-                //veh.addRoute2Veh(newRoute);
+                //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
                 double earliest_departure_time = newRoute.GetEarliestDepartureTime();//该路径的最早出发时间
                 //只要新产生路径的最早出发时间小于最晚时间限制就可以为其分配customer
                 while (earliest_departure_time < veh.Late_time)
                 {
-                    newRoute = BIA(newRoute);
+                    newRoute = BIA(newRoute, unroute_cus, out unroute_cus);
                     veh.addRoute2Veh(newRoute);//将路径加入到vehicle中
                     solution.AddRoute(newRoute);
                     newRoute = new Route(problem, veh);
-                    newRoute.RouteAssign2Veh(veh);//将路径分配给该车
-                    veh.addRoute2Veh(newRoute);
+                    //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
                     earliest_departure_time = newRoute.GetEarliestDepartureTime();
+   
                 }
             }
             return solution;
@@ -66,35 +65,45 @@ namespace rich_VRP.Constructive
         /// <param name="unroute_cus"></param>
         /// <param name="left_unroute_cus"></param>
         /// <returns></returns>
-        public Route BIA(Route route)
+        public Route BIA(Route route, List<Customer> unroute_cus, out List<Customer> left_unroute_cus)
         {
             double violation_volume = route.ViolationOfVolume();//若不违反返回0
             double violation_weight = route.ViolationOfVolume();//若不违反返回0
             //有总的行驶里程约束吗？？？？
 
             double insert_feasible = violation_volume + violation_weight;//只有体积和重量限制没有违反才能继续往路径里插入新的点
-            Route best_route = route.Copy();
+            Route best_route = route;
             while (insert_feasible == 0)
             {
                 double best_cost = double.MaxValue; //一个无穷大的数
-                double alefa = rand.NextDouble(); //产生0~1的随机数，评价标准的参数
-                route = best_route.Copy();
+                double alefa = rand.NextDouble() / 100; //产生0~1的随机数，评价标准的参数
+                route = best_route;
                 bool inserted = false;//记录本次循环是否插入了点
                 Customer inserted_cus = null;//最终确定要插入的点
-                for (int i = 0; i < unrouted_Cus.Count; i++)
+                for (int i = 0; i < unroute_cus.Count; i++)
                 {
-                    Customer insert_cus = unrouted_Cus[i];
-                    Route cur_route = route.Copy();
+                    Customer insert_cus = unroute_cus[i];
+                    int num_cus = route.RouteList.Count;
                     for (int j = 1; j < route.RouteList.Count; j++)//第一个位置和最后一个位置不能插入
                     {
+                        Route cur_route = route.Copy();
                         cur_route.InsertNode(insert_cus, j);//插入
                         double add_distance = insert_cus.TravelDistance(cur_route.RouteList[j - 1]) + insert_cus.TravelDistance(cur_route.RouteList[j + 1])
                                               - cur_route.RouteList[j - 1].TravelDistance(cur_route.RouteList[j + 1]);//增加的距离（dik + dkj - dij）
-
-
+                        
                         ///////////////插入电站:在插入点前、后、前和后或者都不插入四种情况////////////////////////////////////
+                        
                         Station after_sta = cur_route.insert_sta(insert_cus);//若要在insert_cus后插入电站，应该插入哪个？
-                        Station after_sta1 = cur_route.insert_sta(cur_route.RouteList[j + 1]);//若要在insert_cus后一个客户后面插入电站，应该插入哪个？
+                        AbsNode after_sta1 = null;
+                        if (j == num_cus - 1)
+                        {
+                            after_sta1 = problem.EndDepot;
+                        }
+                        else
+                        {
+                            after_sta1 = cur_route.insert_sta(cur_route.RouteList[j + 1]);//若要在insert_cus后一个客户后面插入电站，应该插入哪个？
+                        }
+                        
                         Station before_sta = cur_route.insert_sta(cur_route.RouteList[j - 1]);//若要在insert_cus前插入电站，应该插入哪个？
                         ///判断是否需要在insert-cus后插入充电站
                         ///如果剩余电量能够维持车辆行驶至下custoner后再充电
@@ -116,6 +125,9 @@ namespace rich_VRP.Constructive
                                             - insert_cus.TravelDistance(cur_route.RouteList[j - 1]);//插入电站后增加的行驶距离
                         }
 
+                       
+                        
+                        
 
                         ////////////////选择最优的一次插入////////////////////////////////////////////////////
                         if (cur_route.IsFeasible())//如果插入customer和相应的station后满足所有约束
@@ -126,7 +138,7 @@ namespace rich_VRP.Constructive
                             if (cost < best_cost)
                             {
                                 best_cost = cost;
-                                best_route = cur_route.Copy();
+                                best_route = cur_route;
                                 inserted = true;
                                 inserted_cus = insert_cus;
                             }
@@ -140,13 +152,15 @@ namespace rich_VRP.Constructive
                 }
                 else
                 {
-                    unrouted_Cus.Remove(inserted_cus);
+                    unroute_cus.Remove(inserted_cus);
                     violation_volume = best_route.ViolationOfVolume();//若不违反返回0
                     violation_weight = best_route.ViolationOfVolume();//若不违反返回0
                     insert_feasible = violation_volume + violation_weight;//只有体积和重量限制没有违反才能继续往路径里插入新的点
                 }
             }
-        
+
+
+            left_unroute_cus = unroute_cus;
             return best_route;
         }
 

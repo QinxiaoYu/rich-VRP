@@ -111,23 +111,23 @@ namespace OP.Data
 		{
 			return VehFleet.Count;
 		}
-		/// <summary>
-		/// Adds the new vehicle to VehFleet.
-		/// </summary>
-		/// <param name="_vehtypeid">VehTypeid.</param>
-		public Vehicle addNewVeh(int _vehtypeid)
-		{
-			int numofVeh = GetNumOfUsedVeh();
-			Vehicle veh = new Vehicle(_vehtypeid, numofVeh);
-			VehFleet.Add (veh);
-            return veh;		
-		}
+        /// <summary>
+        /// Adds the new vehicle to VehFleet.
+        /// </summary>
+        /// <param name="_vehtypeid">VehTypeid.</param>
+        public Vehicle addNewVeh(int _vehtypeid)
+        {
+            int numofVeh = GetNumOfUsedVeh();
+            Vehicle veh = new Vehicle(_vehtypeid, numofVeh);
+            VehFleet.Add(veh);
+            return veh;
+        }
 
-		/// <summary>
-		/// Removes a veh by its ID.
-		/// </summary>
-		/// <param name="_vehid">Vehid.</param>
-		public void removeVeh(int _vehid)
+        /// <summary>
+        /// Removes a veh by its ID.
+        /// </summary>
+        /// <param name="_vehid">Vehid.</param>
+        public void removeVeh(int _vehid)
 		{
 			Vehicle veh2remove = GetVehbyID (_vehid);
 			VehFleet.Remove (veh2remove);

@@ -58,7 +58,7 @@ namespace OP.Data
 
             AddNode(startdepot);
             AddNode(enddepot);
-            
+
 
         }
 
@@ -78,6 +78,10 @@ namespace OP.Data
             RouteList = new List<AbsNode>();
             ServiceBeginingTimes = new List<double>();
             battery_level = new List<double>();
+
+            int numRouteofVeh = veh.VehRouteList.Count(); //当前车辆已经行驶的趟数
+            this.RouteIndexofVeh = numRouteofVeh;
+
             AddNode(startdepot);
             AddNode(enddepot);
         }
@@ -112,7 +116,7 @@ namespace OP.Data
             this.AssignedVeh = veh;
             int numRouteofVeh = veh.VehRouteList.Count(); //当前车辆已经行驶的趟数
             this.RouteIndexofVeh = numRouteofVeh;
-            
+
 
         }
         /// <summary>
@@ -131,6 +135,10 @@ namespace OP.Data
                 return ArrivalTimeofpreRoute + Problem.MinWaitTimeAtDepot;
             }
         }
+
+
+
+
         /// <summary>
         /// 计算当前路径达到终点的时刻
         /// </summary>
@@ -173,6 +181,7 @@ namespace OP.Data
             AbsNode lastCustomer = RouteList.Count == 0 ? newNode : RouteList[RouteList.Count - 1];
             //线路上最后一个点 可以开始游览的时间 （如果到达时间早于时间窗的开始时间，则为时间窗开始时间；否则为实际达到时间）
             double lastServiceTime = RouteList.Count == 0 ? Math.Max(GetEarliestDepartureTime(), newNode.Info.ReadyTime) : ServiceBeginingTimes[ServiceBeginingTimes.Count - 1];
+            
             //新景点 可以开始游览的时间
             double serviceBegins = NextServiceBeginTime(newNode, lastCustomer, lastServiceTime);
             //线路上最后一个点的剩余电量
@@ -197,7 +206,7 @@ namespace OP.Data
             return remainBattery;
         }
 
-       
+
 
         internal void InsertCustomer(List<Customer> unroutedCustomers)
         {
@@ -448,7 +457,7 @@ namespace OP.Data
         /// <returns>如果有，则返回第一个违反点所在位置，否则返回-1.</returns>
         public int ViolationOfTimeWindow()
         {
-            for (int i = 0; i < RouteList.Count-1; ++i)
+            for (int i = 1 ; i < RouteList.Count-1; ++i)
             {
                 double ArrivalTimeAtj = ServiceBeginingTimes[i]
                                         + RouteList[i].Info.ServiceTime
@@ -475,7 +484,7 @@ namespace OP.Data
             double readyTime = newCustomer.Info.ReadyTime;
             return Math.Max(readyTime, prevTime + serviceTime + travelTime);
         }
-       
+
 
         internal double GetWaitTime()
         {
@@ -492,6 +501,7 @@ namespace OP.Data
             return waittime;
         }
 
+       
         /// <summary>
         /// which station should be inesrt after a certain customer?
         /// </summary>
@@ -508,15 +518,16 @@ namespace OP.Data
                     continue;
                 }
                 int distance = node.TravelDistance(station);
-                if (distance<min_distance)
+                if (distance < min_distance)
                 {
                     min_distance = distance;
                     sta = station;
                 }
             }
-            
+
             return sta;
         }
+
 
 
         public Route Copy()
