@@ -22,6 +22,7 @@ namespace OP.Data
         /// </summary>
         public Vehicle AssignedVeh { get; set; }
 
+        public VehicleType AssignedVehType { get; set; }
         /// <summary>
         /// 路径上的顾客集合，首尾包含仓库
         /// </summary>
@@ -34,20 +35,35 @@ namespace OP.Data
         /// <summary>
         /// The time departure from depot
         /// </summary>
-        public double DepatureTime { get; set; }
+        double DepatureTime;
         /// <summary>
         /// The time return to depot
         /// </summary>
-        public double ArrivalTime { get; set; }
+        double ArrivalTime;
         /// <summary>
         /// 在某点处剩余电量可行驶的距离，插入新的点后需要更新
         /// </summary>
         public List<double> battery_level { get; set; }
 
+        public Route(Problem problem, VehicleType vehtype)
+        {
+            Depot startdepot = problem.StartDepot;
+            Depot enddepot = problem.EndDepot;
+            Problem = problem;
+            AssignedVehType = vehtype;
+            AssignedVeh = null;
+            RouteList = new List<AbsNode>();
+            ServiceBeginingTimes = new List<double>();
+            battery_level = new List<double>();
 
+            AddNode(startdepot);
+            AddNode(enddepot);
+            
+
+        }
 
         /// <summary>
-        /// 初始化一条路径，该路径为
+        /// 在已知分配给哪辆车的前提下，初始化一条路径
         /// </summary>
         /// <param name="problem"></param>
         /// <param name="veh">为该路径分配的车辆</param>
@@ -57,6 +73,7 @@ namespace OP.Data
             Depot enddepot = problem.EndDepot;
             Problem = problem;
             AssignedVeh = veh;
+            
             //Solution = null;
             RouteList = new List<AbsNode>();
             ServiceBeginingTimes = new List<double>();
@@ -64,6 +81,8 @@ namespace OP.Data
             AddNode(startdepot);
             AddNode(enddepot);
         }
+
+
 
         /// <summary>
         /// 初始化一条路径，该路径只包含一个种子顾客
@@ -84,11 +103,16 @@ namespace OP.Data
             AddNode(enddepot);
         }
 
+        /// <summary>
+        /// 把一条线路分配给一辆具体的车
+        /// </summary>
+        /// <param name="veh"></param>
         public void RouteAssign2Veh(Vehicle veh)
         {
             this.AssignedVeh = veh;
             int numRouteofVeh = veh.VehRouteList.Count(); //当前车辆已经行驶的趟数
             this.RouteIndexofVeh = numRouteofVeh;
+            
 
         }
         /// <summary>
@@ -97,11 +121,11 @@ namespace OP.Data
         /// <returns></returns>
         public double GetEarliestDepartureTime()
         {
-            if (this.RouteIndexofVeh==0)
+            if (this.RouteIndexofVeh==0) //如果该线路为首趟线路，则其最早开始时间既为起点上班时间
             {
                 return Problem.StartDepot.Info.ReadyTime;
             }
-            else
+            else //如果该线路非首趟线路，则其最早开始时间依赖于其前一趟的结束时间
             {
                 double ArrivalTimeofpreRoute = this.AssignedVeh.VehRouteList[this.RouteIndexofVeh - 1].GetArrivalTime();
                 return ArrivalTimeofpreRoute + Problem.MinWaitTimeAtDepot;
@@ -116,6 +140,27 @@ namespace OP.Data
             int numNodesinRoute = this.RouteList.Count();
             this.ArrivalTime = ServiceBeginingTimes[numNodesinRoute - 1];
             return ArrivalTime;
+        }
+
+        internal int FindGoodStationPosition(int rock_position, out Station goodSta)
+        {
+            throw new NotImplementedException();
+        }
+        /// <summary>
+        /// 获得某点处的浮动时间=该点处的等待时长
+        /// </summary>
+        /// <param name="i">该点在线路中的位置</param>
+        /// <returns></returns>
+        internal double GetFloatTimeAtCus(int i)
+        {
+            double floattime = 960.0;
+            if (RouteList[i].Info.Type==2)//充电站
+            {
+                double arrivetime = ServiceBeginingTimes[i - 1] + RouteList[i - 1].Info.ServiceTime + RouteList[i - 1].TravelTime(RouteList[i]);
+                double servicestarttime = ServiceBeginingTimes[i];
+                floattime = servicestarttime - arrivetime;
+            }
+            return floattime;
         }
 
         /// <summary>
@@ -152,41 +197,7 @@ namespace OP.Data
             return remainBattery;
         }
 
-        public List<AbsNode> getSubRoute(AbsNode fromNode, AbsNode toNode)
-        {
-            List<AbsNode> SubCustomers = new List<AbsNode>();
-            if (fromNode is Depot && toNode is Depot)
-            {
-                SubCustomers.Add(RouteList[0]);
-                return SubCustomers;
-            }
-            else
-            {
-                int from_index = (fromNode is Depot) ? 0 : ((Customer)fromNode).Index();
-                int to_index = (toNode is Depot) ? this.RouteList.Count - 1 : ((Customer)toNode).Index();
-                if (from_index <= to_index)
-                {
-                    for (int i = from_index; i <= to_index; i++)
-                    {
-                        SubCustomers.Add(this.RouteList[i]);
-                    }
-                }
-                else
-                {
-                    for (int i = from_index; i < this.RouteList.Count; i++)
-                    {
-                        SubCustomers.Add(this.RouteList[i]);
-                    }
-                    for (int j = 1; j <= to_index; j++)
-                    {
-                        SubCustomers.Add(this.RouteList[j]);
-                    }
-                }
-
-
-                return SubCustomers;
-            }
-        }
+       
 
         internal void InsertCustomer(List<Customer> unroutedCustomers)
         {
@@ -207,7 +218,14 @@ namespace OP.Data
         /// <param name="position">插入位置</param>
         public void InsertNode(AbsNode newNode, int position)
         {
-            newNode = newNode.ShallowCopy();           
+            if (newNode.Info.Type==2)
+            {
+                newNode = (Customer)newNode;
+            }
+            if (newNode.Info.Type == 3)
+            {
+                newNode = (Station)newNode;
+            }           
             RouteList.Insert(position, newNode);
             ServiceBeginingTimes.Insert(position,0);
             battery_level.Insert(position, 0);
@@ -216,8 +234,8 @@ namespace OP.Data
             {
                 double newTime = NextServiceBeginTime(RouteList[i], RouteList[i - 1], ServiceBeginingTimes[i - 1]);
                 ServiceBeginingTimes[i] = newTime;
-                double newBattey = NextRemainBattery(RouteList[i], RouteList[i - 1], battery_level[i - 1]);
-                battery_level[i] = newBattey;
+                double newBattery = NextRemainBattery(RouteList[i], RouteList[i - 1], battery_level[i - 1]);
+                battery_level[i] = newBattery;
             }
             UpdateId();
         }
@@ -231,10 +249,13 @@ namespace OP.Data
         {
             RouteList.RemoveAt(position);
             ServiceBeginingTimes.RemoveAt(position);
+            battery_level.RemoveAt(position);
             for (int i = position; i < RouteList.Count; ++i)
             {
                 double newTime = NextServiceBeginTime(RouteList[i], RouteList[i - 1], ServiceBeginingTimes[i - 1]);
                 ServiceBeginingTimes[i] = newTime;
+                double newBattery = NextRemainBattery(RouteList[i], RouteList[i - 1], battery_level[i - 1]);
+                battery_level[i] = newBattery;
             }
 
             UpdateId();
@@ -298,9 +319,9 @@ namespace OP.Data
             double vW = ViolationOfWeight();
             if (vW > 0) return false;
             int vR = ViolationOfRange();
-            if (vR == -1) return false;
+            if (vR > -1) return false;
             int vTW = ViolationOfTimeWindow();
-            if (vTW == -1) return false;
+            if (vTW > -1) return false;
 
             return true;
         }
@@ -431,7 +452,7 @@ namespace OP.Data
             {
                 double ArrivalTimeAtj = ServiceBeginingTimes[i]
                                         + RouteList[i].Info.ServiceTime
-                                                      + RouteList[i].TravelDistance(RouteList[i + 1]);
+                                                      + RouteList[i].TravelTime(RouteList[i + 1]);
                 if (ArrivalTimeAtj>RouteList[i+1].Info.DueDate)
                 {
                     return i + 1;
@@ -454,21 +475,7 @@ namespace OP.Data
             double readyTime = newCustomer.Info.ReadyTime;
             return Math.Max(readyTime, prevTime + serviceTime + travelTime);
         }
-        /// <summary>
-        /// 获取路径中目标点的下一个节点，路径看作首尾相连
-        /// </summary>
-        /// <param name="vi">目标点</param>
-        /// <returns>返回后件</returns>
-        internal AbsNode getNext(AbsNode vi)
-        {
-            int vi_id = vi.Info.Id;
-            int vi_index = 0;
-            if (vi_id != 0)
-            {
-                vi_index = ((Customer)vi).Index();
-            }
-            return this.RouteList[vi_index + 1];
-        }
+       
 
         internal double GetWaitTime()
         {
@@ -490,62 +497,45 @@ namespace OP.Data
         /// </summary>
         /// <param name="cus"></param>
         /// <returns></returns>
-        public Station insert_sta(Customer cus)
+        public Station insert_sta(AbsNode node)
         {
+            int min_distance = int.MaxValue;
             Station sta = null;
+            foreach (var station in Problem.Stations)
+            {
+                if (station.Info.Id == node.Info.Id)
+                {
+                    continue;
+                }
+                int distance = node.TravelDistance(station);
+                if (distance<min_distance)
+                {
+                    min_distance = distance;
+                    sta = station;
+                }
+            }
+            
             return sta;
         }
 
-        internal AbsNode getPrevious(AbsNode vi)
-        {
-            int vi_id = vi.Info.Id;
-            int vi_index = this.RouteList.Count - 1;
-            if (vi_id!=0)
-            {
-                vi_index = ((Customer)vi).Index();
-            }
-            return this.RouteList[vi_index - 1];
-        }
 
         public Route Copy()
         {
             var newRouteList = new List<AbsNode>(RouteList.Count);
             newRouteList.AddRange(RouteList.Select(node => node.ShallowCopy()));
-            var r = new Route(Problem,this.AssignedVeh)
+            var r = new Route(Problem, this.AssignedVeh)
             {
+                AssignedVehType = this.AssignedVehType,
                 RouteList = newRouteList,
                 ServiceBeginingTimes = new List<double>(ServiceBeginingTimes),
+                battery_level = new List<double>(battery_level),
 
             };
-            for (int i = 1; i < RouteList.Count - 1; ++i)
-                ((Customer)r.RouteList[i]).Route = r;
             r.UpdateId();
             return r;
         }
 
-        internal bool IsBetween(AbsNode node, AbsNode fromNode, AbsNode toNode)
-        {
-            int node_index = node is Customer ? ((Customer)node).Index() : 0;
-            int fromNode_index = fromNode is Customer ? ((Customer)fromNode).Index() : 0;
-            int toNode_index = toNode is Customer ? ((Customer)toNode).Index() : this.RouteList.Count-1;
-            if (fromNode is Depot && toNode is Depot)
-            {
-                return (node is Depot) ? true : false;
-            }
-            if (fromNode_index<toNode_index)
-            {
-                return (node_index >= fromNode_index) && (node_index <= toNode_index);
-            }
-            if (fromNode_index==toNode_index)
-            {
-                return node_index == fromNode_index;
-            }
-            if (fromNode_index>toNode_index)
-            {
-                return node_index >= fromNode_index || node_index <= toNode_index;
-            }
-            return false;
-        }
+     
 
         public string PrintToString(bool printTime = true, bool printCapacity = false, bool printCapacityUnit = false )
         {

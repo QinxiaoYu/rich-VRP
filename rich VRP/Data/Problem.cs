@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Collections;
 using System.Collections.Generic;
 
 // Analysis disable once CheckNamespace
@@ -17,9 +18,13 @@ namespace OP.Data
       
         public Fleet fleet { get; set; }
 
-        public static int[,] DistanceBetween { get; set; }
-        public static int[,] TravelTimeBetween { get; set; }
+        static int[,] DistanceBetween { get; set; }
+        static int[,] TravelTimeBetween { get; set; }
         public static double[,] AngelBetween { get; set; }
+
+        public List<int[]> NearDistanceCus;
+        public List<int[]> NearDistanceSta;
+
 
         public double MinWaitTimeAtDepot { get; set; }
         public double WaitCostRate { get; set; }
@@ -62,8 +67,6 @@ namespace OP.Data
             TravelTimeBetween[i, j] = tt;
         }
 
-
-
         public static int GetDistanceIJ(int i, int j)
         {
             return DistanceBetween[i, j];
@@ -86,7 +89,6 @@ namespace OP.Data
             throw new Exception("Customer not found");
         }
 
-
         public void SetAllNodes()
         {
             AllNodes = new List<NodeInfo> { StartDepot.Info, EndDepot.Info };
@@ -99,6 +101,86 @@ namespace OP.Data
             SetDistanceIJ(i, j, dis_ij);
             SetTravelTimeIJ(i, j, tt_ij);
 
+        }
+        /// <summary>
+        /// 计算每一个商户的小邻域，即离它可达的最近的前numNNCus个商户，以及钱numNNSta个充电站
+        /// </summary>
+        /// <param name="_numNNCus"></param>
+        /// <param name="_numNNSta"></param>
+        public void SetNearDistanceCusAndSta(int _numNNCus, int _numNNSta)
+        {       
+            for (int i = 0; i < Customers.Count; i++)
+            {
+                var node = Customers[i];
+                Hashtable neighbours_Distance = new Hashtable();
+                for (int j = 0; j < Customers.Count; j++)
+                {
+                    if (i!=j)
+                    {
+                        var node_j = Customers[j];
+                        double et_i = node.Info.ReadyTime+node.Info.ServiceTime; //从商户i出发的最早可出发时间！=实际出发时间
+                        double tt_ij = node.TravelTime(node_j);
+                        double at_j = et_i + tt_ij;
+
+                        if (at_j < node_j.Info.DueDate) //可达性
+                        {
+                            double dis_ij = node.TravelDistance(node_j);
+                            neighbours_Distance.Add(node_j.Info.Id, dis_ij); //按照里程远近判断两点的距离关系
+                        }
+                    }
+                }
+                double[] valueArray = new double[neighbours_Distance.Count];
+                int[] keyArray = new int[neighbours_Distance.Count];
+                neighbours_Distance.Keys.CopyTo(keyArray, 0);
+                neighbours_Distance.Values.CopyTo(valueArray, 0);
+                Array.Sort(valueArray, keyArray);// 按照value升序排列
+                int real_numNNCus = Math.Min(keyArray.Length, _numNNCus);
+                int[] NCus_ID = new int[real_numNNCus];
+                for (int k = 0; k < real_numNNCus; k++)
+                {
+                    NCus_ID[k] = (int)keyArray.GetValue(k) ;
+                }
+                NearDistanceCus.Add(NCus_ID);
+                neighbours_Distance.Clear();
+                
+                for (int j = 0; j < Stations.Count; j++)
+                {
+                    var station_j = Stations[j];
+                    double dis_ij = node.TravelDistance(station_j);
+                    neighbours_Distance.Add(station_j.Info.Id, dis_ij);
+                }
+                double[] valueArray2 = new double[neighbours_Distance.Count];
+                int[] keyArray2 = new int[neighbours_Distance.Count];
+                neighbours_Distance.Keys.CopyTo(keyArray2, 0);
+                neighbours_Distance.Values.CopyTo(valueArray2, 0);
+                Array.Sort(valueArray2, keyArray2);// 按照value升序排列
+                int real_numNNSta = Math.Min(keyArray2.Length, _numNNSta);
+                int[] NSta_ID = new int[real_numNNSta];
+                for (int k = 0; k < real_numNNSta; k++)
+                {
+                    NSta_ID[k] = (int)keyArray2.GetValue(k);
+                }
+                NearDistanceSta.Add(NSta_ID);
+                neighbours_Distance.Clear();
+            }
+        }
+        /// <summary>
+        /// 获得某个商户的商户小邻域，即离它可达的最近的前一些商户
+        /// </summary>
+        /// <param name="_cus_id"></param>
+        /// <returns></returns>
+        public int[] GetNearDistanceCus(int _cus_id)
+        {
+            return NearDistanceCus[_cus_id];
+        }
+        /// <summary>
+        ///  获得某个商户的充电站小邻域，即离它可达的最近的前一些充电站
+        /// </summary>
+        /// <param name="_cus_id"></param>
+        /// <returns></returns>
+        public int[] GetNearDistanceSta(int _cus_id)
+        {
+            return NearDistanceSta[_cus_id];
         }
     }
     
@@ -148,7 +230,7 @@ namespace OP.Data
 
         
         public virtual AbsNode ShallowCopy()
-        {
+        {          
             throw new Exception("You cannot copy abstract node");
         }
 
@@ -187,40 +269,17 @@ namespace OP.Data
 
     public class Customer : AbsNode
     {
-        public Route Route { get; set; }
-
+       
         public Customer(NodeInfo info)
         {
             Info = info;
-            Route = null;
+         
         }
-
-
         public override AbsNode ShallowCopy()
         {
-            return DeepCopy();
+            return new Customer(Info);
         }
 
-        public Customer DeepCopy()
-        {
-            return new Customer(Info)
-            {
-                Route = Route
-            };
-        }
-
-
-        /// <summary>
-        /// Find the position that customer in route.
-        /// </summary>
-        /// <returns>The position of customer in route.</returns>
-        public int Index()
-        {
-            for (var i = 0; i < Route.RouteList.Count; ++i)
-                if (Route.RouteList[i].Info.Id == Info.Id)
-                    return i;
-            return -1;
-        }
     }
     
 

@@ -115,11 +115,12 @@ namespace OP.Data
 		/// Adds the new vehicle to VehFleet.
 		/// </summary>
 		/// <param name="_vehtypeid">VehTypeid.</param>
-		public void addNewVeh(int _vehtypeid)
+		public Vehicle addNewVeh(int _vehtypeid)
 		{
 			int numofVeh = GetNumOfUsedVeh();
 			Vehicle veh = new Vehicle(_vehtypeid, numofVeh);
-			VehFleet.Add (veh);		
+			VehFleet.Add (veh);
+            return veh;		
 		}
 
 		/// <summary>
