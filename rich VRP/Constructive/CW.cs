@@ -45,15 +45,30 @@ namespace rich_VRP.Constructive
                 while (earliest_departure_time < veh.Late_time)
                 {
                     newRoute = BIA(newRoute, unroute_cus, out unroute_cus);
-                    veh.addRoute2Veh(newRoute);//将路径加入到vehicle中
-                    solution.AddRoute(newRoute);
-                    newRoute = new Route(problem, veh);
-                    //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
-                    earliest_departure_time = newRoute.GetEarliestDepartureTime();
-   
+                    if (newRoute.RouteList.Count > 2)//此路线插入customer了
+                    {
+                        veh.addRoute2Veh(newRoute);//将路径加入到vehicle中
+                        solution.AddRoute(newRoute);
+                        if (unroute_cus.Count == 0)//是否还有未插入的点
+                        {
+                            earliest_departure_time = veh.Late_time;
+                        }
+                        else
+                        {
+                            newRoute = new Route(problem, veh);
+                            //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
+                            earliest_departure_time = newRoute.GetEarliestDepartureTime();
+                        }
+                    }
+                    else
+                    {
+                        earliest_departure_time = veh.Late_time;
+                    }
                 }
+                int a = fleet.GetNumOfUsedVeh();
+                Console.WriteLine(a);
             }
-            int a = fleet.GetNumOfUsedVeh();
+            
             return solution;
         }
 
@@ -77,7 +92,7 @@ namespace rich_VRP.Constructive
             while (insert_feasible == 0)
             {
                 double best_cost = double.MaxValue; //一个无穷大的数
-                double alefa = rand.NextDouble() / 100; //产生0~1的随机数，评价标准的参数
+                double alefa = rand.NextDouble(); //产生0~1的随机数，评价标准的参数
                 route = best_route;
                 bool inserted = false;//记录本次循环是否插入了点
                 Customer inserted_cus = null;//最终确定要插入的点
@@ -126,9 +141,6 @@ namespace rich_VRP.Constructive
                                             - insert_cus.TravelDistance(cur_route.RouteList[j - 1]);//插入电站后增加的行驶距离
                         }
 
-                       
-                        
-                        
 
                         ////////////////选择最优的一次插入////////////////////////////////////////////////////
                         if (cur_route.IsFeasible())//如果插入customer和相应的station后满足所有约束

@@ -480,7 +480,7 @@ namespace OP.Data
         /// <returns>如果有，则返回第一个违反点所在位置，否则返回-1.</returns>
         public int ViolationOfTimeWindow()
         {
-            for (int i = 1 ; i < RouteList.Count-1; ++i)
+            for (int i = 0 ; i < RouteList.Count-1; ++i)
             {
                 double ArrivalTimeAtj = ServiceBeginingTimes[i]
                                         + RouteList[i].Info.ServiceTime
