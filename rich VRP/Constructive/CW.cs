@@ -36,7 +36,7 @@ namespace rich_VRP.Constructive
             {
                 int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机）
                 veh = fleet.addNewVeh(type);
-
+             
 
                 Route newRoute = new Route(problem, veh); ////////产生一条该车的路径
                 //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
@@ -53,6 +53,7 @@ namespace rich_VRP.Constructive
    
                 }
             }
+            int a = fleet.GetNumOfUsedVeh();
             return solution;
         }
 
