@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OP.Data;
+
 using System.IO;
 using rich_VRP.Constructive;
 using rich_VRP.ObjectiveFunc;
@@ -18,8 +19,8 @@ namespace rich_VRP
             string dir = Directory.GetCurrentDirectory();
             
             Problem problem = reader.Read(dir);
-            problem.MinWaitTimeAtDepot = 60;
-      
+            problem.MinWaitTimeAtDepot = 60; //在配送中心的最少等待时间 
+            problem.SetNearDistanceCusAndSta(10, 2); //计算每个商户的小邻域
 
             ///初始化
             Initialization initial = new Initialization(problem);
@@ -45,6 +46,7 @@ namespace rich_VRP
             sw.Write(sb);
 
 
+          
         }
     }
 }

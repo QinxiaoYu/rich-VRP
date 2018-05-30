@@ -97,7 +97,10 @@ namespace OP.Data
             }
 
             p.SetNodes(nodes, abbr, Tmax, numV,numD,numC,numS);
-
+            int max_dis = int.MinValue;
+            int min_dis = int.MaxValue;
+            int max_tt = int.MinValue;
+            int min_tt = int.MaxValue;
             using (StreamReader Dreader = new StreamReader(disfile))
             {
                 string str_Dis = string.Empty;
@@ -112,8 +115,25 @@ namespace OP.Data
                     int _tt_ij = int.Parse(paras[4]);
                     p.SetDistanceANDTravelIJ(_i, _j, _tt_ij, _dis_ij); 
                     str_Dis = Dreader.ReadLine();
+                    if (_dis_ij>max_dis)
+                    {
+                        max_dis = _dis_ij;
+                    }
+                    if(_dis_ij<min_dis)
+                    {
+                        min_dis = _dis_ij;
+                    }
+                    if (_tt_ij > max_tt)
+                    {
+                        max_tt = _tt_ij;
+                    }
+                    if (_tt_ij < min_tt)
+                    {
+                        min_tt = _tt_ij;
+                    }
                 }
                 Dreader.Close();
+                Console.WriteLine(max_tt.ToString() + ","+min_tt.ToString() + "," + max_dis.ToString() + "," + min_dis.ToString());
             }
 
             using (StreamReader Vreader = new StreamReader(vehfile))
@@ -143,7 +163,7 @@ namespace OP.Data
                         MaxNum = _maxnum,
                         ChargeTime = _chargetime, //0.5h
                         ChargeCostRate = 100, // 100RMB/h
-                        VariableCost = _vcost,
+                        VariableCost = _vcost/1000,
                         FixedCost = _fcost,
                     });
                     str_VehType = Vreader.ReadLine();

@@ -79,19 +79,6 @@ namespace OP.Data
             return newRoutes;
         }
 
-
-        /// <summary>
-        /// 提取解中的所有客户
-        /// </summary>
-        /// <returns></returns>
-        public List<Customer> CustomerListCopy()
-        {
-            var customerList = new List<Customer>();
-            foreach (Route route in Routes)
-                for (int i = 1; i < route.RouteList.Count - 1; ++i)
-                    customerList.Add(((Customer) route.RouteList[i]).DeepCopy());
-            return customerList;
-        }
     }
 
 
