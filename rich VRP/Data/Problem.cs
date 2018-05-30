@@ -25,6 +25,8 @@ namespace OP.Data
         public List<int[]> NearDistanceCus;
         public List<int[]> NearDistanceSta;
 
+        //public List<int> PriorityTimeCus;
+
 
         public double MinWaitTimeAtDepot { get; set; }
         public double WaitCostRate { get; set; }
@@ -103,12 +105,14 @@ namespace OP.Data
 
         }
         /// <summary>
-        /// 计算每一个商户的小邻域，即离它可达的最近的前numNNCus个商户，以及钱numNNSta个充电站
+        /// 计算每一个商户的小邻域，即离它可达的最近的前numNNCus个商户，以及前numNNSta个充电站
         /// </summary>
         /// <param name="_numNNCus"></param>
         /// <param name="_numNNSta"></param>
         public void SetNearDistanceCusAndSta(int _numNNCus, int _numNNSta)
-        {       
+        {
+            NearDistanceCus = new List<int[]>();
+            NearDistanceSta = new List<int[]>();
             for (int i = 0; i < Customers.Count; i++)
             {
                 var node = Customers[i];
@@ -164,6 +168,19 @@ namespace OP.Data
                 neighbours_Distance.Clear();
             }
         }
+        ///// <summary>
+        ///// 预处理，计算从配送中心出发直接到各个商户的等待时间
+        ///// </summary>
+        //public void SetPriorityTimeCusList()
+        //{
+        //    for (int i = 0; i < this.Customers.Count; i++)
+        //    {
+        //        int dis_0i = StartDepot.TravelTime(Customers[i]);
+        //        int waittime = (int)Customers[i].Info.ReadyTime - dis_0i;
+
+
+        //    }
+        //}
         /// <summary>
         /// 获得某个商户的商户小邻域，即离它可达的最近的前一些商户
         /// </summary>

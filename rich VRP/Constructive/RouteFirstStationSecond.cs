@@ -1,5 +1,6 @@
 ﻿using OP.Data;
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -22,40 +23,63 @@ namespace rich_VRP.Constructive
             unvisitedCus = new List<Customer>(problem.Customers);
         }
 
-
-        public Solution Initial_paralle(bool randVeh = false)
+        /// <summary>
+        /// 初始化一个可行解
+        /// </summary>
+        /// <param name="_numR">预设线路数量，假设都用大车，至少需要的线路数量</param>
+        /// <param name="randVeh">预设车型是否纯单一或混合</param>
+        /// <returns></returns>
+        public Solution Initial_paralle(int _numR,bool randVeh = false)
         {
             Solution solution = new Solution(problem);
+            int Num_VehTypes = fleet.VehTypes.Count();
 
-            //Step 1. 将点分配给路线；这一过程只考虑体积、重量、时间窗约束，不考虑充电
-            while (unvisitedCus.Count > 0)
+            //Step 0. 初始化一些空线路
+            if (randVeh == true) //如果使用混合车型,则需要更多线路
             {
-                int Num_VehTypes = fleet.VehTypes.Count();
-                VehicleType rd_vt = fleet.VehTypes[Num_VehTypes - 1]; //大车型
-                if (randVeh)
+                _numR = (int)1.3 * _numR;
+                while (_numR>0)
                 {
                     int rd_int = rd.Next(Num_VehTypes);
-                    rd_vt = fleet.VehTypes[rd_int]; //随机车型
+                    VehicleType rd_vt = fleet.VehTypes[rd_int]; //随机车型
+                    Route route = new Route(problem, rd_vt);
+                    solution.AddRoute(route);
+                    _numR--;
                 }
-                Route route = new Route(problem, rd_vt);
-                solution.AddRoute(route);
+            }
+            else
+            {
+                while(_numR>0)
+                {
+                    VehicleType rd_vt = fleet.VehTypes[Num_VehTypes - 1]; //大车型
+                    Route route = new Route(problem, rd_vt);
+                    solution.AddRoute(route);
+                    _numR--;
+                }
+            }
+
+            //Step 0.1 早上第一趟的第一个点，去这些点没有等待时长，先插入路径
+            FixFirstCusofRoute(solution);
+        
+            //Step 1. 将点分配给路线；这一过程只考虑体积、重量、时间窗约束，不考虑充电
+
+            while (unvisitedCus.Count > 0)
+            {                              
                 bool flag = true;
                 do
                 {
-                    int idx_route = 0;
-                    Customer _nextcus = null;
-                    _nextcus = FindBestRoute(solution, out idx_route);
-                    if (_nextcus != null)
-                    {
-                        Route _r = solution.Routes[idx_route];
-                        _r.InsertNode(_nextcus, _r.RouteList.Count - 1);
-                        unvisitedCus.Remove(_nextcus);
-                    }
-                    else //当前解中找不到合适的路线 可以继续往里面加入商户，则退出do while，新产生一条线路
+                  
+                    bool isEnought = true; //标记当前解中的路径是否能够容纳所有商户
+                    isEnought = FindBestRoute(solution); 
+                    if (isEnought == false)
                     {
                         flag = false;
-                    }
+                    }            
                 } while (flag);
+                int rd_int = rd.Next(Num_VehTypes);
+                VehicleType rd_vt = fleet.VehTypes[rd_int]; //随机车型
+                Route route = new Route(problem, rd_vt);
+                solution.AddRoute(route);
             }
             //Step 2. 对每条线路，考虑里程约束，加入充电站；加入充电站后，将不满足时间窗的商户重新放回unvisitedCus。
             for (int i = 0; i < solution.Routes.Count; i++)
@@ -85,8 +109,6 @@ namespace rich_VRP.Constructive
             //之后，若还有未访问的商户，为他们新建路线
             while (unvisitedCus.Count>0)
             {
-
-                int Num_VehTypes = fleet.VehTypes.Count();
                 VehicleType rd_vt = fleet.VehTypes[Num_VehTypes - 1]; //大车型
                 Route route = new Route(problem, rd_vt);
                 BuildFeasibleRoute(route);
@@ -98,6 +120,27 @@ namespace rich_VRP.Constructive
 
             return solution;
         }
+
+        private void FixFirstCusofRoute(Solution solution)
+        {
+            List<Customer> tmp_unvisitCus = new List<Customer>(unvisitedCus);
+            int cnt = 0; //路径计数器
+            foreach (var cus in tmp_unvisitCus)
+            {
+                int waittime = (int)cus.Info.ReadyTime - problem.StartDepot.TravelTime(cus);
+                if (waittime<=this.problem.StartDepot.Info.ReadyTime)
+                {
+                    solution.Routes[cnt].InsertNode(cus, 1);
+                    cnt++;
+                    unvisitedCus.Remove(cus);
+                    if (cnt>=solution.Routes.Count)
+                    {
+                        break;
+                    }
+                }
+            }
+        }
+
         /// <summary>
         /// 在当前解中为某一商户寻找一个可行的插入位置,不破化当前解的路径结构
         /// </summary>
@@ -152,9 +195,130 @@ namespace rich_VRP.Constructive
             throw new NotImplementedException();
         }
 
-        private Customer FindBestRoute(Solution solution, out int idx_route)
+        private bool FindBestRoute(Solution solution)
         {
-            throw new NotImplementedException();
+         
+            int num_route = solution.Routes.Count;
+            Hashtable ht = new Hashtable();
+            for (int i = 0; i < num_route; i++)
+            {              
+                //判断这条路线是否open
+                if (solution.Routes[i].GetOpen())
+                {
+                    Route r = solution.Routes[i];
+                    double r_v = r.GetTotalVolume();
+                    double r_w = r.GetTotalWeight();
+                    int num_cus = r.RouteList.Count;
+                    var preNode = r.RouteList[num_cus - 2]; //前一个点
+                    var nxtNode = r.RouteList[num_cus - 1]; //后一个点
+
+                    double departuretime_pre = r.ServiceBeginingTimes[num_cus - 2] + preNode.Info.ServiceTime;
+                    double min_cost_chage = double.MaxValue; //插入一个点后增加的费用
+                    Customer best_cus = null;
+                    bool NodesLeftInNeighbours = false;
+                    if (preNode.Info.Type == 2) //前一个点是商户
+                    {
+                        int[] Neighbours_id = problem.GetNearDistanceCus(preNode.Info.Id);
+
+                        for (int j = 0; j < Neighbours_id.Count(); j++)
+                        {
+
+                            Customer cus2insert = problem.SearchbyId(Neighbours_id[j]);
+                            //判断该商户是否还在未访问列表
+                            if (!unvisitedCus.Exists((Customer c) => c.Info.Id == cus2insert.Info.Id ? true : false))
+                            {
+                                continue;
+                            }
+                            NodesLeftInNeighbours = true;
+                            //首先判断重量、体积超限否
+                            if (cus2insert.Info.Volume + r_v > r.AssignedVehType.Volume ||
+                                cus2insert.Info.Weight + r_w > r.AssignedVehType.Weight)
+                            {
+                                continue;
+                            }
+                            //其次判断时间窗满足否                        
+                            double at_cus = departuretime_pre + preNode.TravelTime(cus2insert);
+                            if (at_cus > cus2insert.Info.DueDate)
+                            {
+                                continue;
+                            }
+                            //最后判断插入之后引起的长度增加量
+                            double trans_cost_change = (preNode.TravelDistance(cus2insert) + cus2insert.TravelDistance(nxtNode)
+                                - preNode.TravelDistance(nxtNode)) * r.AssignedVehType.VariableCost;
+
+                            //最最后 看一下插入的这个点，他的小邻域里的邻居数量
+                            int num_neighbour_cus = problem.GetNearDistanceCus(cus2insert.Info.Id).Count();
+
+                            trans_cost_change = trans_cost_change / num_neighbour_cus; //距离增加越少越好，后续可选小邻居越多越好
+                            if (trans_cost_change < min_cost_chage)
+                            {
+                                min_cost_chage = trans_cost_change;
+                                best_cus = cus2insert;
+                            }
+                        }
+                        
+                    }
+                    if (preNode.Info.Type == 1 || NodesLeftInNeighbours == false)
+                    {
+                       foreach (var cus2insert in unvisitedCus)
+                        {
+                            //首先判断重量、体积超限否
+                            if (cus2insert.Info.Volume + r_v > r.AssignedVehType.Volume ||
+                                cus2insert.Info.Weight + r_w > r.AssignedVehType.Weight)
+                            {
+                                continue;
+                            }
+                            //其次判断时间窗满足否                        
+                            double at_cus = departuretime_pre + preNode.TravelTime(cus2insert);
+                            if (at_cus > cus2insert.Info.DueDate)
+                            {
+                                continue;
+                            }
+                            //最后判断插入之后引起的长度增加量
+                            double trans_cost_change = (preNode.TravelDistance(cus2insert) + cus2insert.TravelDistance(nxtNode)
+                                - preNode.TravelDistance(nxtNode)) * r.AssignedVehType.VariableCost;
+                            //最最后 看一下插入的这个点，他的小邻域里的邻居数量
+                            int num_neighbour_cus = problem.GetNearDistanceCus(cus2insert.Info.Id).Count();
+
+                            trans_cost_change = trans_cost_change / num_neighbour_cus; //距离增加越少越好，后续可选小邻居越多越好
+
+                            if (trans_cost_change < min_cost_chage)
+                            {
+                                min_cost_chage = trans_cost_change;
+                                best_cus = cus2insert;
+                            }
+                        }
+
+                    }
+
+                    if (best_cus!=null)
+                    {
+                        ht.Add(i, best_cus);
+                    }
+                    else //当前路径不能再扩充了
+                    {
+                        r.SetClosed();
+                    }                 
+                }
+            }//end for routes 循环
+
+            if (ht.Count==0)
+            {
+                return false;
+            }
+            else
+            {
+                foreach (int idx_route in ht.Keys)
+                {
+                    Customer cus = (Customer)ht[idx_route];
+                    if (unvisitedCus.Exists((Customer c) => c.Info.Id == cus.Info.Id ? true : false))
+                    {
+                        solution.Routes[idx_route].InsertNode(cus, solution.Routes[idx_route].RouteList.Count - 1);
+                        unvisitedCus.Remove(cus);
+                    }
+                }
+                return true;
+            }
         }
 
         private void RepairRouteByInstSta(Route route)

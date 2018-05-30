@@ -44,6 +44,10 @@ namespace OP.Data
         /// 在某点处剩余电量可行驶的距离，插入新的点后需要更新
         /// </summary>
         public List<double> battery_level { get; set; }
+        /// <summary>
+        /// 在初始化中判断这条线路是否还可以插入
+        /// </summary>
+        bool isOpen = true;
 
         public Route(Problem problem, VehicleType vehtype)
         {
@@ -136,8 +140,21 @@ namespace OP.Data
             }
         }
 
-
-
+        /// <summary>
+        /// 在初始化中，设置一条线路已经处于不能再添加商户的状态
+        /// </summary>
+        public void SetClosed()
+        {
+            this.isOpen = false;
+        }
+        /// <summary>
+        /// 在初始化中，判断一条线路是否处于还可以添加商户的状态
+        /// </summary>
+        /// <returns></returns>
+        public bool GetOpen()
+        {
+            return this.isOpen;
+        }
 
         /// <summary>
         /// 计算当前路径达到终点的时刻
@@ -152,7 +169,13 @@ namespace OP.Data
 
         internal int FindGoodStationPosition(int rock_position, out Station goodSta)
         {
-            throw new NotImplementedException();
+            goodSta = null;
+            int best_position_sta = -1;
+            for (int i = 1; i < rock_position; i++)
+            {
+
+            }
+            return best_position_sta;
         }
         /// <summary>
         /// 获得某点处的浮动时间=该点处的等待时长
