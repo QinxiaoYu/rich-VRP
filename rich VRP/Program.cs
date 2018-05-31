@@ -31,7 +31,7 @@ namespace rich_VRP
             string result = ini_solution.PrintToString();
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
-            outfilename = dir + "//" + "test_4.txt";
+            outfilename = dir + "//" + "test_7.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
 
             OriginObjFunc evaluate = new OriginObjFunc();
