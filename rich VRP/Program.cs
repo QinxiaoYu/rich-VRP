@@ -20,7 +20,7 @@ namespace rich_VRP
             
             Problem problem = reader.Read(dir);
             problem.MinWaitTimeAtDepot = 60; //在配送中心的最少等待时间 
-            problem.SetNearDistanceCusAndSta(10, 2); //计算每个商户的小邻域
+            //problem.SetNearDistanceCusAndSta(10, 2); //计算每个商户的小邻域
 
             ///初始化
             Initialization initial = new Initialization(problem);
@@ -31,7 +31,7 @@ namespace rich_VRP
             string result = ini_solution.PrintToString();
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
-            outfilename = dir + "//" + "test.txt";
+            outfilename = dir + "//" + "test_4.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
 
             OriginObjFunc evaluate = new OriginObjFunc();
