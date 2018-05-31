@@ -44,6 +44,9 @@ namespace rich_VRP
             
 
             sw.Write(sb);
+            
+            sw.Flush();
+            sw.Close();
 
 
           
