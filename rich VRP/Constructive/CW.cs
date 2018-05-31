@@ -103,6 +103,8 @@ namespace rich_VRP.Constructive
                     for (int j = 1; j < route.RouteList.Count; j++)//第一个位置和最后一个位置不能插入
                     {
                         Route cur_route = route.Copy();
+                        double waittime_before_insert = cur_route.GetWaitTime();
+
                         cur_route.InsertNode(insert_cus, j);//插入
                         double add_distance = insert_cus.TravelDistance(cur_route.RouteList[j - 1]) + insert_cus.TravelDistance(cur_route.RouteList[j + 1])
                                               - cur_route.RouteList[j - 1].TravelDistance(cur_route.RouteList[j + 1]);//增加的距离（dik + dkj - dij）
@@ -146,8 +148,11 @@ namespace rich_VRP.Constructive
                         if (cur_route.IsFeasible())//如果插入customer和相应的station后满足所有约束
                         {
                             double insertcus_dis = insert_cus.TravelDistance(problem.StartDepot) + insert_cus.TravelDistance(problem.EndDepot);
-
-                            double cost = add_distance - alefa * insertcus_dis;//评价插入质量的标准
+                            double waittime_after_insert = cur_route.GetWaitTime();
+                            double add_waittime = waittime_after_insert - waittime_before_insert;//增加的等待时间
+                            //double add_waittime = 0;
+                            double TransCostRate = fleet.GetVehTypebyID(cur_route.AssignedVeh.TypeId).VariableCost;//行驶费率
+                            double cost = TransCostRate * (add_distance - alefa * insertcus_dis) + problem.WaitCostRate * add_waittime;//评价插入质量的标准
                             if (cost < best_cost)
                             {
                                 best_cost = cost;

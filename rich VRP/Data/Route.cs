@@ -512,7 +512,7 @@ namespace OP.Data
         internal double GetWaitTime()
         {
             double waittime = 0;
-            for (int i = 1; i < this.RouteList.Count; i++)
+            for (int i = 1; i < this.RouteList.Count - 1; i++)
             {
                 double arrivetime = ServiceBeginingTimes[i - 1] + RouteList[i - 1].Info.ServiceTime + RouteList[i - 1].TravelTime(RouteList[i]);
                 double servicestarttime = ServiceBeginingTimes[i];
@@ -639,5 +639,6 @@ namespace OP.Data
             }
             return true;
         }
+        
     }
 }
