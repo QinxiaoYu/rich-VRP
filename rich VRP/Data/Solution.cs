@@ -25,6 +25,34 @@ namespace OP.Data
             Routes.Add(route);
         }
 
+        internal void UpdateTripChainTime()
+        {
+            foreach (Vehicle veh in this.Problem.fleet.VehFleet)
+            {
+                int num_trips_veh = veh.getNumofVisRoute();
+                if (num_trips_veh>1)
+                {
+                    for (int i = 1; i < num_trips_veh; i++)
+                    {                       
+                        double new_departure_cur = veh.VehRouteList[i].GetEarliestDepartureTime();
+                        veh.VehRouteList[i].ServiceBeginingTimes[0] = new_departure_cur;
+                        GetRouteByID(veh.VehRouteList[i].RouteId).ServiceBeginingTimes[0] = new_departure_cur;           
+                    }
+                }
+            }
+        }
+
+        public Route GetRouteByID(string route_id)
+        {
+            foreach (Route route in Routes)
+            {
+                if (route.RouteId==route_id)
+                {
+                    return route;
+                }
+            }
+            return null;
+        }
 
         public double TotalDistance()
         {
@@ -55,7 +83,7 @@ namespace OP.Data
                     solution += "\r\n";
                 }
                 solution += "\r\n";
-                solution += "total distance: " + TotalDistance().ToString(CultureInfo.InvariantCulture) + " (OBJ: " + (ObjVal).ToString(CultureInfo.InvariantCulture) + ")";
+                solution += "total distance: " + TotalDistance().ToString(CultureInfo.InvariantCulture);
             }
                       
             return solution;

@@ -1,8 +1,7 @@
 ﻿using OP.Data;
 using System;
 using System.Collections.Generic;
-
-
+using System.Text;
 
 namespace rich_VRP.ObjectiveFunc
 {
@@ -11,7 +10,7 @@ namespace rich_VRP.ObjectiveFunc
         public Problem problem;
         public Fleet fleet;
 
-        public double CalObjCost (Solution solution)
+        public double CalObjCost (Solution solution,StringBuilder sb = null)
         {
             problem = solution.Problem;
             fleet = problem.fleet;
@@ -39,7 +38,7 @@ namespace rich_VRP.ObjectiveFunc
                 
                 for (int i = 0; i < veh.VehRouteList.Count; i++)
                 {
-                    double VariableCost_Veh = CalObjVarCost(veh.VehRouteList[i]); //计算单条线路上所有可变成本=等待成本2+运输成本+充电成本
+                    double VariableCost_Veh = CalObjVarCost(veh.VehRouteList[i],sb); //计算单条线路上所有可变成本=等待成本2+运输成本+充电成本
                     VariableCost += VariableCost_Veh;       
                 }
                 VariableCost += WaitCost1;
@@ -52,7 +51,7 @@ namespace rich_VRP.ObjectiveFunc
         /// </summary>
         /// <param name="route"></param>
         /// <returns></returns>
-        public double CalObjVarCost(Route route)
+        public double CalObjVarCost(Route route,StringBuilder sb=null)
         {  
             //2. 车辆等待成本，包含 2)在商户处的等待成本。（??在充电站不算等待成本）
             double WaitCost = 0;
@@ -81,6 +80,8 @@ namespace rich_VRP.ObjectiveFunc
                 }
 
             }
+            string txt = string.Format("vehid = {0}, waitcost ={1}, transcost = {2}, chargecost ={3} \n", route.AssignedVeh.VehId.ToString(), WaitCost.ToString(), TransCost.ToString(), ChargeCost.ToString(), (WaitCost + TransCost + ChargeCost).ToString());
+            sb.AppendLine(txt);
             Console.WriteLine("vehid = {0}, waitcost ={1}, transcost = {2}, chargecost ={3} \n", route.AssignedVeh.VehId.ToString(), WaitCost.ToString(), TransCost.ToString(), ChargeCost.ToString(), (WaitCost + TransCost + ChargeCost).ToString());
             return WaitCost + TransCost + ChargeCost;
         }

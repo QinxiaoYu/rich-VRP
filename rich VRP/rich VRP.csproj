@@ -55,6 +55,7 @@
     <Compile Include="Neighborhoods\Intra\TwoOpt.cs" />
     <Compile Include="Neighborhoods\LocalSearch.cs" />
     <Compile Include="Neighborhoods\Remove\RemoveRandom.cs" />
+    <Compile Include="Neighborhoods\Remove\RemoveSta.cs" />
     <Compile Include="ObjectiveFunc\OriginObjFunc.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
