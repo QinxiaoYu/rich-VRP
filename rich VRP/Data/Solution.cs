@@ -20,9 +20,9 @@ namespace OP.Data
         }
         public void AddRoute(Route route)
         {
-            Route newRoute = route.Copy();
+            //Route newRoute = route.Copy();
             //newRoute.Solution = this;
-            Routes.Add(newRoute);
+            Routes.Add(route);
         }
 
 
@@ -79,6 +79,17 @@ namespace OP.Data
             return newRoutes;
         }
 
+        internal void UpdateFirstTripTime()
+        {
+            foreach (Route trip in this.Routes)
+            {
+                if (trip.RouteIndexofVeh ==0)
+                {
+                    trip.UpdateDepartureTime();
+                }
+                
+            }
+        }
     }
 
 

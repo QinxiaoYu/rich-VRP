@@ -90,6 +90,19 @@ namespace OP.Data
             AddNode(enddepot);
         }
 
+        internal void UpdateDepartureTime()
+        {
+            
+            double departuretime = this.ServiceBeginingTimes[0] + this.RouteList[0].Info.ServiceTime;
+            double arrivetime = departuretime + this.RouteList[0].TravelTime(RouteList[1]);
+            double waittime_firstcus = Math.Max(0, ServiceBeginingTimes[1] - arrivetime);
+            if (waittime_firstcus>0)
+            {
+                this.ServiceBeginingTimes[0] = this.ServiceBeginingTimes[0] + waittime_firstcus;
+            }
+            
+        }
+
 
 
         /// <summary>
@@ -563,6 +576,7 @@ namespace OP.Data
                 RouteList = newRouteList,
                 ServiceBeginingTimes = new List<double>(ServiceBeginingTimes),
                 battery_level = new List<double>(battery_level),
+                RouteIndexofVeh = this.RouteIndexofVeh,
 
             };
             r.UpdateId();
@@ -596,6 +610,7 @@ namespace OP.Data
                 //}
             }
             TourInfo += string.Format("{0} 点 到达 {1} ,旅途结束。\n", ServiceBeginingTimes[RouteList.Count-1],RouteList[RouteList.Count-1].Info.Id);
+            TourInfo += string.Format("所用车型: {0} id={1}, 重量 ={2} 体积={3}。\n ",this.AssignedVeh.TypeId.ToString(),this.AssignedVeh.VehId, this.GetTotalWeight().ToString(),this.GetTotalVolume().ToString());
             //if (printTime)
             //{
             //    return (routeText + "\n" + serviceText+"\n");

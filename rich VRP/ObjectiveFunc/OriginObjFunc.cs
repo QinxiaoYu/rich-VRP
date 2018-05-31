@@ -25,7 +25,7 @@ namespace rich_VRP.ObjectiveFunc
             }
             
             double VariableCost = 0;
-            //2. 车辆等待成本，包含 1)多次往返车辆在配送中心的等待成本;2)在商户处的等待成本。（??在充电站不算等待成本）
+            //2. 车辆等待成本，包含 1)多次往返车辆在配送中心的等待成本;2)在商户处的等待成本。（在充电站不算等待成本）
             //double WaitCost = 0;
             //3. 车辆运输成本
             //double TransCost = 0;
@@ -68,6 +68,7 @@ namespace rich_VRP.ObjectiveFunc
                 double AT_i = route.ServiceBeginingTimes[i - 1] + route.RouteList[i - 1].Info.ServiceTime + route.RouteList[i - 1].TravelTime(route.RouteList[i]);
                 double WT_i = Math.Max(route.ServiceBeginingTimes[i] - AT_i, 0);
                 WaitCost += WT_i * problem.WaitCostRate;
+                
 
                 //运输成本
                 double Distance_ij = route.RouteList[i - 1].TravelDistance(route.RouteList[i]);
@@ -80,6 +81,7 @@ namespace rich_VRP.ObjectiveFunc
                 }
 
             }
+            Console.WriteLine("vehid = {0}, waitcost ={1}, transcost = {2}, chargecost ={3} \n", route.AssignedVeh.VehId.ToString(), WaitCost.ToString(), TransCost.ToString(), ChargeCost.ToString(), (WaitCost + TransCost + ChargeCost).ToString());
             return WaitCost + TransCost + ChargeCost;
         }
 
