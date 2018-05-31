@@ -44,6 +44,7 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constructive\CW.cs" />
+    <Compile Include="Constructive\RouteFirstStationSecond.cs" />
     <Compile Include="MetaHeuristic\ALNS.cs" />
     <Compile Include="MetaHeuristic\ILS.cs" />
     <Compile Include="MetaHeuristic\SA.cs" />
