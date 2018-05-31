@@ -610,6 +610,7 @@ namespace OP.Data
                 //}
             }
             TourInfo += string.Format("{0} 点 到达 {1} ,旅途结束。\n", ServiceBeginingTimes[RouteList.Count-1],RouteList[RouteList.Count-1].Info.Id);
+            TourInfo += string.Format("所用车型: {0} id={1}, 重量 ={2} 体积={3}。\n ",this.AssignedVeh.TypeId.ToString(),this.AssignedVeh.VehId, this.GetTotalWeight().ToString(),this.GetTotalVolume().ToString());
             //if (printTime)
             //{
             //    return (routeText + "\n" + serviceText+"\n");

@@ -152,6 +152,7 @@ namespace OP.Data
                     double _chargetime = double.Parse(paras[6]); //按照小时算
                     double _vcost = double.Parse(paras[7]);
                     double _fcost = double.Parse(paras[8]);
+                    double _chargerate = 100.0000/60;
 
                     types.Add(new VehicleType
                     {
@@ -162,7 +163,7 @@ namespace OP.Data
                         MaxRange = _maxrange,
                         MaxNum = _maxnum,
                         ChargeTime = _chargetime, //0.5h
-                        ChargeCostRate = 100, // 100RMB/h
+                        ChargeCostRate = _chargerate, // 100RMB/h
                         VariableCost = _vcost/1000,
                         FixedCost = _fcost,
                     });
