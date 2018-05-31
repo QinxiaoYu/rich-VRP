@@ -39,6 +39,9 @@ namespace rich_VRP
             sb.AppendLine(cost.ToString("0.00"));
 
             sw.Write(sb);
+            
+            sw.Flush();
+            sw.Close();
 
 
           
