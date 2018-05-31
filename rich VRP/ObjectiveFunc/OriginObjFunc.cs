@@ -71,7 +71,7 @@ namespace rich_VRP.ObjectiveFunc
 
                 //运输成本
                 double Distance_ij = route.RouteList[i - 1].TravelDistance(route.RouteList[i]);
-                TransCost += TransCostRate * Distance_ij;
+                TransCost += 0.001 * TransCostRate * Distance_ij;
 
                 //充电成本
                 if (route.RouteList[i].Info.Type == 3)

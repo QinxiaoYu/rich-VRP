@@ -25,18 +25,23 @@ namespace rich_VRP
             ///初始化
             Initialization initial = new Initialization(problem);
             Solution ini_solution = initial.initial_construct();
-            string result = ini_solution.PrintToString();
 
+           
+
+            string result = ini_solution.PrintToString();
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
             outfilename = dir + "//" + "test.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
-            sb.AppendLine(result);
 
             OriginObjFunc evaluate = new OriginObjFunc();
             double cost = evaluate.CalObjCost(ini_solution);
-            
             sb.AppendLine(cost.ToString("0.00"));
+
+            sb.AppendLine(result);
+
+            
+            
 
             sw.Write(sb);
             
