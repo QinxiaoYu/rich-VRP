@@ -38,7 +38,7 @@ namespace rich_VRP.Constructive
                 veh = fleet.addNewVeh(type);
              
 
-                Route newRoute = new Route(problem, veh); ////////产生一条该车的路径
+                Route newRoute = new Route(problem, veh); ////////产生一条该车的路径,已经把车分配给了路径
                 //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
                 double earliest_departure_time = newRoute.GetEarliestDepartureTime();//该路径的最早出发时间
                 //只要新产生路径的最早出发时间小于最晚时间限制就可以为其分配customer
@@ -68,7 +68,7 @@ namespace rich_VRP.Constructive
                 int a = fleet.GetNumOfUsedVeh();
                 Console.WriteLine(a);
             }
-            
+            solution.UpdateFirstTripTime();
             return solution;
         }
 

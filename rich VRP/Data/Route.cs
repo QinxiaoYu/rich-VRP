@@ -90,6 +90,19 @@ namespace OP.Data
             AddNode(enddepot);
         }
 
+        internal void UpdateDepartureTime()
+        {
+            
+            double departuretime = this.ServiceBeginingTimes[0] + this.RouteList[0].Info.ServiceTime;
+            double arrivetime = departuretime + this.RouteList[0].TravelTime(RouteList[1]);
+            double waittime_firstcus = Math.Max(0, ServiceBeginingTimes[1] - arrivetime);
+            if (waittime_firstcus>0)
+            {
+                this.ServiceBeginingTimes[0] = this.ServiceBeginingTimes[0] + waittime_firstcus;
+            }
+            
+        }
+
 
 
         /// <summary>
@@ -563,6 +576,7 @@ namespace OP.Data
                 RouteList = newRouteList,
                 ServiceBeginingTimes = new List<double>(ServiceBeginingTimes),
                 battery_level = new List<double>(battery_level),
+                RouteIndexofVeh = this.RouteIndexofVeh,
 
             };
             r.UpdateId();

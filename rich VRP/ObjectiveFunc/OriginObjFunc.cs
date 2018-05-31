@@ -25,7 +25,7 @@ namespace rich_VRP.ObjectiveFunc
             }
             
             double VariableCost = 0;
-            //2. 车辆等待成本，包含 1)多次往返车辆在配送中心的等待成本;2)在商户处的等待成本。（??在充电站不算等待成本）
+            //2. 车辆等待成本，包含 1)多次往返车辆在配送中心的等待成本;2)在商户处的等待成本。（在充电站不算等待成本）
             //double WaitCost = 0;
             //3. 车辆运输成本
             //double TransCost = 0;
