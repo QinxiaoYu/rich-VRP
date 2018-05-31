@@ -67,7 +67,7 @@ namespace rich_VRP.ObjectiveFunc
                 //等待成本
                 double AT_i = route.ServiceBeginingTimes[i - 1] + route.RouteList[i - 1].Info.ServiceTime + route.RouteList[i - 1].TravelTime(route.RouteList[i]);
                 double WT_i = Math.Max(route.ServiceBeginingTimes[i] - AT_i, 0);
-                WaitCost += WT_i + problem.WaitCostRate;
+                WaitCost += WT_i * problem.WaitCostRate;
 
                 //运输成本
                 double Distance_ij = route.RouteList[i - 1].TravelDistance(route.RouteList[i]);
