@@ -8,6 +8,7 @@ using OP.Data;
 using System.IO;
 using rich_VRP.Constructive;
 using rich_VRP.ObjectiveFunc;
+using rich_VRP.Neighborhoods.Remove;
 
 namespace rich_VRP
 {
@@ -32,17 +33,25 @@ namespace rich_VRP
             string result = ini_solution.PrintToString();
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
-            outfilename = dir + "//" + "test_10.txt";
+            outfilename = dir + "//" + "test_16.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
 
             OriginObjFunc evaluate = new OriginObjFunc();
-            double cost = evaluate.CalObjCost(ini_solution);
+            double cost = evaluate.CalObjCost(ini_solution,sb);
             sb.AppendLine(cost.ToString("0.00"));
-
-            sb.AppendLine(result);
-
-            
-            
+            //sb.AppendLine(result);
+            sw.Write(sb);
+            sw.Flush();
+            sb.Clear();
+            RemoveSta oper = new RemoveSta();
+            bool isIprv = oper.Remove(ini_solution);
+            if (isIprv)
+            {
+                sb.AppendLine("====RemoveSta=====");
+                double newcost = evaluate.CalObjCost(ini_solution,sb);
+                sb.AppendLine(newcost.ToString("0.00"));
+                //sb.AppendLine(ini_solution.PrintToString());
+            }         
 
             sw.Write(sb);
             

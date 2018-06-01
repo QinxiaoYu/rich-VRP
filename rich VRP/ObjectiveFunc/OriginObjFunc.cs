@@ -1,8 +1,7 @@
 ﻿using OP.Data;
 using System;
 using System.Collections.Generic;
-
-
+using System.Text;
 
 namespace rich_VRP.ObjectiveFunc
 {
@@ -11,14 +10,14 @@ namespace rich_VRP.ObjectiveFunc
         public Problem problem;
         public Fleet fleet;
 
-        public double CalObjCost (Solution solution)
+        public double CalObjCost (Solution solution,StringBuilder sb = null)
         {
-            problem = solution.Problem;
-            fleet = problem.fleet;
+            problem = solution.problem;
+            fleet = solution.fleet;
            
             //1.车辆使用成本
             double FixedCost = 0;
-            foreach (var vehtype in fleet.VehTypes) 
+            foreach (var vehtype in problem.VehTypes) 
             {
                 int Num_VehsofType = fleet.GetVehsOfType(vehtype.VehTypeID).Count; //每种车型使用的车辆数
                 FixedCost += vehtype.FixedCost * Num_VehsofType;
@@ -39,7 +38,8 @@ namespace rich_VRP.ObjectiveFunc
                 
                 for (int i = 0; i < veh.VehRouteList.Count; i++)
                 {
-                    double VariableCost_Veh = CalObjVarCost(veh.VehRouteList[i]); //计算单条线路上所有可变成本=等待成本2+运输成本+充电成本
+                    Route ri_veh = solution.GetRouteByID(veh.VehRouteList[i]);
+                    double VariableCost_Veh = CalObjVarCost(ri_veh,sb); //计算单条线路上所有可变成本=等待成本2+运输成本+充电成本
                     VariableCost += VariableCost_Veh;       
                 }
                 VariableCost += WaitCost1;
@@ -52,16 +52,16 @@ namespace rich_VRP.ObjectiveFunc
         /// </summary>
         /// <param name="route"></param>
         /// <returns></returns>
-        public double CalObjVarCost(Route route)
+        public double CalObjVarCost(Route route,StringBuilder sb=null)
         {  
             //2. 车辆等待成本，包含 2)在商户处的等待成本。（??在充电站不算等待成本）
             double WaitCost = 0;
             //3. 车辆运输成本
             double TransCost = 0;
-            double TransCostRate = fleet.GetVehTypebyID(route.AssignedVeh.TypeId).VariableCost;
+            double TransCostRate = problem.GetVehTypebyID(route.AssignedVeh.TypeId).VariableCost;
             //4. 车辆充电成本
             double ChargeCost = 0;
-            double ChargeCostRate = fleet.GetVehTypebyID(route.AssignedVeh.TypeId).ChargeCostRate;
+            double ChargeCostRate = problem.GetVehTypebyID(route.AssignedVeh.TypeId).ChargeCostRate;
             for (int i = 1; i < route.RouteList.Count; i++)
             {
                 //等待成本
@@ -81,6 +81,8 @@ namespace rich_VRP.ObjectiveFunc
                 }
 
             }
+            string txt = string.Format("vehid = {0}, waitcost ={1}, transcost = {2}, chargecost ={3} \n", route.AssignedVeh.VehId.ToString(), WaitCost.ToString(), TransCost.ToString(), ChargeCost.ToString(), (WaitCost + TransCost + ChargeCost).ToString());
+            sb.AppendLine(txt);
             Console.WriteLine("vehid = {0}, waitcost ={1}, transcost = {2}, chargecost ={3} \n", route.AssignedVeh.VehId.ToString(), WaitCost.ToString(), TransCost.ToString(), ChargeCost.ToString(), (WaitCost + TransCost + ChargeCost).ToString());
             return WaitCost + TransCost + ChargeCost;
         }

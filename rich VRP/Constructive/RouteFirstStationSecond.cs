@@ -11,7 +11,7 @@ namespace rich_VRP.Constructive
     class RouteFirstStationSecond
     {
         Problem problem;
-        Fleet fleet;
+
         List<Customer> unvisitedCus;
 
         Random rd = new Random();
@@ -19,7 +19,6 @@ namespace rich_VRP.Constructive
         public RouteFirstStationSecond(Problem _p)
         {
             problem = _p;
-            fleet = problem.fleet;
             unvisitedCus = new List<Customer>(problem.Customers);
         }
 
@@ -32,7 +31,8 @@ namespace rich_VRP.Constructive
         public Solution Initial_paralle(int _numR,bool randVeh = false)
         {
             Solution solution = new Solution(problem);
-            int Num_VehTypes = fleet.VehTypes.Count();
+
+            int Num_VehTypes = problem.VehTypes.Count();
 
             //Step 0. 初始化一些空线路
             if (randVeh == true) //如果使用混合车型,则需要更多线路
@@ -41,7 +41,7 @@ namespace rich_VRP.Constructive
                 while (_numR>0)
                 {
                     int rd_int = rd.Next(Num_VehTypes);
-                    VehicleType rd_vt = fleet.VehTypes[rd_int]; //随机车型
+                    VehicleType rd_vt = problem.VehTypes[rd_int]; //随机车型
                     Route route = new Route(problem, rd_vt);
                     solution.AddRoute(route);
                     _numR--;
@@ -51,7 +51,7 @@ namespace rich_VRP.Constructive
             {
                 while(_numR>0)
                 {
-                    VehicleType rd_vt = fleet.VehTypes[Num_VehTypes - 1]; //大车型
+                    VehicleType rd_vt = problem.VehTypes[Num_VehTypes - 1]; //大车型
                     Route route = new Route(problem, rd_vt);
                     solution.AddRoute(route);
                     _numR--;
@@ -77,7 +77,7 @@ namespace rich_VRP.Constructive
                     }            
                 } while (flag);
                 int rd_int = rd.Next(Num_VehTypes);
-                VehicleType rd_vt = fleet.VehTypes[rd_int]; //随机车型
+                VehicleType rd_vt = problem.VehTypes[rd_int]; //随机车型
                 Route route = new Route(problem, rd_vt);
                 solution.AddRoute(route);
             }
@@ -109,7 +109,7 @@ namespace rich_VRP.Constructive
             //之后，若还有未访问的商户，为他们新建路线
             while (unvisitedCus.Count>0)
             {
-                VehicleType rd_vt = fleet.VehTypes[Num_VehTypes - 1]; //大车型
+                VehicleType rd_vt = problem.VehTypes[Num_VehTypes - 1]; //大车型
                 Route route = new Route(problem, rd_vt);
                 BuildFeasibleRoute(route);
                 solution.AddRoute(route);            
@@ -223,7 +223,7 @@ namespace rich_VRP.Constructive
                         for (int j = 0; j < Neighbours_id.Count(); j++)
                         {
 
-                            Customer cus2insert = problem.SearchbyId(Neighbours_id[j]);
+                            Customer cus2insert = problem.SearchCusbyId(Neighbours_id[j]);
                             //判断该商户是否还在未访问列表
                             if (!unvisitedCus.Exists((Customer c) => c.Info.Id == cus2insert.Info.Id ? true : false))
                             {

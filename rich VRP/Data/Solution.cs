@@ -9,13 +9,17 @@ namespace OP.Data
     {
 
         public List<Route> Routes;
-        public Problem Problem;
+        public Problem problem;
         public double ObjVal;
+        public Fleet fleet;
+        public List<Customer> UnVisitedCus;
 
-        public Solution(Problem problem)
+        public Solution(Problem _problem)
         {
             Routes = new List<Route>();
-            Problem = problem;
+            problem = _problem;
+            fleet = new Fleet();
+            fleet.solution = this;
             ObjVal = 0.0;
         }
         public void AddRoute(Route route)
@@ -25,6 +29,35 @@ namespace OP.Data
             Routes.Add(route);
         }
 
+        internal void UpdateTripChainTime()
+        {
+            foreach (Vehicle veh in fleet.VehFleet)
+            {
+                int num_trips_veh = veh.getNumofVisRoute();
+                if (num_trips_veh>1)
+                {
+                    for (int i = 1; i < num_trips_veh; i++)
+                    {
+                        Route cur_route = GetRouteByID(veh.VehRouteList[i]);
+                        double new_departure_cur = cur_route.GetEarliestDepartureTime();
+                        cur_route.ServiceBeginingTimes[0] = new_departure_cur;
+                              
+                    }
+                }
+            }
+        }
+
+        public Route GetRouteByID(string route_id)
+        {
+            foreach (Route route in Routes)
+            {
+                if (route.RouteId==route_id)
+                {
+                    return route;
+                }
+            }
+            return null;
+        }
 
         public double TotalDistance()
         {
@@ -55,7 +88,7 @@ namespace OP.Data
                     solution += "\r\n";
                 }
                 solution += "\r\n";
-                solution += "total distance: " + TotalDistance().ToString(CultureInfo.InvariantCulture) + " (OBJ: " + (ObjVal).ToString(CultureInfo.InvariantCulture) + ")";
+                solution += "total distance: " + TotalDistance().ToString(CultureInfo.InvariantCulture);
             }
                       
             return solution;
@@ -64,10 +97,16 @@ namespace OP.Data
 
         public Solution Copy()
         {
-            var sol = new Solution(Problem);
+            var sol = new Solution(problem);
             foreach (Route route in Routes)
-                if(route.RouteList.Count >= 2)
-                   sol.AddRoute(route.Copy());
+            {
+                if (route.RouteList.Count >= 2)
+                    sol.AddRoute(route.Copy());
+            }
+            foreach (Vehicle veh in this.fleet.VehFleet)
+            {
+                sol.fleet.VehFleet.Add(veh.Copy());
+            }            
             return sol;
         }
 
