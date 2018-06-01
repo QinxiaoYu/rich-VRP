@@ -4,6 +4,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Collections;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.NetworkInformation;
 
 namespace OP.Data
 {
@@ -48,6 +50,20 @@ namespace OP.Data
         /// 在初始化中判断这条线路是否还可以插入
         /// </summary>
         bool isOpen = true;
+        /// <summary>
+        /// 专门用作route.copy
+        /// </summary>
+        public Route(Problem problem)
+        {
+            Depot startdepot = problem.StartDepot;
+            Depot enddepot = problem.EndDepot;
+            Problem = problem;
+            AssignedVehType = null;
+            AssignedVeh = null;
+            RouteList = new List<AbsNode>();
+            ServiceBeginingTimes = new List<double>();
+            battery_level = new List<double>();
+        }
 
         public Route(Problem problem, VehicleType vehtype)
         {
@@ -65,6 +81,8 @@ namespace OP.Data
 
 
         }
+
+
 
         /// <summary>
         /// 在已知分配给哪辆车的前提下，初始化一条路径
@@ -124,6 +142,7 @@ namespace OP.Data
             AddNode(enddepot);
         }
 
+
         /// <summary>
         /// 把一条线路分配给一辆具体的车
         /// </summary>
@@ -148,7 +167,8 @@ namespace OP.Data
             }
             else //如果该线路非首趟线路，则其最早开始时间依赖于其前一趟的结束时间
             {
-                double ArrivalTimeofpreRoute = this.AssignedVeh.VehRouteList[this.RouteIndexofVeh - 1].GetArrivalTime();
+                string pre_id = this.AssignedVeh.VehRouteList[this.RouteIndexofVeh - 1];
+                double ArrivalTimeofpreRoute = this.AssignedVeh.solution.GetRouteByID(pre_id).GetArrivalTime();
                 return ArrivalTimeofpreRoute + Problem.MinWaitTimeAtDepot;
             }
         }
@@ -178,6 +198,12 @@ namespace OP.Data
             int numNodesinRoute = this.RouteList.Count();
             this.ArrivalTime = ServiceBeginingTimes[numNodesinRoute - 1];
             return ArrivalTime;
+        }
+
+        public double GetDepartureTime()
+        {
+            this.DepatureTime = ServiceBeginingTimes[0];
+            return DepatureTime;
         }
 
         internal int FindGoodStationPosition(int rock_position, out Station goodSta)
@@ -405,7 +431,7 @@ namespace OP.Data
         public double GetRouteVolumeCap()
         {
             int vehType = this.AssignedVeh.TypeId;
-            double CapacityVolume = Problem.fleet.GetVehTypebyID(vehType).Volume;
+            double CapacityVolume = Problem.GetVehTypebyID(vehType).Volume;
             return CapacityVolume;
         }
         /// <summary>
@@ -439,7 +465,7 @@ namespace OP.Data
         public double GetRouteWeightCap()
         {
             int vehType = this.AssignedVeh.TypeId;
-            double CapacityWeight = Problem.fleet.GetVehTypebyID(vehType).Weight;
+            double CapacityWeight = Problem.GetVehTypebyID(vehType).Weight;
             return CapacityWeight;
         }
         /// <summary>
@@ -472,7 +498,7 @@ namespace OP.Data
         public double GetRouteRangeCap()
         {
             int vehType = this.AssignedVeh.TypeId;
-            double CapacityRange = Problem.fleet.GetVehTypebyID(vehType).MaxRange;
+            double CapacityRange = Problem.GetVehTypebyID(vehType).MaxRange;
             return CapacityRange;
         }
 
@@ -570,15 +596,13 @@ namespace OP.Data
         {
             var newRouteList = new List<AbsNode>(RouteList.Count);
             newRouteList.AddRange(RouteList.Select(node => node.ShallowCopy()));
-            var r = new Route(Problem, this.AssignedVeh)
-            {
-                AssignedVehType = this.AssignedVehType,
-                RouteList = newRouteList,
-                ServiceBeginingTimes = new List<double>(ServiceBeginingTimes),
-                battery_level = new List<double>(battery_level),
-                RouteIndexofVeh = this.RouteIndexofVeh,
-
-            };
+            var r = new Route(Problem);
+            r.AssignedVehType = this.AssignedVehType;
+            r.AssignedVeh = this.AssignedVeh;
+            r.RouteIndexofVeh = this.RouteIndexofVeh;
+            r.RouteList = newRouteList;
+            r.ServiceBeginingTimes = new List<double>(ServiceBeginingTimes);
+            r.battery_level = new List<double>(battery_level);
             r.UpdateId();
             return r;
         }
@@ -652,7 +676,37 @@ namespace OP.Data
                     return false;
                 }
             }
-            return true;
+           return true;}
+
+		public Tuple<double, double, double, int> routeCost(double TransCostRate,double ChargeCostRate)
+		{
+			double WaitCost = 0;
+			double TransCost = 0;
+			double ChargeCost = 0;
+			int chargeCount = 0;
+
+            for (int i = 1; i<RouteList.Count; i++)
+            {
+                //等待成本
+                double AT_i = ServiceBeginingTimes[i - 1] + RouteList[i - 1].Info.ServiceTime + RouteList[i - 1].TravelTime(RouteList[i]);
+				double WT_i = Math.Max(ServiceBeginingTimes[i] - AT_i, 0);
+				WaitCost += WT_i * Problem.WaitCostRate;
+				//运输成本
+				double Distance_ij = RouteList[i - 1].TravelDistance(RouteList[i]);
+				TransCost += TransCostRate* Distance_ij;
+
+                //充电成本
+                if (RouteList[i].Info.Type == 3)
+                {
+                    ChargeCost += ChargeCostRate* RouteList[i].Info.ServiceTime;
+					chargeCount += 1;
+                }
+
+            }
+
+			return new Tuple<double, double, double, int>(TransCost, WaitCost, ChargeCost, chargeCount);
+
+			
         }
         
     }

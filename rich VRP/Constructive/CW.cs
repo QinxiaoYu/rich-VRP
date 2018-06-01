@@ -21,20 +21,21 @@ namespace rich_VRP.Constructive
         List<Station> charge_sta = new List<Station>();
         public Initialization(Problem p)//把带初始化的问题传进来
         {
-            this.problem = p;
-            fleet = p.fleet;
+            this.problem = p;           
         }
 
 
         public Solution initial_construct()
         {
             Solution solution = new Solution(problem);
+            fleet = solution.fleet;
             var unroute_cus = new List<Customer>(problem.Customers); //没有访问的点
             Vehicle veh = null;
             
             while (unroute_cus.Count > 0)
             {
                 int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机）
+                //int type = 2;
                 veh = fleet.addNewVeh(type);
              
 
@@ -151,8 +152,8 @@ namespace rich_VRP.Constructive
                             double waittime_after_insert = cur_route.GetWaitTime();
                             double add_waittime = waittime_after_insert - waittime_before_insert;//增加的等待时间
                             //double add_waittime = 0;
-                            double TransCostRate = fleet.GetVehTypebyID(cur_route.AssignedVeh.TypeId).VariableCost;//行驶费率
-                            double cost = TransCostRate * (add_distance - alefa * insertcus_dis) + problem.WaitCostRate * add_waittime;//评价插入质量的标准
+                            double TransCostRate = problem.GetVehTypebyID(cur_route.AssignedVeh.TypeId).VariableCost;//行驶费率
+                            double cost = TransCostRate * (add_distance - alefa * insertcus_dis) + Problem.WaitCostRate * add_waittime;//评价插入质量的标准
                             if (cost < best_cost)
                             {
                                 best_cost = cost;
