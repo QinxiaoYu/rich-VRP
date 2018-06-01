@@ -19,9 +19,7 @@ namespace rich_VRP.Neighborhoods.Remove
                 {
                     isImprove = true;
                     solution.Routes[i] = impr_route.Copy();
-                    Vehicle veh = solution.Routes[i].AssignedVeh;
-                    int idx_route_veh = solution.Routes[i].RouteIndexofVeh;
-                    veh.VehRouteList[idx_route_veh] = impr_route.Copy();
+                   
                 }
                     
             }
@@ -54,12 +52,13 @@ namespace rich_VRP.Neighborhoods.Remove
                         {
                             route = tmp_r;
                             bst_route = tmp_r.Copy();
-                          
+                            bst_route.AssignedVeh.VehRouteList[bst_route.RouteIndexofVeh] = bst_route.RouteId;
                             break;
                         }
                     }
                 }
             }
+            
             return bst_route;
         }
 

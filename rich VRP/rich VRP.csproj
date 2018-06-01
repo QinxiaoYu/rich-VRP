@@ -63,7 +63,7 @@
     <Compile Include="Data\Reader.cs" />
     <Compile Include="Data\Route.cs" />
     <Compile Include="Data\Solution.cs" />
-    <Compile Include="Data\VehicleType.cs" />
+    <Compile Include="Data\Vehicle.cs" />
     <Compile Include="Data\Writer.cs" />
     <Compile Include="Data\Problem.cs" />
   </ItemGroup>

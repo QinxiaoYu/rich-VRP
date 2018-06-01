@@ -48,6 +48,20 @@ namespace OP.Data
         /// 在初始化中判断这条线路是否还可以插入
         /// </summary>
         bool isOpen = true;
+        /// <summary>
+        /// 专门用作route.copy
+        /// </summary>
+        public Route(Problem problem)
+        {
+            Depot startdepot = problem.StartDepot;
+            Depot enddepot = problem.EndDepot;
+            Problem = problem;
+            AssignedVehType = null;
+            AssignedVeh = null;
+            RouteList = new List<AbsNode>();
+            ServiceBeginingTimes = new List<double>();
+            battery_level = new List<double>();
+        }
 
         public Route(Problem problem, VehicleType vehtype)
         {
@@ -65,6 +79,8 @@ namespace OP.Data
 
 
         }
+
+
 
         /// <summary>
         /// 在已知分配给哪辆车的前提下，初始化一条路径
@@ -148,7 +164,8 @@ namespace OP.Data
             }
             else //如果该线路非首趟线路，则其最早开始时间依赖于其前一趟的结束时间
             {
-                double ArrivalTimeofpreRoute = this.AssignedVeh.VehRouteList[this.RouteIndexofVeh - 1].GetArrivalTime();
+                string pre_id = this.AssignedVeh.VehRouteList[this.RouteIndexofVeh - 1];
+                double ArrivalTimeofpreRoute = this.AssignedVeh.solution.GetRouteByID(pre_id).GetArrivalTime();
                 return ArrivalTimeofpreRoute + Problem.MinWaitTimeAtDepot;
             }
         }
@@ -405,7 +422,7 @@ namespace OP.Data
         public double GetRouteVolumeCap()
         {
             int vehType = this.AssignedVeh.TypeId;
-            double CapacityVolume = Problem.fleet.GetVehTypebyID(vehType).Volume;
+            double CapacityVolume = Problem.GetVehTypebyID(vehType).Volume;
             return CapacityVolume;
         }
         /// <summary>
@@ -439,7 +456,7 @@ namespace OP.Data
         public double GetRouteWeightCap()
         {
             int vehType = this.AssignedVeh.TypeId;
-            double CapacityWeight = Problem.fleet.GetVehTypebyID(vehType).Weight;
+            double CapacityWeight = Problem.GetVehTypebyID(vehType).Weight;
             return CapacityWeight;
         }
         /// <summary>
@@ -472,7 +489,7 @@ namespace OP.Data
         public double GetRouteRangeCap()
         {
             int vehType = this.AssignedVeh.TypeId;
-            double CapacityRange = Problem.fleet.GetVehTypebyID(vehType).MaxRange;
+            double CapacityRange = Problem.GetVehTypebyID(vehType).MaxRange;
             return CapacityRange;
         }
 
@@ -570,15 +587,13 @@ namespace OP.Data
         {
             var newRouteList = new List<AbsNode>(RouteList.Count);
             newRouteList.AddRange(RouteList.Select(node => node.ShallowCopy()));
-            var r = new Route(Problem, this.AssignedVeh)
-            {
-                AssignedVehType = this.AssignedVehType,
-                RouteList = newRouteList,
-                ServiceBeginingTimes = new List<double>(ServiceBeginingTimes),
-                battery_level = new List<double>(battery_level),
-                RouteIndexofVeh = this.RouteIndexofVeh,
-
-            };
+            var r = new Route(Problem);
+            r.AssignedVehType = this.AssignedVehType;
+            r.AssignedVeh = this.AssignedVeh;
+            r.RouteIndexofVeh = this.RouteIndexofVeh;
+            r.RouteList = newRouteList;
+            r.ServiceBeginingTimes = new List<double>(ServiceBeginingTimes);
+            r.battery_level = new List<double>(battery_level);
             r.UpdateId();
             return r;
         }

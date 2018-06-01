@@ -4,49 +4,7 @@ using System.Collections.Generic;
 
 namespace OP.Data
 {
-	public class VehicleType
-	{
-		public int VehTypeID { get; set; }
-        public string Name { get; set; }
-		/// <summary>
-		/// 体积
-		/// </summary>
-		public double Volume { get; set; }
-		/// <summary>
-		/// 载重
-		/// </summary>
-		public double Weight { get; set; }
-		/// <summary>
-		/// 最大行驶里程
-		/// </summary>
-		public double MaxRange { get; set;}	
-
-		/// <summary>
-		/// Gets or sets the fixed cost.
-		/// </summary>
-		/// <value>The fixed cost.</value>
-		public double FixedCost { get; set;}
-
-		/// <summary>
-		/// Gets or sets the variable cost.
-		/// </summary>
-		/// <value>The variable cost.</value>
-		public double VariableCost {get;set;}
-
-		/// <summary>
-		/// Gets or sets the charge time.
-		/// </summary>
-		/// <value>The charge time.</value>
-		public double ChargeTime { get; set;}
-        /// <summary>
-        /// Gets or sets the charge cost per hour (RMB/min)
-        /// </summary>
-        public double ChargeCostRate { get; set; }
-        /// <summary>
-        /// Gets or sets the maximal number of vehicles of this type
-        /// </summary>
-        public int MaxNum { get; set; }
-	}
+	
 
 	public class Vehicle 
 	{
@@ -69,18 +27,32 @@ namespace OP.Data
         /// <summary>
         /// 某辆车跑过的所有路线的集合
         /// </summary>
-		public List<Route> VehRouteList;
+		public List<string> VehRouteList;
 
+        public Solution solution;
+
+        public Vehicle(int _typeid)
+        {
+            this.TypeId = _typeid;
+            this.VehId = -1;
+            VehRouteList = new List<string>();
+        }
+
+        /// <summary>
+        /// 已知车型以及车辆id时候，初始一辆车
+        /// </summary>
+        /// <param name="_typeid"></param>
+        /// <param name="_vehid"></param>
 		public Vehicle(int _typeid, int _vehid)
 		{
 			this.TypeId = _typeid;
 			this.VehId = _vehid;
-			VehRouteList = new List<Route>();
+			VehRouteList = new List<string>();
 		}
 
 		public void addRoute2Veh(Route _r)
 		{
-			this.VehRouteList.Add (_r);
+			this.VehRouteList.Add (_r.RouteId);
             
 			///to do 
 			///update some infomation about this veh, e.g, the arrival time to the depot and the departure time from depots
@@ -95,9 +67,9 @@ namespace OP.Data
         public Vehicle Copy()
         {
             Vehicle v = new Vehicle(this.TypeId, this.VehId);
-            foreach (Route r in this.VehRouteList)
+            foreach (string r_id in this.VehRouteList)
             {
-                v.VehRouteList.Add(r.Copy());
+                v.VehRouteList.Add(r_id);
             }
             return v;
         }
@@ -108,19 +80,18 @@ namespace OP.Data
 	/// </summary>
 	public class Fleet
 	{
-        public List<VehicleType> VehTypes;
+        public Solution solution;
 		public List<Vehicle> VehFleet;
        
-		public Fleet(List<VehicleType> _vehtypes)
+		public Fleet()
 		{
 			VehFleet = new List<Vehicle> ();
-            VehTypes = _vehtypes;
-
+            solution = null;  
 		}
 
 		public int GetNumOfUsedVeh()
 		{
-			return VehFleet.Count;
+			return VehFleet.Count;  
 		}
         /// <summary>
         /// Adds the new vehicle to VehFleet.
@@ -130,6 +101,7 @@ namespace OP.Data
         {
             int numofVeh = GetNumOfUsedVeh();
             Vehicle veh = new Vehicle(_vehtypeid, numofVeh);
+            veh.solution = this.solution;      
             VehFleet.Add(veh);
             return veh;
         }
@@ -193,21 +165,11 @@ namespace OP.Data
 			return null;
 		}
 
-        public VehicleType GetVehTypebyID(int _vehtypeid)
-        {
-            foreach (VehicleType vehtype in this.VehTypes)
-            {
-                if (vehtype.VehTypeID == _vehtypeid)
-                {
-                    return vehtype;
-                }
-            }
-            return null;
-        }
+       
 
         public Fleet Copy()
         {
-            Fleet f = new Fleet(this.VehTypes);
+            Fleet f = new Fleet();
             foreach (Vehicle veh in this.VehFleet)
             {
                 f.VehFleet.Add(veh.Copy());

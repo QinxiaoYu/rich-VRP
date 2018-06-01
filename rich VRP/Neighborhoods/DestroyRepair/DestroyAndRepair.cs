@@ -10,11 +10,10 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
     class DestroyAndRepair
     {
         public Solution solution;
-        public Fleet fleet;
+      
         public DestroyAndRepair(Solution _solution)
         {
-            solution = _solution.Copy();
-            fleet = solution.Problem.fleet.Copy();
+            solution = _solution.Copy();          
             solution.UnVisitedCus = new List<Customer>();
         }
         /// <summary>

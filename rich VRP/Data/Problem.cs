@@ -16,7 +16,7 @@ namespace OP.Data
         public List<Station> Stations { get; set; }
         public List<NodeInfo> AllNodes { get; set; }
       
-        public Fleet fleet { get; set; }
+        public List<VehicleType> VehTypes { get; set; }
 
         static int[,] DistanceBetween { get; set; }
         static int[,] TravelTimeBetween { get; set; }
@@ -56,7 +56,7 @@ namespace OP.Data
 
         public void SetVehicleTypes(List<VehicleType> _types)
         {
-            fleet = new Fleet(_types);
+            VehTypes = _types;
         }
 
         public void SetDistanceIJ(int i, int j, int dis)
@@ -83,12 +83,24 @@ namespace OP.Data
             return AngelBetween[i, j];
         }
 
-        public Customer SearchbyId(int id)
+        public Customer SearchCusbyId(int id)
         {
             foreach (var customer in Customers)
                 if (customer.Info.Id == id)
                     return customer;
             throw new Exception("Customer not found");
+        }
+
+        public VehicleType GetVehTypebyID(int _vehtypeid)
+        {
+            foreach (VehicleType vehtype in this.VehTypes)
+            {
+                if (vehtype.VehTypeID == _vehtypeid)
+                {
+                    return vehtype;
+                }
+            }
+            return null;
         }
 
         public void SetAllNodes()
@@ -200,7 +212,51 @@ namespace OP.Data
             return NearDistanceSta[_cus_id];
         }
     }
-    
+
+    public class VehicleType
+    {
+        public int VehTypeID { get; set; }
+        public string Name { get; set; }
+        /// <summary>
+        /// 体积
+        /// </summary>
+        public double Volume { get; set; }
+        /// <summary>
+        /// 载重
+        /// </summary>
+        public double Weight { get; set; }
+        /// <summary>
+        /// 最大行驶里程
+        /// </summary>
+        public double MaxRange { get; set; }
+
+        /// <summary>
+        /// Gets or sets the fixed cost.
+        /// </summary>
+        /// <value>The fixed cost.</value>
+        public double FixedCost { get; set; }
+
+        /// <summary>
+        /// Gets or sets the variable cost.
+        /// </summary>
+        /// <value>The variable cost.</value>
+        public double VariableCost { get; set; }
+
+        /// <summary>
+        /// Gets or sets the charge time.
+        /// </summary>
+        /// <value>The charge time.</value>
+        public double ChargeTime { get; set; }
+        /// <summary>
+        /// Gets or sets the charge cost per hour (RMB/min)
+        /// </summary>
+        public double ChargeCostRate { get; set; }
+        /// <summary>
+        /// Gets or sets the maximal number of vehicles of this type
+        /// </summary>
+        public int MaxNum { get; set; }
+    }
+
     public class NodeInfo
     {
         public int Id { get; set; }
