@@ -136,21 +136,23 @@ namespace OP.Data
 			String[] columns = { "trans_code", "vehicle_type", "dis_seq", "distribute_lea_tm", "distribute_arr_tm", "distance", "trans_cost", "charge_cost", "wait_cost", "fixed_use_cost", "total_cost", "charge_cnt" };
 			//create trans_code_dict that containts routeID
 			string title = String.Join(",", columns);
-			result.Append(title);
-			foreach (var veh in Problem.fleet.VehFleet)
-			{
-				result.Append("\n");
-				result.Append(veh.vehCostInf());
+            result.AppendLine(title);            
+			foreach (var veh in fleet.VehFleet)
+			{				
+				result.AppendLine(veh.vehCostInf());
     }
-			string result_s = result.ToString();
+			//string result_s = result.ToString();
 			//生成文件名称
 			//获取当前时间
 
 			DateTime time = DateTime.Now;
-			string path = ".//Result" + "//reslut" + time.Year.ToString() + time.Month.ToString() + time.Day.ToString() + time.Hour.ToString() + ".csv";
+			string path =  ".//reslut" + time.Month.ToString() + time.Day.ToString() + time.Hour.ToString()+time.Minute.ToString()+time.Second.ToString()+time.Millisecond.ToString() + ".csv";
+
 			using (System.IO.StreamWriter file = new System.IO.StreamWriter(path))
 			{
-				file.Write(result_s);
+				file.Write(result);
+                file.Flush();
+                file.Close();
 			}
 		}
     

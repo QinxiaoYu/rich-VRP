@@ -142,6 +142,7 @@ namespace OP.Data
             AddNode(enddepot);
         }
 
+
         /// <summary>
         /// 把一条线路分配给一辆具体的车
         /// </summary>
@@ -197,6 +198,12 @@ namespace OP.Data
             int numNodesinRoute = this.RouteList.Count();
             this.ArrivalTime = ServiceBeginingTimes[numNodesinRoute - 1];
             return ArrivalTime;
+        }
+
+        public double GetDepartureTime()
+        {
+            this.DepatureTime = ServiceBeginingTimes[0];
+            return DepatureTime;
         }
 
         internal int FindGoodStationPosition(int rock_position, out Station goodSta)
