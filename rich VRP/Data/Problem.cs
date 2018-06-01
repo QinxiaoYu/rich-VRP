@@ -22,14 +22,11 @@ namespace OP.Data
         static int[,] TravelTimeBetween { get; set; }
         public static double[,] AngelBetween { get; set; }
 
+        public static double MinWaitTimeAtDepot { get; set; }
+        public static double WaitCostRate { get; set; }
         public List<int[]> NearDistanceCus;
         public List<int[]> NearDistanceSta;
 
-        //public List<int> PriorityTimeCus;
-
-
-        public double MinWaitTimeAtDepot { get; set; }
-        public double WaitCostRate { get; set; }
 
         public void SetNodes(List<NodeInfo> nodes, string abbr, double t_max, int numV, int numD, int numC, int numS)
         {
@@ -68,6 +65,8 @@ namespace OP.Data
         {
             TravelTimeBetween[i, j] = tt;
         }
+
+
 
         public static int GetDistanceIJ(int i, int j)
         {
@@ -256,7 +255,7 @@ namespace OP.Data
         /// </summary>
         public int MaxNum { get; set; }
     }
-
+    
     public class NodeInfo
     {
         public int Id { get; set; }
@@ -303,7 +302,7 @@ namespace OP.Data
 
         
         public virtual AbsNode ShallowCopy()
-        {          
+        {
             throw new Exception("You cannot copy abstract node");
         }
 
@@ -342,7 +341,7 @@ namespace OP.Data
 
     public class Customer : AbsNode
     {
-       
+
         public Customer(NodeInfo info)
         {
             Info = info;

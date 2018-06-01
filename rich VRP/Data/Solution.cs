@@ -2,7 +2,8 @@
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
-
+using System.Text;
+using System.Reflection;
 namespace OP.Data
 {
     public class Solution
@@ -101,7 +102,7 @@ namespace OP.Data
             foreach (Route route in Routes)
             {
                 if (route.RouteList.Count >= 2)
-                    sol.AddRoute(route.Copy());
+                   sol.AddRoute(route.Copy());
             }
             foreach (Vehicle veh in this.fleet.VehFleet)
             {
@@ -126,11 +127,34 @@ namespace OP.Data
                 {
                     trip.UpdateDepartureTime();
                 }
-                
+
             }
         }
+		public void PrintResult()
+		{
+			StringBuilder result = new StringBuilder("");//初始化空的可变长字符串
+			String[] columns = { "trans_code", "vehicle_type", "dis_seq", "distribute_lea_tm", "distribute_arr_tm", "distance", "trans_cost", "charge_cost", "wait_cost", "fixed_use_cost", "total_cost", "charge_cnt" };
+			//create trans_code_dict that containts routeID
+			string title = String.Join(",", columns);
+            result.AppendLine(title);            
+			foreach (var veh in fleet.VehFleet)
+			{				
+				result.AppendLine(veh.vehCostInf());
     }
+			//string result_s = result.ToString();
+			//生成文件名称
+			//获取当前时间
 
+			DateTime time = DateTime.Now;
+			string path =  ".//reslut" + time.Month.ToString() + time.Day.ToString() + time.Hour.ToString()+time.Minute.ToString()+time.Second.ToString()+time.Millisecond.ToString() + ".csv";
 
+			using (System.IO.StreamWriter file = new System.IO.StreamWriter(path))
+			{
+				file.Write(result);
+                file.Flush();
+                file.Close();
+			}
+		}
     
+}
 }
