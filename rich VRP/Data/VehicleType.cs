@@ -1,6 +1,7 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 
 namespace OP.Data
 {
@@ -53,7 +54,6 @@ namespace OP.Data
         //////////////////////新增方法与属性/////////////////////////
         public double Late_time = 1440;//车辆最晚结束时间（分钟）24：00
         public double Early_time = 480;//车辆最早开始时间（分钟）8：00
-
         ///////////////////////////////////////////////////////////
 
         /// <summary>
@@ -70,6 +70,20 @@ namespace OP.Data
         /// 某辆车跑过的所有路线的集合
         /// </summary>
 		public List<Route> VehRouteList;
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <value>The dist sep.</value>
+		public string dist_sep { get; set; }
+		public string distribute_lea_tm { get; set; }
+		public string distribute_arr_tm { get; set; }
+		public double distance { get; set; }
+		public double tran_cost { get; set; }
+		public double charge_cost { get; set; }
+		public double wait_cost { get; set; }
+		public double total_cost { get; set; }
+		public int charge_cnt { get; set; }
+		public double fixed_use_cost { get; set;}
 
 		public Vehicle(int _typeid, int _vehid)
 		{
@@ -81,14 +95,41 @@ namespace OP.Data
 		public void addRoute2Veh(Route _r)
 		{
 			this.VehRouteList.Add (_r);
-			///to do 
-			///update some infomation about this veh, e.g, the arrival time to the depot and the departure time from depots
 			 
 		}
 
 		public int getNumofVisRoute()
 		{
 			return VehRouteList.Count;
+		}
+		//计算一辆车的各种成本
+		public double calculCost()
+		{
+			fixed_use_cost = Fleet.VehTypes[TypeId - 1].FixedCost;
+			double TransCostRate = Fleet.VehTypes[TypeId-1].VariableCost;
+			double ChargeCostRate = Fleet.VehTypes[TypeId-1].ChargeCostRate;
+			int Num_Trip_Veh = getNumofVisRoute();
+			double WaitCost1 = Problem.WaitCostRate * (Num_Trip_Veh - 1) * Problem.MinWaitTimeAtDepot;
+            for (int i = 0; i<VehRouteList.Count; i++)
+            {
+                var VariableCost = VehRouteList[i].routeCost(TransCostRate,ChargeCostRate); //计算单条线路上所有可变成本=等待成本2+运输成本+充电成本
+				tran_cost += VariableCost.Item1;
+				wait_cost += VariableCost.Item2;
+				charge_cost += VariableCost.Item3;
+				charge_cnt += VariableCost.Item4;
+				     
+            }
+            wait_cost += WaitCost1;
+			total_cost = wait_cost + tran_cost + charge_cost + fixed_use_cost;
+			return total_cost;
+
+		}
+		//打印一辆车的各种信息
+		public StringBuilder vehCostInf()
+		{
+			StringBuilder costInfs = new StringBuilder();
+			costInfs.Append(VehId + "," + TypeId + "," + dist_sep + "," + distribute_lea_tm + "," + distribute_arr_tm + "," + distance + "," + tran_cost + "," + charge_cost + "," + wait_cost + "," + fixed_use_cost+","+total_cost+","+charge_cnt+"\n");
+			return costInfs;
 		}
 	
 	}
@@ -97,7 +138,7 @@ namespace OP.Data
 	/// </summary>
 	public class Fleet
 	{
-        public List<VehicleType> VehTypes;
+        public static List<VehicleType> VehTypes;
 		public List<Vehicle> VehFleet;
        
 		public Fleet(List<VehicleType> _vehtypes)

@@ -21,8 +21,8 @@ namespace OP.Data
         public static int[,] TravelTimeBetween { get; set; }
         public static double[,] AngelBetween { get; set; }
 
-        public double MinWaitTimeAtDepot { get; set; }
-        public double WaitCostRate { get; set; }
+        public static double MinWaitTimeAtDepot { get; set; }
+        public static double WaitCostRate { get; set; }
 
         public void SetNodes(List<NodeInfo> nodes, string abbr, double t_max, int numV, int numD, int numC, int numS)
         {
