@@ -11,6 +11,7 @@ namespace OP.Data
         public List<Route> Routes;
         public Problem Problem;
         public double ObjVal;
+        public List<Customer> UnVisitedCus;
 
         public Solution(Problem problem)
         {

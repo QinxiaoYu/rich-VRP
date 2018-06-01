@@ -91,6 +91,16 @@ namespace OP.Data
 		{
 			return VehRouteList.Count;
 		}
+
+        public Vehicle Copy()
+        {
+            Vehicle v = new Vehicle(this.TypeId, this.VehId);
+            foreach (Route r in this.VehRouteList)
+            {
+                v.VehRouteList.Add(r.Copy());
+            }
+            return v;
+        }
 	
 	}
 	/// <summary>
@@ -195,9 +205,16 @@ namespace OP.Data
             return null;
         }
 
-
-        //尝试在master分支上进行修改，再推送到GitHub
-        //第二次尝试：只提交更改到本地master分支，不推送到远程，而是选择pull requests
+        public Fleet Copy()
+        {
+            Fleet f = new Fleet(this.VehTypes);
+            foreach (Vehicle veh in this.VehFleet)
+            {
+                f.VehFleet.Add(veh.Copy());
+            }
+            return f;
+        }
+        
 	}
 }
 
