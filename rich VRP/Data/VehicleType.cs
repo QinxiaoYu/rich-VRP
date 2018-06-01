@@ -225,7 +225,7 @@ namespace OP.Data
 
         public VehicleType GetVehTypebyID(int _vehtypeid)
         {
-            foreach (VehicleType vehtype in this.VehTypes)
+            foreach (VehicleType vehtype in VehTypes)
             {
                 if (vehtype.VehTypeID == _vehtypeid)
                 {
