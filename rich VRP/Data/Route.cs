@@ -4,6 +4,8 @@ using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Collections;
+using System.Security.Cryptography.X509Certificates;
+using System.Net.NetworkInformation;
 
 namespace OP.Data
 {
@@ -140,6 +142,7 @@ namespace OP.Data
             AddNode(enddepot);
         }
 
+
         /// <summary>
         /// 把一条线路分配给一辆具体的车
         /// </summary>
@@ -195,6 +198,12 @@ namespace OP.Data
             int numNodesinRoute = this.RouteList.Count();
             this.ArrivalTime = ServiceBeginingTimes[numNodesinRoute - 1];
             return ArrivalTime;
+        }
+
+        public double GetDepartureTime()
+        {
+            this.DepatureTime = ServiceBeginingTimes[0];
+            return DepatureTime;
         }
 
         internal int FindGoodStationPosition(int rock_position, out Station goodSta)
@@ -667,7 +676,37 @@ namespace OP.Data
                     return false;
                 }
             }
-            return true;
+           return true;}
+
+		public Tuple<double, double, double, int> routeCost(double TransCostRate,double ChargeCostRate)
+		{
+			double WaitCost = 0;
+			double TransCost = 0;
+			double ChargeCost = 0;
+			int chargeCount = 0;
+
+            for (int i = 1; i<RouteList.Count; i++)
+            {
+                //等待成本
+                double AT_i = ServiceBeginingTimes[i - 1] + RouteList[i - 1].Info.ServiceTime + RouteList[i - 1].TravelTime(RouteList[i]);
+				double WT_i = Math.Max(ServiceBeginingTimes[i] - AT_i, 0);
+				WaitCost += WT_i * Problem.WaitCostRate;
+				//运输成本
+				double Distance_ij = RouteList[i - 1].TravelDistance(RouteList[i]);
+				TransCost += TransCostRate* Distance_ij;
+
+                //充电成本
+                if (RouteList[i].Info.Type == 3)
+                {
+                    ChargeCost += ChargeCostRate* RouteList[i].Info.ServiceTime;
+					chargeCount += 1;
+                }
+
+            }
+
+			return new Tuple<double, double, double, int>(TransCost, WaitCost, ChargeCost, chargeCount);
+
+			
         }
         
     }

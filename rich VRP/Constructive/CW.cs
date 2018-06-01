@@ -153,7 +153,7 @@ namespace rich_VRP.Constructive
                             double add_waittime = waittime_after_insert - waittime_before_insert;//增加的等待时间
                             //double add_waittime = 0;
                             double TransCostRate = problem.GetVehTypebyID(cur_route.AssignedVeh.TypeId).VariableCost;//行驶费率
-                            double cost = TransCostRate * (add_distance - alefa * insertcus_dis) + problem.WaitCostRate * add_waittime;//评价插入质量的标准
+                            double cost = TransCostRate * (add_distance - alefa * insertcus_dis) + Problem.WaitCostRate * add_waittime;//评价插入质量的标准
                             if (cost < best_cost)
                             {
                                 best_cost = cost;

@@ -1,17 +1,17 @@
 ﻿using System;
 using System.Collections;
 using System.Collections.Generic;
+using System.Text;
 
 namespace OP.Data
 {
-	
+
 
 	public class Vehicle 
 	{
         //////////////////////新增方法与属性/////////////////////////
         public double Late_time = 1440;//车辆最晚结束时间（分钟）24：00
         public double Early_time = 480;//车辆最早开始时间（分钟）8：00
-
         ///////////////////////////////////////////////////////////
 
         /// <summary>
@@ -27,7 +27,21 @@ namespace OP.Data
         /// <summary>
         /// 某辆车跑过的所有路线的集合
         /// </summary>
-		public List<string> VehRouteList;
+		public List<String> VehRouteList;
+		/// <summary>
+		/// 
+		/// </summary>
+		/// <value>The dist sep.</value>
+		public string dist_sep { get; set; }
+		public string distribute_lea_tm { get; set; }
+		public string distribute_arr_tm { get; set; }
+		public double distance { get; set; }
+		public double tran_cost { get; set; }
+		public double charge_cost { get; set; }
+		public double wait_cost { get; set; }
+		public double total_cost { get; set; }
+		public int charge_cnt { get; set; }
+		public double fixed_use_cost { get; set;}
 
         public Solution solution;
 
@@ -63,6 +77,98 @@ namespace OP.Data
 		{
 			return VehRouteList.Count;
 		}
+		//计算一辆车的各种成本
+		public double calculCost()
+		{
+            ResetCost();
+          
+			fixed_use_cost = this.solution.problem.VehTypes[TypeId - 1].FixedCost;
+			double TransCostRate = this.solution.problem.VehTypes[TypeId-1].VariableCost;
+			double ChargeCostRate = this.solution.problem.VehTypes[TypeId-1].ChargeCostRate;
+			int Num_Trip_Veh = getNumofVisRoute();
+			double WaitCost1 = Problem.WaitCostRate * (Num_Trip_Veh - 1) * Problem.MinWaitTimeAtDepot;
+            int num_routes = this.VehRouteList.Count;
+            if (num_routes==0)
+            {
+                Console.WriteLine(this.VehId.ToString());
+            }
+            for (int i = 0; i<VehRouteList.Count; i++)
+            {
+                Route cur_route = this.solution.GetRouteByID(VehRouteList[i]);
+                int num_nodes = cur_route.RouteList.Count;
+                if (num_nodes==2)
+                {
+                    Console.WriteLine(this.VehId.ToString() + ";" + cur_route.RouteId + ";" + cur_route.RouteIndexofVeh.ToString());
+                }
+                var VariableCost = cur_route.routeCost(TransCostRate,ChargeCostRate); //计算单条线路上所有可变成本=等待成本2+运输成本+充电成本
+				tran_cost += VariableCost.Item1;
+                distance += VariableCost.Item1 / TransCostRate;             
+				wait_cost += VariableCost.Item2;
+				charge_cost += VariableCost.Item3;
+				charge_cnt += VariableCost.Item4;
+                
+				     
+            }
+            wait_cost += WaitCost1;
+			total_cost = wait_cost + tran_cost + charge_cost + fixed_use_cost;
+			return total_cost;
+
+		}
+
+        private void ResetCost()
+        {
+            distance = 0;
+            tran_cost = 0;
+            wait_cost = 0;
+            charge_cost = 0;
+            charge_cnt = 0;
+            total_cost = 0;
+            fixed_use_cost = 0;
+        }
+
+        //打印一辆车的各种信息
+        public string vehCostInf()
+		{
+
+			string costInfs = "";
+            GetvehRoutesInfo();    
+			costInfs = VehId + "," + TypeId + "," + dist_sep + "," + distribute_lea_tm + "," + distribute_arr_tm + "," + distance + "," + tran_cost.ToString("0.00") + "," + charge_cost + "," + wait_cost.ToString("0.00") + "," + fixed_use_cost+","+total_cost.ToString("0.00")+","+charge_cnt;
+			return costInfs;
+		}
+
+        private void GetvehRoutesInfo()
+        {
+           
+            double dt_veh = double.MaxValue;
+            double at_veh = double.MinValue;
+            List<string> nodes_id = new List<string>();
+            int num_routes = this.getNumofVisRoute();
+
+            foreach (var item in VehRouteList)
+            {
+                Route cur_route = this.solution.GetRouteByID(item);
+                for (int i = 0; i < cur_route.RouteList.Count-1; i++)
+                {
+                    nodes_id.Add(cur_route.RouteList[i].Info.Id.ToString());
+                }
+                
+                double at_cur = cur_route.GetArrivalTime();
+                double dt_cur = cur_route.GetDepartureTime();
+                if (dt_cur<dt_veh)
+                {
+                    dt_veh = dt_cur;
+                }
+                if (at_cur>at_veh)
+                {
+                    at_veh = at_cur;
+                }
+            }
+            nodes_id.Add(0.ToString());
+            dist_sep = string.Join(";", nodes_id.ToArray());
+            distribute_lea_tm = string.Format("{0}:{1}", ((int)dt_veh / 60).ToString(), (dt_veh % 60).ToString());
+            distribute_arr_tm = string.Format("{0}:{1}", ((int)at_veh / 60).ToString(), (at_veh % 60).ToString());
+
+        }
 
         public Vehicle Copy()
         {
@@ -91,7 +197,7 @@ namespace OP.Data
 
 		public int GetNumOfUsedVeh()
 		{
-			return VehFleet.Count;  
+			return VehFleet.Count;
 		}
         /// <summary>
         /// Adds the new vehicle to VehFleet.
@@ -168,15 +274,15 @@ namespace OP.Data
        
 
         public Fleet Copy()
-        {
+            {
             Fleet f = new Fleet();
             foreach (Vehicle veh in this.VehFleet)
-            {
+                {
                 f.VehFleet.Add(veh.Copy());
             }
             return f;
         }
-        
+
 	}
 }
 
