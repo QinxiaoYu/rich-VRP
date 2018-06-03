@@ -67,7 +67,7 @@ namespace OP.Data
 		public void addRoute2Veh(Route _r)
 		{
 			this.VehRouteList.Add (_r.RouteId);
-            
+			 
 			///to do 
 			///update some infomation about this veh, e.g, the arrival time to the depot and the departure time from depots
 			 
@@ -106,7 +106,7 @@ namespace OP.Data
 				wait_cost += VariableCost.Item2;
 				charge_cost += VariableCost.Item3;
 				charge_cnt += VariableCost.Item4;
-                
+				     
 				     
             }
             wait_cost += WaitCost1;
@@ -126,7 +126,7 @@ namespace OP.Data
             fixed_use_cost = 0;
         }
 
-        //打印一辆车的各种信息
+		//打印一辆车的各种信息
         public string vehCostInf()
 		{
 
@@ -167,8 +167,8 @@ namespace OP.Data
             dist_sep = string.Join(";", nodes_id.ToArray());
             distribute_lea_tm = string.Format("{0}:{1}", ((int)dt_veh / 60).ToString(), (dt_veh % 60).ToString());
             distribute_arr_tm = string.Format("{0}:{1}", ((int)at_veh / 60).ToString(), (at_veh % 60).ToString());
-
-        }
+	
+	}
 
         public Vehicle Copy()
         {
