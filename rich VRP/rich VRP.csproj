@@ -63,23 +63,26 @@
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constructive\CW.cs" />
+    <Compile Include="Constructive\RouteFirstStationSecond.cs" />
     <Compile Include="MetaHeuristic\ALNS.cs" />
     <Compile Include="MetaHeuristic\ILS.cs" />
     <Compile Include="MetaHeuristic\SA.cs" />
     <Compile Include="MetaHeuristic\TS.cs" />
     <Compile Include="MetaHeuristic\VNS.cs" />
+    <Compile Include="Neighborhoods\DestroyRepair\DestroyAndRepair.cs" />
     <Compile Include="Neighborhoods\Insert\InsertDistance.cs" />
     <Compile Include="Neighborhoods\Inter\CrossInter.cs" />
     <Compile Include="Neighborhoods\Intra\TwoOpt.cs" />
     <Compile Include="Neighborhoods\LocalSearch.cs" />
     <Compile Include="Neighborhoods\Remove\RemoveRandom.cs" />
+    <Compile Include="Neighborhoods\Remove\RemoveSta.cs" />
     <Compile Include="ObjectiveFunc\OriginObjFunc.cs" />
     <Compile Include="Program.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />
     <Compile Include="Data\Reader.cs" />
     <Compile Include="Data\Route.cs" />
     <Compile Include="Data\Solution.cs" />
-    <Compile Include="Data\VehicleType.cs" />
+    <Compile Include="Data\Vehicle.cs" />
     <Compile Include="Data\Writer.cs" />
     <Compile Include="Data\Problem.cs" />
   </ItemGroup>

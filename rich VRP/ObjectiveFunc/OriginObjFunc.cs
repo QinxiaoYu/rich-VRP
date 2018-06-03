@@ -1,8 +1,7 @@
 ﻿using OP.Data;
 using System;
 using System.Collections.Generic;
-
-
+using System.Text;
 
 namespace rich_VRP.ObjectiveFunc
 {
@@ -13,8 +12,8 @@ namespace rich_VRP.ObjectiveFunc
 
         public double CalObjCost (Solution solution)
         {
-            problem = solution.Problem;
-            fleet = problem.fleet;
+            problem = solution.problem;
+            fleet = solution.fleet;
 
 			//全部成本
 			double totalCost = 0;
@@ -26,7 +25,6 @@ namespace rich_VRP.ObjectiveFunc
 
             return totalCost;
         }
-      
 
     }
 }
