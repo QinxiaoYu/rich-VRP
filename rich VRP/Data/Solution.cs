@@ -134,26 +134,38 @@ namespace OP.Data
 		{
 			StringBuilder result = new StringBuilder("");//初始化空的可变长字符串
 			String[] columns = { "trans_code", "vehicle_type", "dist_seq", "distribute_lea_tm", "distribute_arr_tm", "distance", "trans_cost", "charge_cost", "wait_cost", "fixed_use_cost", "total_cost", "charge_cnt" };
-			//create trans_code_dict that containts routeID
+            //create trans_code_dict that containts routeID
+            StringBuilder result_otherinfo = new StringBuilder();
+            string[] columns_otherinfo = { "acc_range","waittime","acc_battery","acc_weight","acc_volumn"};
 			string title = String.Join(",", columns);
-            result.AppendLine(title);            
+            string title_otherinfo = String.Join(",", columns_otherinfo);
+            result.AppendLine(title);
+            result_otherinfo.AppendLine(title_otherinfo);
 			foreach (var veh in fleet.VehFleet)
 			{				
 				result.AppendLine(veh.vehCostInf());
-    }
+                string otherinfo = veh.vehOtherInfo();
+                result_otherinfo.AppendLine(otherinfo);
+            }
 			//string result_s = result.ToString();
 			//生成文件名称
 			//获取当前时间
 
 			DateTime time = DateTime.Now;
 			string path =  ".//reslut" + time.Month.ToString() + time.Day.ToString() + time.Hour.ToString()+time.Minute.ToString()+time.Second.ToString()+time.Millisecond.ToString() + ".csv";
-
+            string path_otherinfo = ".//other_reslut" + time.Month.ToString() + time.Day.ToString() + time.Hour.ToString() + time.Minute.ToString() + time.Second.ToString() + time.Millisecond.ToString() + ".csv";
 			using (System.IO.StreamWriter file = new System.IO.StreamWriter(path))
 			{
 				file.Write(result);
                 file.Flush();
                 file.Close();
 			}
+            using (System.IO.StreamWriter file_ohterinfo = new System.IO.StreamWriter(path_otherinfo))
+            {
+                file_ohterinfo.Write(result_otherinfo);
+                file_ohterinfo.Flush();
+                file_ohterinfo.Close();
+            }
 		}
     
 }
