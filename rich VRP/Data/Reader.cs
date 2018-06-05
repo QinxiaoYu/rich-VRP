@@ -1,7 +1,14 @@
-﻿using System.Collections.Generic;
+﻿using System;
+using System.Collections.Generic;
+using System.Data;
 using System.IO;
-using System;
-
+using LinqToExcel;
+using System.Linq;
+using System.Xml.Linq;
+using System.Reflection;
+using System.Text;
+using System.Data.OleDb;
+using ExcelDataReader;
 namespace OP.Data
 {
     interface IProblemReader
@@ -15,9 +22,9 @@ namespace OP.Data
       
         public Problem Read(string txtFilePath)
         {
-            string nodefile = txtFilePath + "\\node.txt";
-            string disfile = txtFilePath + "\\data.txt";
-            string vehfile = txtFilePath + "\\veh.txt";         
+			string nodefile = txtFilePath + "/input_node.xlsx";
+			string disfile = txtFilePath + "/input_distance-time.txt";
+			string vehfile = txtFilePath + "/input_vehicle_type.xlsx";
             var nodes = new List<NodeInfo>();
             var types = new List<VehicleType>();
             var p = new Problem();
@@ -27,35 +34,31 @@ namespace OP.Data
             int numC = 0;
             int numS = 0;
             int numD = 0;
-            using (StreamReader reader = new StreamReader(nodefile))
+			DataTable nodeTable = ExcelTocsv(nodefile);
+			foreach (DataRow dr in nodeTable.Rows)
             {
                 //abbr = Path.GetFileNameWithoutExtension(txtFilePath);
                 string line = string.Empty;
 
                 //read node info
                 //序号 类型 经度 纬度 包裹总重量 包裹总体积 商家最早收货时间 商家最晚收货时间
-                line = reader.ReadLine();
-       
-                while (!string.IsNullOrWhiteSpace(line))
-                {
-                    string[] paras = line.Split(new char[1] { '	' }, StringSplitOptions.RemoveEmptyEntries);
                     //int _c_id, int _x, int _y, int _s, int _r_t, int _d_t, int _s_t
-                    int _c_id = int.Parse(paras[0]);                                   
-                    int _type = int.Parse(paras[1]); //类型
-                    double _x = double.Parse(paras[2]);//经度 
-                    double _y = double.Parse(paras[3]);//纬度
-                    double _w = _type==2? double.Parse(paras[4]):0;//重量
-                    double _v = _type==2? double.Parse(paras[5]):0;//体积
-                    double _s_t = _type==1? 0:0.5 * 60;//卸货时间，恒定为0.5h，换算成30min
+				int _c_id = int.Parse(dr[0].ToString());
+				int _type = int.Parse(dr[1].ToString()); //类型
+				double _x = double.Parse(dr[2].ToString());//经度 
+				double _y = double.Parse(dr[3].ToString());//纬度
+				double _w = _type == 2 ? double.Parse(dr[4].ToString()) : 0;//重量
+				double _v = _type == 2 ? double.Parse(dr[5].ToString()) : 0;//体积
+				double _s_t = _type == 1 ? 0 : 0.5 * 60;//卸货时间，恒定为0.5h，换算成30min
                     int _r_t = 480; //商家最早收货时间 换算成从0点开始的分钟，如8:00，则为480；24:00，则为1440
                     int _d_t = 1440;//商家最晚收货时间
                     if (_type == 2)
                     {
-                        DateTime _r_t1 = DateTime.Parse(paras[6]);
+					DateTime _r_t1 = DateTime.Parse(dr[6].ToString());
                         int min = _r_t1.Minute;
                         int hour = _r_t1.Hour;
                         _r_t = hour * 60 + min; //商家最早收货时间 换算成从0点开始的分钟，如8:00，则为480；24:00，则为1440
-                        DateTime _d_t1 = DateTime.Parse(paras[7]);
+					DateTime _d_t1 = DateTime.Parse(dr[7].ToString());
                         int min_d_t = _d_t1.Minute;
                         int hour_d_t = _d_t1.Hour;
                         _d_t = hour_d_t * 60 + min_d_t;//商家最晚收货时间
@@ -89,18 +92,14 @@ namespace OP.Data
                         
                     });
                     
-                    line = reader.ReadLine();
                    
-                }
-                reader.Close();
      
             }
-
-            p.SetNodes(nodes, abbr, Tmax, numV,numD,numC,numS);
-            int max_dis = int.MinValue;
-            int min_dis = int.MaxValue;
-            int max_tt = int.MinValue;
-            int min_tt = int.MaxValue;
+			p.SetNodes(nodes, abbr, Tmax, numV, numD, numC, numS);
+			int max_dis = int.MinValue;
+			int min_dis = int.MaxValue;
+			int max_tt = int.MinValue;
+			int min_tt = int.MaxValue;
             using (StreamReader Dreader = new StreamReader(disfile))
             {
                 string str_Dis = string.Empty;
@@ -122,7 +121,7 @@ namespace OP.Data
                     if(_dis_ij<min_dis)
                     {
                         min_dis = _dis_ij;
-                    }
+                }
                     if (_tt_ij > max_tt)
                     {
                         max_tt = _tt_ij;
@@ -136,24 +135,19 @@ namespace OP.Data
                 Console.WriteLine(max_tt.ToString() + ","+min_tt.ToString() + "," + max_dis.ToString() + "," + min_dis.ToString());
             }
 
-            using (StreamReader Vreader = new StreamReader(vehfile))
+			DataTable vehicleTable = ExcelTocsv(vehfile);
+			foreach (DataRow dr in vehicleTable.Rows)
             {
-                string str_VehType = string.Empty;
-                str_VehType = Vreader.ReadLine();
-                while (!string.IsNullOrWhiteSpace(str_VehType))
-                {
-                    string[] paras = str_VehType.Split(new char[1] { '	' }, StringSplitOptions.RemoveEmptyEntries);
-                    int _vtid = int.Parse(paras[0]);
-                    string _name = paras[1];
-                    double _v = double.Parse(paras[2]);
-                    double _w = double.Parse(paras[3]);
-                    int _maxnum = paras[4] == "unlimited" ? numC : int.Parse(paras[4]);
-                    double _maxrange = double.Parse(paras[5]); //按照米算
-                    double _chargetime = double.Parse(paras[6]); //按照小时算
-                    double _vcost = double.Parse(paras[7]);
-                    double _fcost = double.Parse(paras[8]);
-                    double _chargerate = 100.0000/60;
-
+				int _vtid = int.Parse(dr[0].ToString());
+				string _name = dr[1].ToString();
+				double _v = double.Parse(dr[2].ToString());
+				double _w = double.Parse(dr[3].ToString());
+				int _maxnum = dr[4].ToString() == "unlimited" ? numC : int.Parse(dr[4].ToString());
+				double _maxrange = double.Parse(dr[5].ToString()); //按照米算
+				double _chargetime = double.Parse(dr[6].ToString()); //按照小时算
+				double _vcost = double.Parse(dr[7].ToString());
+				double _fcost = double.Parse(dr[8].ToString());
+				double _chargerate = 100.0000 / 60;
                     types.Add(new VehicleType
                     {
                         VehTypeID = _vtid,
@@ -163,19 +157,49 @@ namespace OP.Data
                         MaxRange = _maxrange,
                         MaxNum = _maxnum,
                         ChargeTime = _chargetime, //0.5h
-                        ChargeCostRate = _chargerate, // 100RMB/h
-                        VariableCost = _vcost/1000,
+					ChargeCostRate = _chargerate, // 100RMB/h
+					VariableCost = _vcost / 1000,
                         FixedCost = _fcost,
                     });
-                    str_VehType = Vreader.ReadLine();
-                }
-                Vreader.Close();
+
+
             }
+
+
             p.SetVehicleTypes(types);
 
             return p;
             
         }    
+
+		public DataTable ExcelTocsv(string excelPath)
+		{
+			FileStream stream = File.Open(excelPath, FileMode.Open, FileAccess.Read);
+
+			////1. Reading from a binary Excel file ('97-2003 format; *.xls)
+			//IExcelDataReader excelReader = ExcelReaderFactory.CreateBinaryReader(stream);
+
+			//2. Reading from a OpenXml Excel file (2007 format; *.xlsx)
+			IExcelDataReader excelReader = ExcelReaderFactory.CreateOpenXmlReader(stream);
+
+			//3. DataSet - The result of each spreadsheet will be created in the result.Tables
+			//DataSet result = excelReader.AsDataSet();
+			int count = excelReader.ResultsCount;
+
+			//excelReader.IsFirstRowAsColumnNames = true;
+
+			DataSet result = excelReader.AsDataSet(new ExcelDataSetConfiguration()
+			{
+				ConfigureDataTable = (_) => new ExcelDataTableConfiguration()
+				{
+					UseHeaderRow = true
     }
+			});
+			DataTable dt = result.Tables[0];
+			return dt;
+
 
 }
+	}
+}
+
