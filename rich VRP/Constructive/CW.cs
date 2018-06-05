@@ -4,6 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using OP.Data;
+using rich_VRP.Neighborhoods.Insert;
 
 namespace rich_VRP.Constructive
 {
@@ -40,7 +41,6 @@ namespace rich_VRP.Constructive
              
 
                 Route newRoute = new Route(problem, veh); ////////产生一条该车的路径,已经把车分配给了路径
-                //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
                 double earliest_departure_time = newRoute.GetEarliestDepartureTime();//该路径的最早出发时间
                 //只要新产生路径的最早出发时间小于最晚时间限制就可以为其分配customer
                 while (earliest_departure_time < veh.Late_time)
@@ -57,7 +57,6 @@ namespace rich_VRP.Constructive
                         else
                         {
                             newRoute = new Route(problem, veh);
-                            //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
                             earliest_departure_time = newRoute.GetEarliestDepartureTime();
                         }
                     }
@@ -66,8 +65,8 @@ namespace rich_VRP.Constructive
                         earliest_departure_time = veh.Late_time;
                     }
                 }
-                int a = fleet.GetNumOfUsedVeh();
-                Console.WriteLine(a);
+                int num = fleet.GetNumOfUsedVeh();
+                Console.WriteLine(num);//输出车辆数
             }
             solution.UpdateFirstTripTime();
             return solution;
@@ -93,7 +92,8 @@ namespace rich_VRP.Constructive
             while (insert_feasible == 0)
             {
                 double best_cost = double.MaxValue; //一个无穷大的数
-                double alefa = rand.NextDouble(); //产生0~1的随机数，评价标准的参数
+                //double alefa = rand.NextDouble(); //产生0~1的随机数，评价标准的参数
+                double alefa = 0;
                 route = best_route;
                 bool inserted = false;//记录本次循环是否插入了点
                 Customer inserted_cus = null;//最终确定要插入的点
@@ -150,8 +150,82 @@ namespace rich_VRP.Constructive
                         {
                             double insertcus_dis = insert_cus.TravelDistance(problem.StartDepot) + insert_cus.TravelDistance(problem.EndDepot);
                             double waittime_after_insert = cur_route.GetWaitTime();
-                            double add_waittime = waittime_after_insert - waittime_before_insert;//增加的等待时间
-                            //double add_waittime = 0;
+                            //double add_waittime = waittime_after_insert - waittime_before_insert;//增加的等待时间
+                            double add_waittime = 0;
+                            double TransCostRate = problem.GetVehTypebyID(cur_route.AssignedVeh.TypeId).VariableCost;//行驶费率
+                            double cost = TransCostRate * (add_distance - alefa * insertcus_dis) + Problem.WaitCostRate * add_waittime;//评价插入质量的标准
+                            if (cost < best_cost)
+                            {
+                                best_cost = cost;
+                                best_route = cur_route;
+                                inserted = true;
+                                inserted_cus = insert_cus;
+                            }
+                        }
+
+                    }
+                }
+                if (!inserted)//如果在本次循环中没有插入新的点，说明该路径接近饱和，退出while循环
+                {
+                    insert_feasible = 1;
+                }
+                else
+                {
+                    unroute_cus.Remove(inserted_cus);
+                    violation_volume = best_route.ViolationOfVolume();//若不违反返回0
+                    violation_weight = best_route.ViolationOfVolume();//若不违反返回0
+                    insert_feasible = violation_volume + violation_weight;//只有体积和重量限制没有违反才能继续往路径里插入新的点
+                }
+            }
+
+            left_unroute_cus = unroute_cus;
+            return best_route;
+        }
+
+        /// <summary>
+        /// 最后再考虑充电
+        /// </summary>
+        /// <param name="route"></param>
+        /// <param name="unroute_cus"></param>
+        /// <param name="left_unroute_cus"></param>
+        /// <returns></returns>
+        public Route BIA_2(Route route, List<Customer> unroute_cus, out List<Customer> left_unroute_cus)
+        {
+            List<Customer> unrouteCus_b4inerted = new List<Customer>(unroute_cus);
+            Route route_be4inerted = route.Copy();
+            double violation_volume = route.ViolationOfVolume();//若不违反返回0
+            double violation_weight = route.ViolationOfVolume();//若不违反返回0
+            double insert_feasible = violation_volume + violation_weight;//只有体积和重量限制没有违反才能继续往路径里插入新的点
+            Route best_route = route;
+            
+            while (insert_feasible == 0)
+            {
+                double best_cost = double.MaxValue; //一个无穷大的数
+                double alefa = rand.NextDouble(); //产生0~1的随机数，评价标准的参数
+                //double alefa = 0;
+                route = best_route;
+                bool inserted = false;//记录本次循环是否插入了点
+                Customer inserted_cus = null;//最终确定要插入的点
+                for (int i = 0; i < unroute_cus.Count; i++)
+                {
+                    Customer insert_cus = unroute_cus[i];//临时插入的点
+                    int num_cus = route.RouteList.Count;
+                    for (int j = 1; j < route.RouteList.Count; j++)//第一个位置和最后一个位置不能插入
+                    {
+                        Route cur_route = route.Copy();
+                        double waittime_before_insert = cur_route.GetWaitTime();
+                        cur_route.InsertNode(insert_cus, j);//插入
+                        double add_distance = insert_cus.TravelDistance(cur_route.RouteList[j - 1]) + insert_cus.TravelDistance(cur_route.RouteList[j + 1])
+                                              - cur_route.RouteList[j - 1].TravelDistance(cur_route.RouteList[j + 1]);//增加的距离（dik + dkj - dij）
+
+ 
+                        ////////////////选择最优的一次插入////////////////////////////////////////////////////
+                        if (cur_route.IsFeasible_except_bat()) //如果插入customer和相应的station后满足所有约束
+                        {
+                            double insertcus_dis = insert_cus.TravelDistance(problem.StartDepot) + insert_cus.TravelDistance(problem.EndDepot);
+                            double waittime_after_insert = cur_route.GetWaitTime();
+                            //double add_waittime = waittime_after_insert - waittime_before_insert;//增加的等待时间
+                            double add_waittime = 0;
                             double TransCostRate = problem.GetVehTypebyID(cur_route.AssignedVeh.TypeId).VariableCost;//行驶费率
                             double cost = TransCostRate * (add_distance - alefa * insertcus_dis) + Problem.WaitCostRate * add_waittime;//评价插入质量的标准
                             if (cost < best_cost)
@@ -179,10 +253,19 @@ namespace rich_VRP.Constructive
             }
 
 
+            InsertSta InsertSta = new InsertSta();
+            best_route = InsertSta.InsertStaInRoute(best_route);
+            if (best_route == null)
+            {
+                best_route = BIA_2(route_be4inerted, unrouteCus_b4inerted, out unroute_cus);
+                Console.WriteLine("+++++++++++++++++++++++++++++++++++++++++++BIA_2");
+
+            }
+           
             left_unroute_cus = unroute_cus;
             return best_route;
-        }
 
+        }
 
     }
 }

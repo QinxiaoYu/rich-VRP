@@ -140,7 +140,7 @@ namespace OP.Data
 			foreach (var veh in fleet.VehFleet)
 			{				
 				result.AppendLine(veh.vehCostInf());
-    }
+            }
 			//string result_s = result.ToString();
 			//生成文件名称
 			//获取当前时间

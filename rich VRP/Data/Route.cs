@@ -380,6 +380,23 @@ namespace OP.Data
 
 
         /// <summary>
+        /// 笼统的判读路径是否可行(除电量之外)
+        /// </summary>
+        /// <returns>不可行：对某一个顾客：服务时间>最晚可接受时间or对路径：容量超限</returns>
+        public bool IsFeasible_except_bat()
+        {
+            double vV = ViolationOfVolume();
+            if (vV > 0) return false;
+            double vW = ViolationOfWeight();
+            if (vW > 0) return false;
+            int vTW = ViolationOfTimeWindow();
+            if (vTW > -1) return false;
+            return true;
+        }
+
+
+
+        /// <summary>
         /// 笼统的判读路径是否可行
         /// </summary>
         /// <returns>不可行：对某一个顾客：服务时间>最晚可接受时间or对路径：容量超限</returns>
