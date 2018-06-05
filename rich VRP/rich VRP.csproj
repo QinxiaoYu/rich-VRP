@@ -50,6 +50,7 @@
     <Compile Include="MetaHeuristic\SA.cs" />
     <Compile Include="MetaHeuristic\TS.cs" />
     <Compile Include="MetaHeuristic\VNS.cs" />
+    <Compile Include="Neighborhoods\AC.cs" />
     <Compile Include="Neighborhoods\DestroyRepair\DestroyAndRepair.cs" />
     <Compile Include="Neighborhoods\Insert\InsertDistance.cs" />
     <Compile Include="Neighborhoods\Inter\CrossInter.cs" />
