@@ -27,11 +27,9 @@ namespace rich_VRP
             string dir = Directory.GetCurrentDirectory();
             
             Problem problem = reader.Read(dir);
-<<<<<<< HEAD
             Problem.MinWaitTimeAtDepot = 60; //在配送中心的最少等待时间 
             Problem.WaitCostRate = 0.4;
             //problem.SetNearDistanceCusAndSta(10, 2); //计算每个商户的小邻域
-=======
             Problem.MinWaitTimeAtDepot = 60;
       
 
@@ -40,7 +38,6 @@ namespace rich_VRP
             Solution ini_solution = initial.initial_construct();
             string result = ini_solution.PrintToString();
 
->>>>>>> 1d0d11c... analysis
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
             outfilename = dir + "//" + "test_0605.txt";
