@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 ﻿//using OP.Data;
 //using System;
 //using System.Collections.Generic;
@@ -106,3 +107,6 @@
 				
 //	}
 //}
+=======
+﻿
+>>>>>>> 1d0d11c... analysis

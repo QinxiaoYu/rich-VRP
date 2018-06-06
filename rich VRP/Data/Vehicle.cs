@@ -188,6 +188,10 @@ namespace OP.Data
 	{
         public Solution solution;
 		public List<Vehicle> VehFleet;
+
+		public Fleet(){
+			
+		}
        
 		public Fleet()
 		{
