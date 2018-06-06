@@ -82,6 +82,12 @@ namespace OP.Data
 
         }
 
+		///初始化一条空路
+		public Route()
+		{
+			
+		}
+
 
 
         /// <summary>
