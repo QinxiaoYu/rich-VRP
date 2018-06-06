@@ -43,7 +43,8 @@ namespace rich_VRP
 >>>>>>> 1d0d11c... analysis
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
-            outfilename = dir + "//" + "test_0603.txt";
+            outfilename = dir + "//" + "test_0605.txt";
+
             StreamWriter sw = new StreamWriter(outfilename, true);
             for (int i = 0; i < 100; i++)
             {
@@ -65,7 +66,8 @@ namespace rich_VRP
                 {
                     sb.AppendLine("====RemoveSta=====");
                     double newcost = evaluate.CalObjCost(ini_solution);
-                    if (newcost<306194)
+
+                    if (newcost<330000)
                     {
                         ini_solution.PrintResult();
                     }

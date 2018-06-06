@@ -170,6 +170,68 @@ namespace OP.Data
 	
 	}
 
+
+        internal string vehOtherInfo()
+        {
+            VehicleType thisvt = this.solution.problem.GetVehTypebyID(this.TypeId);
+            List<int> CurtourLength = new List<int>();
+            List<int> CurWaitTime = new List<int>();
+            List<int> CurBattery = new List<int>();
+            List<double> CurWeight = new List<double>();
+            List<double> CurVolumn = new List<double>();
+            int AccumutourLenght = 0;
+            int AccumuBattery = 0;
+            double AccumuWeight = 0;
+            double AccumuVolume = 0;
+
+            foreach (var item in VehRouteList)
+            {
+                Route cur_route = this.solution.GetRouteByID(item);
+                for (int i = 0; i < cur_route.RouteList.Count; i++)
+                {
+                    if (i==0)
+                    {
+                        CurtourLength.Add(0);
+                        CurWaitTime.Add(0);
+                        CurBattery.Add((int)thisvt.MaxRange);
+                        CurWeight.Add(0);
+                        CurVolumn.Add(0);
+                        AccumutourLenght = 0;
+                        AccumuBattery = (int)thisvt.MaxRange;
+                        AccumuVolume = 0;
+                        AccumuWeight = 0;
+                    }else
+                    {
+                        AccumutourLenght += cur_route.RouteList[i].TravelDistance(cur_route.RouteList[i - 1]); //到该点时到累计行程
+                        CurtourLength.Add(AccumutourLenght);
+                        int arrivetime = (int)(cur_route.ServiceBeginingTimes[i - 1] + cur_route.RouteList[i-1].Info.ServiceTime + cur_route.RouteList[i].TravelTime(cur_route.RouteList[i - 1]));
+                        CurWaitTime.Add((int)Math.Max(0, cur_route.ServiceBeginingTimes[i]-arrivetime));
+                        if (cur_route.RouteList[i].Info.Type==3) //充电站
+                        {
+                            AccumuBattery = (int)thisvt.MaxRange;
+                        }else
+                        {
+                            AccumuBattery -= cur_route.RouteList[i].TravelDistance(cur_route.RouteList[i - 1]);
+                        }
+
+                        CurBattery.Add(AccumuBattery);
+                        AccumuWeight += cur_route.RouteList[i].Info.Weight;
+                        AccumuVolume += cur_route.RouteList[i].Info.Volume;
+                        CurWeight.Add(AccumuWeight);
+                        CurVolumn.Add(AccumuVolume);                    
+                    }
+
+              }
+            }
+            string Str_CurtourLength = string.Join(";", CurtourLength);
+            string Str_CurWaitTime = string.Join(";", CurWaitTime);
+            string Str_CurBattery = string.Join(";", CurBattery);
+            string Str_CurWeight = string.Join(";", CurWeight);
+            string Str_CurVolumn = string.Join(";", CurVolumn);
+            string Str_Otherinfo = Str_CurtourLength + "," + Str_CurWaitTime + "," + Str_CurBattery + "," + Str_CurWeight + "," + Str_CurVolumn;
+            return Str_Otherinfo;
+        }
+
         public Vehicle Copy()
         {
             Vehicle v = new Vehicle(this.TypeId, this.VehId);
