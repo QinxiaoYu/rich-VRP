@@ -136,9 +136,9 @@ namespace OP.Data
 		public void PrintResult()
 		{
 			StringBuilder result = new StringBuilder("");//初始化空的可变长字符串
-            StringBuilder result_otherinfo = new StringBuilder();
 			String[] columns = { "trans_code", "vehicle_type", "dist_seq", "distribute_lea_tm", "distribute_arr_tm", "distance", "trans_cost", "charge_cost", "wait_cost", "fixed_use_cost", "total_cost", "charge_cnt" };
             //create trans_code_dict that containts routeID
+            StringBuilder result_otherinfo = new StringBuilder();
             string[] columns_otherinfo = { "acc_range","waittime","acc_battery","acc_weight","acc_volumn"};
 			string title = String.Join(",", columns);
             string title_otherinfo = String.Join(",", columns_otherinfo);

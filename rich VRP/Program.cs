@@ -25,7 +25,7 @@ namespace rich_VRP
             Problem.SetNearDistanceCusAndSta(10, 10); //计算每个商户的小邻域
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
-            outfilename = dir + "//" + "test_0606.txt";
+            outfilename = dir + "//" + "test_0605.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
             for (int i = 0; i < 500; i++)
             {
@@ -48,6 +48,7 @@ namespace rich_VRP
                 {
                     sb.AppendLine("====RemoveSta=====");
                     double newcost = evaluate.CalObjCost(ini_solution);
+
                     Console.WriteLine("ObjVal = " + newcost.ToString("0.00"));
 
                     StationPosition sp = new StationPosition();
@@ -56,7 +57,7 @@ namespace rich_VRP
                     Console.WriteLine("ObjVal = " + newcost2.ToString("0.00"));
                     
                     if (newcost<340000)
-                    {
+
                         ini_solution.PrintResult();
                         Console.WriteLine(ini_solution.PrintToString());
                     }

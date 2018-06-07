@@ -212,6 +212,7 @@ namespace OP.Data
 	
 	}
 
+
         internal string vehOtherInfo()
         {
             VehicleType thisvt = Problem.GetVehTypebyID(this.TypeId);
