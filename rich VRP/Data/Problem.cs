@@ -20,7 +20,7 @@ namespace OP.Data
 
         static int[,] DistanceBetween { get; set; }
         static int[,] TravelTimeBetween { get; set; }
-        public static double[,] AngelBetween { get; set; }
+        public static double[,] AngleBetween { get; set; }
 
         public static double MinWaitTimeAtDepot { get; set; }
         public static double WaitCostRate { get; set; }
@@ -49,6 +49,8 @@ namespace OP.Data
             int NodeNumber = AllNodes.Count;
             DistanceBetween = new int[NodeNumber, NodeNumber];
             TravelTimeBetween = new int[NodeNumber, NodeNumber];
+            AngleBetween = new double [NodeNumber, NodeNumber];
+            setAngleBetween();
         }
 
         public static void SetVehicleTypes(List<VehicleType> _types)
@@ -60,7 +62,56 @@ namespace OP.Data
         {
             DistanceBetween[i, j] = dis;
         }
+        /// <summary>
+        /// 两点之间的角度，所有设定的ioj均为逆时针方向的角度，均为[0,360],比如（1，3）= 60 ，则（3，1）= 300 使用时记得要判断
+        /// 其中如果是（0，i），能够获取点i到水平线之间的角度
+        /// </summary>
+        public static void setAngleBetween()
+        {
+            for (int i = 0; i < AllNodes.Count; i++)
+            {
+                for (int j = 0; j < AllNodes.Count; j++)
+                {
+                    double angle1, angle2;
+                    if (i == 0)
+                    {
+                        angle1 = 0;
+                    }
+                    else
+                    {
+                        angle1 = Math.Atan2((AllNodes[i].Y - AllNodes[0].Y), (AllNodes[i].X - AllNodes[0].Y)) * 180 / Math.PI;
+                        if (angle1 < 0)
+                        {
+                            angle1 = angle1 + 360;
+                        }
+                    }
+                    if (j == 0)
+                    {
+                        angle2 = 0;
+                    }
+                    else
+                    {
+                        angle2 = Math.Atan2((AllNodes[j].Y - AllNodes[0].Y), (AllNodes[j].X - AllNodes[0].Y)) * 180 / Math.PI;
+                        if (angle2 < 0)
+                        {
+                            angle2 = angle2 + 360;
+                        }
+                    }
+                    double angle = angle2 - angle1;
+                    if (angle < 0)
+                    {
+                        angle = angle + 360;
+                    }
+                    setAngleBetweenIJ(i, j, angle);
 
+                }
+
+            }
+        }
+        public static void setAngleBetweenIJ(int i, int j, double angle)
+        {
+            AngleBetween[i, j] = angle;
+        }
         public static void SetTravelTimeIJ(int i, int j, int tt)
         {
             TravelTimeBetween[i, j] = tt;
@@ -79,7 +130,7 @@ namespace OP.Data
 
         public static double GetAngelIJ(int i, int j)
         {
-            return AngelBetween[i, j];
+            return AngleBetween[i, j];
         }
 
         public static Customer SearchCusbyId(int id)
