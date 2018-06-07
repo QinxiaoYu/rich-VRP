@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -17,12 +17,31 @@ namespace rich_VRP
     {
         static void Main(string[] args)
         {
+			//string path = "/Users/chenpeng/Documents/Project/GitHub/QinxiaoYu/rich-VRP.git/rich VRP/bin/Debug/reslut6310423451.csv";
+			////draw routes
+			//Perspective per = new Perspective();
+			//per.setResults(path);
+			//per.resoterFleet();
+			//per.Draw();
+
             OpProblemReader reader = new OpProblemReader();
             string dir = Directory.GetCurrentDirectory();   
             reader.Read(dir);
             Problem.MinWaitTimeAtDepot = 60; //在配送中心的最少等待时间 
             Problem.WaitCostRate = 0.4;
+
             Problem.SetNearDistanceCusAndSta(10, 10); //计算每个商户的小邻域
+
+            //problem.SetNearDistanceCusAndSta(10, 2); //计算每个商户的小邻域
+            Problem.MinWaitTimeAtDepot = 60;
+      
+
+            ///初始化
+            Initialization initial = new Initialization(problem);
+            Solution ini_solution = initial.initial_construct();
+            string result = ini_solution.PrintToString();
+
+
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
             outfilename = dir + "//" + "test_0605.txt";

@@ -60,6 +60,8 @@
     <Reference Include="ExcelDataReader.DataSet">
       <HintPath>packages\ExcelDataReader.DataSet.3.4.0\lib\net45\ExcelDataReader.DataSet.dll</HintPath>
     </Reference>
+    <Reference Include="System.Drawing" />
+    <Reference Include="System.Drawing.Design" />
   </ItemGroup>
   <ItemGroup>
     <Compile Include="Constructive\CWObjFunc.cs" />
@@ -88,12 +90,17 @@
     <Compile Include="Data\Vehicle.cs" />
     <Compile Include="Data\Writer.cs" />
     <Compile Include="Data\Problem.cs" />
+    <Compile Include="Analysis\Perspective.cs" />
+    <Compile Include="Analysis\ReadWriteCsv.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />
     <None Include="packages.config" />
   </ItemGroup>
   <ItemGroup />
+  <ItemGroup>
+    <Folder Include="Analysis\" />
+  </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
        Other similar extension points exist, see Microsoft.Common.targets.

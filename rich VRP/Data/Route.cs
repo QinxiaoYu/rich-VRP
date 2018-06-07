@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
@@ -230,6 +230,14 @@ namespace OP.Data
             AddNode(startdepot);
             AddNode(enddepot);
         }
+
+		public double totalCost{ get; set; }
+
+		///初始化一条空路
+		public Route()
+		{
+			
+		}
 
 
 
@@ -893,10 +901,19 @@ namespace OP.Data
 
             }
 
+			totalCost = TransCost + WaitCost + ChargeCost;
 			return new Tuple<double, double, double, int>(TransCost, WaitCost, ChargeCost, chargeCount);
+<<<<<<< Updated upstream
 
 			
         }
         
     }
+=======
+		}
+
+				
+
+		}
+>>>>>>> Stashed changes
 }
