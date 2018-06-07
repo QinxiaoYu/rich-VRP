@@ -292,7 +292,7 @@ namespace OP.Data
 	/// </summary>
 	public class Fleet
 	{
-        public static Solution solution;
+        public Solution solution;
 		public List<Vehicle> VehFleet;
 
 		public Fleet()
