@@ -5,18 +5,18 @@ using System.Collections.Generic;
 // Analysis disable once CheckNamespace
 namespace OP.Data
 {
-    public class Problem
+    public static class Problem
     {   //数据集名称
-        public string Abbr { get; set; }
-        public double Tmax { get; set; }
-        public int VehicleNum { get; set; }
-        public Depot StartDepot { get; set; }
-        public Depot EndDepot { get; set; }
-        public List<Customer> Customers { get; set; }
-        public List<Station> Stations { get; set; }
-        public List<NodeInfo> AllNodes { get; set; }
+        public static string Abbr { get; set; }
+        public static double Tmax { get; set; }
+        public static int VehicleNum { get; set; }
+        public static Depot StartDepot { get; set; }
+        public static Depot EndDepot { get; set; }
+        public static List<Customer> Customers { get; set; }
+        public static List<Station> Stations { get; set; }
+        public static List<NodeInfo> AllNodes { get; set; }
       
-        public List<VehicleType> VehTypes { get; set; }
+        public static List<VehicleType> VehTypes { get; set; }
 
         static int[,] DistanceBetween { get; set; }
         static int[,] TravelTimeBetween { get; set; }
@@ -24,11 +24,11 @@ namespace OP.Data
 
         public static double MinWaitTimeAtDepot { get; set; }
         public static double WaitCostRate { get; set; }
-        public List<int[]> NearDistanceCus;
-        public List<int[]> NearDistanceSta;
+        public static List<int[]> NearDistanceCus;
+        public static List<int[]> NearDistanceSta;
 
 
-        public void SetNodes(List<NodeInfo> nodes, string abbr, double t_max, int numV, int numD, int numC, int numS)
+        public static void SetNodes(List<NodeInfo> nodes, string abbr, double t_max, int numV, int numD, int numC, int numS)
         {
             Tmax = t_max;
             VehicleNum = numV;
@@ -51,17 +51,17 @@ namespace OP.Data
             TravelTimeBetween = new int[NodeNumber, NodeNumber];
         }
 
-        public void SetVehicleTypes(List<VehicleType> _types)
+        public static void SetVehicleTypes(List<VehicleType> _types)
         {
             VehTypes = _types;
         }
 
-        public void SetDistanceIJ(int i, int j, int dis)
+        public static void SetDistanceIJ(int i, int j, int dis)
         {
             DistanceBetween[i, j] = dis;
         }
 
-        public void SetTravelTimeIJ(int i, int j, int tt)
+        public static void SetTravelTimeIJ(int i, int j, int tt)
         {
             TravelTimeBetween[i, j] = tt;
         }
@@ -82,7 +82,7 @@ namespace OP.Data
             return AngelBetween[i, j];
         }
 
-        public Customer SearchCusbyId(int id)
+        public static Customer SearchCusbyId(int id)
         {
             foreach (var customer in Customers)
                 if (customer.Info.Id == id)
@@ -90,9 +90,14 @@ namespace OP.Data
             throw new Exception("Customer not found");
         }
 
-        public VehicleType GetVehTypebyID(int _vehtypeid)
+        public static Station SearchStaById(int id)
         {
-            foreach (VehicleType vehtype in this.VehTypes)
+            return Stations[id - 1001];
+        }
+
+        public static VehicleType GetVehTypebyID(int _vehtypeid)
+        {
+            foreach (VehicleType vehtype in VehTypes)
             {
                 if (vehtype.VehTypeID == _vehtypeid)
                 {
@@ -102,14 +107,14 @@ namespace OP.Data
             return null;
         }
 
-        public void SetAllNodes()
+        public static void SetAllNodes()
         {
             AllNodes = new List<NodeInfo> { StartDepot.Info, EndDepot.Info };
             foreach (var customer in Customers)
                 AllNodes.Add(customer.Info);
         }
 
-        internal void SetDistanceANDTravelIJ(int i, int j, int tt_ij, int dis_ij)
+        internal static void SetDistanceANDTravelIJ(int i, int j, int tt_ij, int dis_ij)
         {
             SetDistanceIJ(i, j, dis_ij);
             SetTravelTimeIJ(i, j, tt_ij);
@@ -120,7 +125,7 @@ namespace OP.Data
         /// </summary>
         /// <param name="_numNNCus"></param>
         /// <param name="_numNNSta"></param>
-        public void SetNearDistanceCusAndSta(int _numNNCus, int _numNNSta)
+        public static  void SetNearDistanceCusAndSta(int _numNNCus, int _numNNSta)
         {
             NearDistanceCus = new List<int[]>();
             NearDistanceSta = new List<int[]>();
@@ -197,7 +202,7 @@ namespace OP.Data
         /// </summary>
         /// <param name="_cus_id"></param>
         /// <returns></returns>
-        public int[] GetNearDistanceCus(int _cus_id)
+        public static int[] GetNearDistanceCus(int _cus_id)
         {
             return NearDistanceCus[_cus_id];
         }
@@ -206,9 +211,9 @@ namespace OP.Data
         /// </summary>
         /// <param name="_cus_id"></param>
         /// <returns></returns>
-        public int[] GetNearDistanceSta(int _cus_id)
+        public static int[] GetNearDistanceSta(int _cus_id)
         {
-            return NearDistanceSta[_cus_id];
+            return NearDistanceSta[_cus_id-1];
         }
     }
 

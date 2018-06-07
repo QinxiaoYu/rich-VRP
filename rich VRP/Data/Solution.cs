@@ -10,15 +10,13 @@ namespace OP.Data
     {
 
         public List<Route> Routes;
-        public Problem problem;
         public double ObjVal;
         public Fleet fleet;
         public List<Customer> UnVisitedCus;
 
-        public Solution(Problem _problem)
+        public Solution()
         {
             Routes = new List<Route>();
-            problem = _problem;
             fleet = new Fleet();
             fleet.solution = this;
             ObjVal = 0.0;
@@ -29,7 +27,9 @@ namespace OP.Data
             //newRoute.Solution = this;
             Routes.Add(route);
         }
-
+        /// <summary>
+        /// 在已知更新某条路线后，不会对下游线路造成不可行情况下，更新下游线路们的最早发车时间
+        /// </summary>
         internal void UpdateTripChainTime()
         {
             foreach (Vehicle veh in fleet.VehFleet)
@@ -39,24 +39,27 @@ namespace OP.Data
                 {
                     for (int i = 1; i < num_trips_veh; i++)
                     {
-                        Route cur_route = GetRouteByID(veh.VehRouteList[i]);
+                        int pos;
+                        Route cur_route = GetRouteByID(veh.VehRouteList[i],out pos);
                         double new_departure_cur = cur_route.GetEarliestDepartureTime();
-                        cur_route.ServiceBeginingTimes[0] = new_departure_cur;
+                        cur_route.ServiceBeginingTimes[0] = new_departure_cur;                    
                               
                     }
                 }
             }
         }
 
-        public Route GetRouteByID(string route_id)
+        public Route GetRouteByID(string route_id, out int pos_inSolution)
         {
-            foreach (Route route in Routes)
+            for (int i = 0; i < Routes.Count; i++)
             {
-                if (route.RouteId==route_id)
+                if (Routes[i].RouteId == route_id)
                 {
-                    return route;
+                    pos_inSolution = i;
+                    return Routes[i];
                 }
             }
+            pos_inSolution = -1;
             return null;
         }
 
@@ -98,7 +101,7 @@ namespace OP.Data
 
         public Solution Copy()
         {
-            var sol = new Solution(problem);
+            var sol = new Solution();
             foreach (Route route in Routes)
             {
                 if (route.RouteList.Count >= 2)
