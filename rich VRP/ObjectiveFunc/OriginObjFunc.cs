@@ -19,6 +19,7 @@ namespace rich_VRP.ObjectiveFunc
           
             foreach (var veh in fleet.VehFleet) //遍历每一个被使用的车辆
             {
+                veh.solution = solution;
 				totalCost += veh.calculCost();
             }
 

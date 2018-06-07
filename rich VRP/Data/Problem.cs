@@ -49,6 +49,13 @@ namespace OP.Data
             int NodeNumber = AllNodes.Count;
             DistanceBetween = new int[NodeNumber, NodeNumber];
             TravelTimeBetween = new int[NodeNumber, NodeNumber];
+            AngelBetween = new double[NodeNumber, NodeNumber];
+            //AngelBetween = CalAngelBetweenNodes();
+        }
+
+        private static double[,] CalAngelBetweenNodes()
+        {
+            throw new NotImplementedException();
         }
 
         public static void SetVehicleTypes(List<VehicleType> _types)

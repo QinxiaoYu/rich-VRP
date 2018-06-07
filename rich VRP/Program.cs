@@ -11,6 +11,7 @@ using rich_VRP.ObjectiveFunc;
 using rich_VRP.Neighborhoods.Remove;
 using rich_VRP.Neighborhoods.Intra;
 using rich_VRP.Constructive.rich_VRP.Constructive;
+using rich_VRP.Neighborhoods.DestroyRepair;
 
 namespace rich_VRP
 {
@@ -28,12 +29,12 @@ namespace rich_VRP
             StringBuilder sb = new StringBuilder();
             outfilename = dir + "//" + "test.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
-            for (int i = 0; i < 500; i++)
+            for (int i = 0; i < 100; i++)
             {
                 sb.Clear();
                 sb.AppendLine("============== " + i.ToString() + " ===============");
-                CW4sveh initial = new CW4sveh(); 
-                //CWObjFunc initial = new CWObjFunc(); //这个效果最差
+                //CW4sveh initial = new CW4sveh(); 
+                CWObjFunc initial = new CWObjFunc(); //这个效果最差
                 //Initialization initial = new Initialization();
                 Solution ini_solution = initial.initial_construct();
                 OriginObjFunc evaluate = new OriginObjFunc();
@@ -51,12 +52,21 @@ namespace rich_VRP
                     sb.AppendLine("====RemoveSta=====");
                     double newcost = evaluate.CalObjCost(ini_solution);
 
-                    Console.WriteLine("ObjVal = " + newcost.ToString("0.00"));
+                    Console.WriteLine("ObjVal 1 = " + newcost.ToString("0.00"));
 
                     StationPosition sp = new StationPosition();
                     ini_solution = sp.StationExchage(ini_solution, 0.3);
                     double newcost2 = evaluate.CalObjCost(ini_solution);
-                    Console.WriteLine("ObjVal = " + newcost2.ToString("0.00"));
+                    Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
+
+                    DestroyAndRepair DR = new DestroyAndRepair();
+                    ini_solution = DR.DestroyShortRoute(ini_solution, 5);
+                    ini_solution = DR.DestroyWasteRoute(ini_solution, 0.2);
+                    ini_solution = DR.DestroyAfternoonNodes(ini_solution, 780, 0.2);
+                    ini_solution = DR.Repair(ini_solution);
+
+                    double newcost3 = evaluate.CalObjCost(ini_solution);
+                    Console.WriteLine("ObjVal 3 = " + newcost3.ToString("0.00"));
 
                     if (newcost < 340000)
                     {
@@ -64,7 +74,7 @@ namespace rich_VRP
                         Console.WriteLine(ini_solution.PrintToString());
                     }
 
-                    sb.AppendLine(newcost2.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
+                    sb.AppendLine(newcost3.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
                     //sb.AppendLine(newcost.ToString("0.00"));
                     //sb.AppendLine(ini_solution.PrintToString());
 

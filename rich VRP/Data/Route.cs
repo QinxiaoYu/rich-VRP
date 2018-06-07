@@ -384,11 +384,11 @@ namespace OP.Data
         internal double GetFloatTimeAtCus(int i)
         {
             double floattime = 960.0;
-            if (RouteList[i].Info.Type==2)//充电站
+            if (RouteList[i].Info.Type==2)//商户
             {
-                double arrivetime = ServiceBeginingTimes[i - 1] + RouteList[i - 1].Info.ServiceTime + RouteList[i - 1].TravelTime(RouteList[i]);
+                double duetime = RouteList[i].Info.DueDate;
                 double servicestarttime = ServiceBeginingTimes[i];
-                floattime = servicestarttime - arrivetime;
+                floattime = duetime - servicestarttime;
             }
             return floattime;
         }

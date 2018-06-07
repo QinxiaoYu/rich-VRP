@@ -23,7 +23,7 @@ namespace OP.Data
 		/// Gets or sets the veh identifier.
 		/// </summary>
 		/// <value>The veh identifier.</value>
-		public int VehId{ get; set; }
+		public string VehId{ get; set; }
         /// <summary>
         /// 某辆车跑过的所有路线的集合
         /// </summary>
@@ -45,10 +45,14 @@ namespace OP.Data
 
         public Solution solution;
 
+        /// <summary>
+        /// 初始化一辆车的对象，该车只有车型，没有id
+        /// </summary>
+        /// <param name="_typeid"></param>
         public Vehicle(int _typeid)
         {
             this.TypeId = _typeid;
-            this.VehId = -1;
+            this.VehId = "AbsVEH";
             VehRouteList = new List<string>();
         }
 
@@ -57,7 +61,7 @@ namespace OP.Data
         /// </summary>
         /// <param name="_typeid"></param>
         /// <param name="_vehid"></param>
-		public Vehicle(int _typeid, int _vehid)
+		public Vehicle(int _typeid, string _vehid)
 		{
 			this.TypeId = _typeid;
 			this.VehId = _vehid;
@@ -294,11 +298,13 @@ namespace OP.Data
 	{
         public Solution solution;
 		public List<Vehicle> VehFleet;
+        public int EverUsedVeh;
        
 		public Fleet()
 		{
 			VehFleet = new List<Vehicle> ();
-            solution = null;  
+            solution = null;
+            EverUsedVeh = 0;
 		}
 
 		public int GetNumOfUsedVeh()
@@ -311,8 +317,9 @@ namespace OP.Data
         /// <param name="_vehtypeid">VehTypeid.</param>
         public Vehicle addNewVeh(int _vehtypeid)
         {
-            int numofVeh = GetNumOfUsedVeh();
-            Vehicle veh = new Vehicle(_vehtypeid, numofVeh);
+            EverUsedVeh += 1;
+            String veh_id = _vehtypeid.ToString() + "-" + EverUsedVeh.ToString();
+            Vehicle veh = new Vehicle(_vehtypeid, veh_id);
             veh.solution = this.solution;      
             VehFleet.Add(veh);
             return veh;
@@ -322,13 +329,13 @@ namespace OP.Data
         /// Removes a veh by its ID.
         /// </summary>
         /// <param name="_vehid">Vehid.</param>
-        public void removeVeh(int _vehid)
+        public void removeVeh(string _vehid)
 		{
 			Vehicle veh2remove = GetVehbyID (_vehid);
-			VehFleet.Remove (veh2remove);
+			VehFleet.Remove(veh2remove);
 		}
 
-        public int GetVehIdxInFleet(int veh_id)
+        public int GetVehIdxInFleet(string veh_id)
         {
             for (int i = 0; i < VehFleet.Count; i++)
             {
@@ -379,7 +386,7 @@ namespace OP.Data
 		/// </summary>
 		/// <returns>vehicle</returns>
 		/// <param name="_vehid">Veh's id.</param>
-		public Vehicle GetVehbyID(int _vehid)
+		public Vehicle GetVehbyID(string _vehid)
 		{
 			foreach (Vehicle veh in VehFleet) {
 				if (veh.VehId == _vehid) {
