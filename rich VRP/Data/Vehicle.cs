@@ -328,6 +328,18 @@ namespace OP.Data
 			VehFleet.Remove (veh2remove);
 		}
 
+        public int GetVehIdxInFleet(int veh_id)
+        {
+            for (int i = 0; i < VehFleet.Count; i++)
+            {
+                if (VehFleet[i].VehId==veh_id)
+                {
+                    return i;
+                }
+            }
+            return -1;
+        }
+
 		/// <summary>
 		/// Gets the number of vehicle of a particular type.
 		/// </summary>

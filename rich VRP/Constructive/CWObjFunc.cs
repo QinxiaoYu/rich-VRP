@@ -8,13 +8,7 @@ using OP.Data;
 namespace rich_VRP.Constructive
 {
     class CWObjFunc
-    {
-
-    }
-    ////////////在route类和vehicle类增加了几个方法和属性
-    class Initialization
-    {
-       
+    {     
         Fleet fleet;
         Random rand = new Random();//随机operter
         List<Customer> unrouted_Cus = new List<Customer>();

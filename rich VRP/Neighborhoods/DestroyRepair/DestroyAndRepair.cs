@@ -9,11 +9,11 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
 {
     class DestroyAndRepair
     {
-        public Solution solution;
-      
+        
+
         public DestroyAndRepair(Solution _solution)
         {
-            solution = _solution.Copy();          
+            solution = _solution;          
             solution.UnVisitedCus = new List<Customer>();
         }
         /// <summary>
@@ -22,8 +22,92 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
         /// <param name="threshold_node"></param>
         public void DestroyShortRoute(int threshold_node)
         {
+            Solution new_sol = solution.Copy();
+            for (int i = new_sol.Routes.Count - 1; i > 0 ;i--)
+            {
+                Route r = new_sol.Routes[i];
+                if (r.RouteList.Count < threshold_node)
+                {                   
+                    solution.Routes.RemoveAt(i);
+                    int veh_id = r.AssignedVeh.VehId;
+                    int idx_veh = solution.fleet.GetVehIdxInFleet(veh_id);
+                    solution.fleet.VehFleet[idx_veh].VehRouteList.Remove(r.RouteId);
+                    if (solution.fleet.VehFleet[idx_veh].getNumofVisRoute()==0)
+                    {
+                        solution.fleet.removeVeh(veh_id);
+                    }
+                    foreach (AbsNode cus in r.RouteList)
+                    {
+                        if (cus.Info.Type==2)
+                        {
+                            solution.UnVisitedCus.Add((Customer)cus);
+                        }
+                    }
 
+                }
+            }        
         }
 
+        public void DestroyWasteRoute(double percent)
+        {
+            Solution new_sol = solution.Copy();
+            for (int i = new_sol.Routes.Count - 1; i > 0; i--)
+            {
+                Route r = new_sol.Routes[i];
+                double totalWeight = r.GetTotalWeight();
+                double totalVolume = r.GetTotalVolume();
+                if (totalVolume<percent*Problem.VehTypes[r.AssignedVeh.TypeId-1].Volume 
+                    || totalWeight < percent*Problem.VehTypes[r.AssignedVeh.TypeId-1].Weight)
+                {
+                    solution.Routes.RemoveAt(i);
+                    int veh_id = r.AssignedVeh.VehId;
+                    int idx_veh = solution.fleet.GetVehIdxInFleet(veh_id);
+                    solution.fleet.VehFleet[idx_veh].VehRouteList.Remove(r.RouteId);
+                    if (solution.fleet.VehFleet[idx_veh].getNumofVisRoute() == 0)
+                    {
+                        solution.fleet.removeVeh(veh_id);
+                    }
+                    foreach (AbsNode cus in r.RouteList)
+                    {
+                        if (cus.Info.Type == 2)
+                        {
+                            solution.UnVisitedCus.Add((Customer)cus);
+                        }
+                    }
+
+                }
+            }
+        }
+
+        public void DestroyAfternoonNodes(double cuttingpoint)
+        {
+            Solution new_sol = solution.Copy();
+            for (int i = new_sol.Routes.Count - 1; i > 0; i--)
+            {
+                Route r = new_sol.Routes[i];
+                double totalWeight = r.GetTotalWeight();
+                double totalVolume = r.GetTotalVolume();
+                if (totalVolume < percent * Problem.VehTypes[r.AssignedVeh.TypeId - 1].Volume
+                    || totalWeight < percent * Problem.VehTypes[r.AssignedVeh.TypeId - 1].Weight)
+                {
+                    solution.Routes.RemoveAt(i);
+                    int veh_id = r.AssignedVeh.VehId;
+                    int idx_veh = solution.fleet.GetVehIdxInFleet(veh_id);
+                    solution.fleet.VehFleet[idx_veh].VehRouteList.Remove(r.RouteId);
+                    if (solution.fleet.VehFleet[idx_veh].getNumofVisRoute() == 0)
+                    {
+                        solution.fleet.removeVeh(veh_id);
+                    }
+                    foreach (AbsNode cus in r.RouteList)
+                    {
+                        if (cus.Info.Type == 2)
+                        {
+                            solution.UnVisitedCus.Add((Customer)cus);
+                        }
+                    }
+
+                }
+            }
+        }
     }
 }
