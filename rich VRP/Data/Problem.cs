@@ -5,58 +5,6 @@ using System.Collections.Generic;
 // Analysis disable once CheckNamespace
 namespace OP.Data
 {
-<<<<<<< HEAD
-    public class Problem
-    {   //数据集名称
-        public string Abbr { get; set; }
-        public double Tmax { get; set; }
-        public int VehicleNum { get; set; }
-        public Depot StartDepot { get; set; }
-        public Depot EndDepot { get; set; }
-        public List<Customer> Customers { get; set; }
-        public List<Station> Stations { get; set; }
-        public List<NodeInfo> AllNodes { get; set; }
-      
-        public List<VehicleType> VehTypes { get; set; }
-
-        static int[,] DistanceBetween { get; set; }
-        static int[,] TravelTimeBetween { get; set; }
-        public static double[,] AngelBetween { get; set; }
-
-        public static double MinWaitTimeAtDepot { get; set; }
-        public static double WaitCostRate { get; set; }
-        public List<int[]> NearDistanceCus;
-        public List<int[]> NearDistanceSta;
-
-
-        public void SetNodes(List<NodeInfo> nodes, string abbr, double t_max, int numV, int numD, int numC, int numS)
-        {
-            Tmax = t_max;
-            VehicleNum = numV;
-            Abbr = abbr;
-            AllNodes = nodes;
-            StartDepot = new Depot(nodes[0]);
-            EndDepot = new Depot(nodes[0]);
-            Customers = new List<Customer>();
-            Stations = new List<Station>();
-            for (var i = numD; i < numC + 1; ++i)
-            {
-                Customers.Add(new Customer(nodes[i]));
-            }
-            for (int i = numC + 1; i < AllNodes.Count; i++)
-            {
-                Stations.Add(new Station(nodes[i]));
-            }
-            int NodeNumber = AllNodes.Count;
-            DistanceBetween = new int[NodeNumber, NodeNumber];
-            TravelTimeBetween = new int[NodeNumber, NodeNumber];
-        }
-
-        public void SetVehicleTypes(List<VehicleType> _types)
-        {
-            VehTypes = _types;
-        }
-=======
 	public class Problem
 	{   //数据集名称
 		public string Abbr { get; set; }
@@ -226,7 +174,7 @@ namespace OP.Data
 			return Problem.GetTravelTimeIJ(Info.Id, destination.Info.Id);
 		}
 
->>>>>>> 1d0d11c... analysis
+
 
 		public virtual AbsNode ShallowCopy()
 		{
@@ -236,8 +184,6 @@ namespace OP.Data
 	}
 
 
-
-<<<<<<< HEAD
         public static double GetAngelIJ(int i, int j)
         {
             return AngelBetween[i, j];
@@ -473,15 +419,6 @@ namespace OP.Data
 
     public class Depot : AbsNode
     {
-        public Depot(NodeInfo info)
-=======
-	public class Depot : AbsNode
-	{
-	        public Depot(NodeInfo info)
->>>>>>> 1d0d11c... analysis
-        {
-            Info = info;
-        }
 
 		public override AbsNode ShallowCopy()
 		{
@@ -502,25 +439,6 @@ namespace OP.Data
 		}
 	}
 
-
-
-<<<<<<< HEAD
-    public class Customer : AbsNode
-    {
-
-        public Customer(NodeInfo info)
-        {
-            Info = info;
-         
-        }
-        public override AbsNode ShallowCopy()
-        {
-            return new Customer(Info);
-        }
-
-    }
-    
-=======
 	public class Customer : AbsNode
 	{
 		public Route Route { get; set; }
@@ -558,8 +476,6 @@ namespace OP.Data
 			return -1;
 		}
 	}
-
->>>>>>> 1d0d11c... analysis
 
 }
 
