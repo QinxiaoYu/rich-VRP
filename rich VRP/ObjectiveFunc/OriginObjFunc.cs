@@ -7,12 +7,11 @@ namespace rich_VRP.ObjectiveFunc
 {
     class OriginObjFunc
     {
-        public Problem problem;
         public Fleet fleet;
 
         public double CalObjCost (Solution solution)
         {
-            problem = solution.problem;
+           
             fleet = solution.fleet;
 
 			//全部成本

@@ -82,9 +82,9 @@ namespace OP.Data
 		{
             ResetCost();
           
-			fixed_use_cost = this.solution.problem.VehTypes[TypeId - 1].FixedCost;
-			double TransCostRate = this.solution.problem.VehTypes[TypeId-1].VariableCost;
-			double ChargeCostRate = this.solution.problem.VehTypes[TypeId-1].ChargeCostRate;
+			fixed_use_cost = Problem.VehTypes[TypeId - 1].FixedCost;
+			double TransCostRate = Problem.VehTypes[TypeId-1].VariableCost;
+			double ChargeCostRate = Problem.VehTypes[TypeId-1].ChargeCostRate;
 			int Num_Trip_Veh = getNumofVisRoute();
 			double WaitCost1 = Problem.WaitCostRate * (Num_Trip_Veh - 1) * Problem.MinWaitTimeAtDepot;
             int num_routes = this.VehRouteList.Count;
@@ -94,7 +94,8 @@ namespace OP.Data
             }
             for (int i = 0; i<VehRouteList.Count; i++)
             {
-                Route cur_route = this.solution.GetRouteByID(VehRouteList[i]);
+                int pos;
+                Route cur_route = this.solution.GetRouteByID(VehRouteList[i],out pos);
                 int num_nodes = cur_route.RouteList.Count;
                 if (num_nodes==2)
                 {
@@ -135,6 +136,46 @@ namespace OP.Data
 			costInfs = VehId + "," + TypeId + "," + dist_sep + "," + distribute_lea_tm + "," + distribute_arr_tm + "," + distance + "," + tran_cost.ToString("0.00") + "," + charge_cost + "," + wait_cost.ToString("0.00") + "," + fixed_use_cost+","+total_cost.ToString("0.00")+","+charge_cnt;
 			return costInfs;
 		}
+        /// <summary>
+        /// 递归检查一条路线推迟到达终点后，对下游线路们的影响。如果下游线路都可行，顺便更新了下游线路的时间，返回true; 如果不可行，则整个返回false。
+        /// </summary>
+        /// <param name="cur_route_pos">当前线路所在位置</param>
+        /// <param name="delaytime">延误时长</param>
+        /// <returns></returns>
+        public bool CheckNxtRoutesFeasible(int cur_route_pos, double delaytime)
+        {
+            if (delaytime<=0 || cur_route_pos>=getNumofVisRoute()-1)
+            {
+                return true;
+            }
+            bool Feasible = false;
+            int pos;
+            //递归检查紧邻下游线路的浮动时间
+            Route nxt_route = solution.GetRouteByID(VehRouteList[cur_route_pos + 1],out pos);
+            Route tmp_nxt_route = nxt_route.Copy();
+            for (int i = 0; i < tmp_nxt_route.RouteList.Count; i++)
+            {
+                if (i==0)
+                {
+                    tmp_nxt_route.ServiceBeginingTimes[i] += delaytime;
+                }
+                else
+                {
+                    tmp_nxt_route.ServiceBeginingTimes[i] = tmp_nxt_route.ServiceBeginingTimes[i - 1] 
+                                                          + tmp_nxt_route.RouteList[i - 1].Info.ServiceTime 
+                                                          + tmp_nxt_route.RouteList[i - 1].TravelDistance(tmp_nxt_route.RouteList[i]);
+                }              
+            }
+            if (tmp_nxt_route.IsFeasible())
+            {
+                if (CheckNxtRoutesFeasible(cur_route_pos + 1, tmp_nxt_route.GetArrivalTime() - nxt_route.GetArrivalTime()))
+                {
+                    Feasible = true;
+                    nxt_route = tmp_nxt_route.Copy();
+                }                            
+            }
+            return Feasible;
+        }
 
         private void GetvehRoutesInfo()
         {
@@ -146,7 +187,8 @@ namespace OP.Data
 
             foreach (var item in VehRouteList)
             {
-                Route cur_route = this.solution.GetRouteByID(item);
+                int pos;
+                Route cur_route = this.solution.GetRouteByID(item,out pos);
                 for (int i = 0; i < cur_route.RouteList.Count-1; i++)
                 {
                     nodes_id.Add(cur_route.RouteList[i].Info.Id.ToString());
@@ -170,9 +212,10 @@ namespace OP.Data
 	
 	}
 
+
         internal string vehOtherInfo()
         {
-            VehicleType thisvt = this.solution.problem.GetVehTypebyID(this.TypeId);
+            VehicleType thisvt = Problem.GetVehTypebyID(this.TypeId);
             List<int> CurtourLength = new List<int>();
             List<int> CurWaitTime = new List<int>();
             List<int> CurBattery = new List<int>();
@@ -185,7 +228,8 @@ namespace OP.Data
 
             foreach (var item in VehRouteList)
             {
-                Route cur_route = this.solution.GetRouteByID(item);
+                int pos;
+                Route cur_route = this.solution.GetRouteByID(item,out pos);
                 for (int i = 0; i < cur_route.RouteList.Count; i++)
                 {
                     if (i==0)
@@ -237,6 +281,7 @@ namespace OP.Data
             foreach (string r_id in this.VehRouteList)
             {
                 v.VehRouteList.Add(r_id);
+                v.solution = this.solution;
             }
             return v;
         }

@@ -10,11 +10,7 @@ using System.Net.NetworkInformation;
 namespace OP.Data
 {
     public class Route
-    {
-
-
-        public Problem Problem;
-            
+    {   
         /// <summary>
         /// 路径的ID
         /// </summary>
@@ -53,11 +49,10 @@ namespace OP.Data
         /// <summary>
         /// 专门用作route.copy
         /// </summary>
-        public Route(Problem problem)
+        public Route()
         {
-            Depot startdepot = problem.StartDepot;
-            Depot enddepot = problem.EndDepot;
-            Problem = problem;
+            Depot startdepot = Problem.StartDepot;
+            Depot enddepot = Problem.EndDepot;
             AssignedVehType = null;
             AssignedVeh = null;
             RouteList = new List<AbsNode>();
@@ -65,11 +60,167 @@ namespace OP.Data
             battery_level = new List<double>();
         }
 
-        public Route(Problem problem, VehicleType vehtype)
+        /// <summary>
+        /// 一条线路最多充电3次
+        /// </summary>
+        /// <param name="cnt_charge"></param>
+        /// <param name="old_obj"></param>
+        /// <returns></returns>
+        internal Route InsertSta(int cnt_charge, double old_obj =0)
         {
-            Depot startdepot = problem.StartDepot;
-            Depot enddepot = problem.EndDepot;
-            Problem = problem;
+            Route bst_route = this.Copy();
+            Route tmp_r = this.Copy();
+            if (cnt_charge>3)
+            {
+                return this;
+            }
+            if (old_obj==0)
+            {
+                var costs = this.routeCost();
+                old_obj = costs.Item1 + costs.Item2 + costs.Item3;
+            }
+
+            List<double> waittime = this.GetWaitTimeAtNode();
+           
+            for (int k = RouteList.Count - 1; k > 0; k--)
+            {
+                if (RouteList[k].Info.Type == 3)//充电站
+                {
+                   
+                    tmp_r.RemoveAt(k);
+                }
+            }
+
+            
+            bool isFeasible = false;
+            //1个充电站    
+            for (int i = 0; i < tmp_r.RouteList.Count-1; i++)
+            {
+                Route tmp_route_i = tmp_r.Copy();
+                tmp_route_i.insert_sta_between(i, i + 1);
+                if (tmp_route_i.ViolationOfRange()>-1 || tmp_route_i.ViolationOfTimeWindow()>-1)
+                {
+                    continue;
+                }
+                var new_costs = tmp_route_i.routeCost();
+                double new_obj = new_costs.Item1 + new_costs.Item2 + new_costs.Item3;
+                if (new_obj < old_obj)
+                {
+                    bst_route = tmp_route_i.Copy();
+                    old_obj = new_obj;
+                    isFeasible = true;
+                }
+            }
+            if (isFeasible == true || cnt_charge == 1)
+            {
+                return bst_route;
+            }
+
+            //2个充电站
+            for (int i = 0; i < tmp_r.RouteList.Count-1; i++)
+            {
+                Route tmp_route_i = tmp_r.Copy();
+                tmp_route_i.insert_sta_between(i, i + 1);
+
+                for (int j = i+2; j < tmp_route_i.RouteList.Count-1; j++)
+                {
+                    Route tmp_route_j = tmp_route_i.Copy();
+                    tmp_route_j.insert_sta_between(j, j + 1);
+                    if (tmp_route_j.ViolationOfRange()>-1 || tmp_route_j.ViolationOfTimeWindow()>-1)
+                    {
+                        continue;
+                    }
+                    var new_costs = tmp_route_j.routeCost();
+                    double new_obj = new_costs.Item1 + new_costs.Item2 + new_costs.Item3;
+                    if (new_obj < old_obj)
+                    {
+                        bst_route = tmp_route_j.Copy();
+                        old_obj = new_obj;
+                        isFeasible = true;
+                    }
+                }
+            }
+            if (isFeasible == true || cnt_charge == 2)
+            {
+                return bst_route;
+            }
+
+            //3个充电站
+            for (int i = 0; i < tmp_r.RouteList.Count-1; i++)
+            {
+                Route tmp_route_i = tmp_r.Copy();
+                tmp_route_i.insert_sta_between(i, i + 1);
+                for (int j = i+2; j < tmp_route_i.RouteList.Count-1; j++)
+                {
+                    Route tmp_route_j = tmp_route_i.Copy();
+                    tmp_route_j.insert_sta_between(j, j + 1);
+                    for (int k = j+2; k <tmp_route_j.RouteList.Count-1 ; k++)
+                    {
+                        Route tmp_route_k = tmp_route_j.Copy();
+                        tmp_route_k.insert_sta_between(k, k + 1);
+                        if (tmp_route_k.ViolationOfRange() > -1 || tmp_route_k.ViolationOfTimeWindow() > -1)
+                        {
+                            continue;
+                        }
+                        var new_costs = tmp_route_k.routeCost();
+                        double new_obj = new_costs.Item1 + new_costs.Item2 + new_costs.Item3;
+                        if (new_obj < old_obj)
+                        {
+                            bst_route = tmp_route_k.Copy();
+                            old_obj = new_obj;
+                            isFeasible = true;
+                        }
+                    }
+                }
+            }
+            return bst_route;
+
+        }
+        /// <summary>
+        /// 在路径的相邻两点之间插入充电站，该充电站距离这两个点的距离和最近
+        /// </summary>
+        /// <param name="i"></param>
+        /// <param name="j"></param>
+        private void insert_sta_between(int i, int j)
+        {
+            var Node_i = this.RouteList[i];
+            var Node_j = this.RouteList[j];
+            List<int> NeighborSta_i = new List<int>();
+            List<int> NeighborSta_j = new List<int>();
+            if (Node_i.Info.Type==2)
+            {
+                NeighborSta_i = Problem.GetNearDistanceSta(Node_i.Info.Id).ToList();
+            }
+            if (Node_j.Info.Type == 2)
+            {
+                NeighborSta_j = Problem.GetNearDistanceSta(Node_j.Info.Id).ToList();
+            }
+
+            List<int> NeighborSta_ij = NeighborSta_i.Intersect(NeighborSta_j).ToList(); 
+            if (NeighborSta_ij.Count==0)
+            {
+                NeighborSta_ij = NeighborSta_i.Union(NeighborSta_j).ToList();
+            }
+
+            Station bst_sta = null;
+            double min_dist_ij = double.MaxValue;
+            foreach (int sta_id in NeighborSta_ij)
+            {
+                Station sta = Problem.SearchStaById(sta_id);
+                double dist_ij = Node_i.TravelDistance(sta) + sta.TravelDistance(Node_j);
+                if (dist_ij<min_dist_ij)
+                {
+                    bst_sta = sta;
+                    min_dist_ij = dist_ij;
+                }
+            }
+            this.InsertNode(bst_sta, j);
+        }
+
+        public Route(VehicleType vehtype)
+        {
+            Depot startdepot = Problem.StartDepot;
+            Depot enddepot = Problem.EndDepot;
             AssignedVehType = vehtype;
             AssignedVeh = null;
             RouteList = new List<AbsNode>();
@@ -78,8 +229,6 @@ namespace OP.Data
 
             AddNode(startdepot);
             AddNode(enddepot);
-
-
         }
 
 
@@ -89,12 +238,12 @@ namespace OP.Data
         /// </summary>
         /// <param name="problem"></param>
         /// <param name="veh">为该路径分配的车辆</param>
-        public Route(Problem problem, Vehicle veh)
+        public Route(Vehicle veh)
         {
-            Depot startdepot = problem.StartDepot;
-            Depot enddepot = problem.EndDepot;
-            Problem = problem;
+            Depot startdepot = Problem.StartDepot;
+            Depot enddepot = Problem.EndDepot;
             AssignedVeh = veh;
+            AssignedVehType = Problem.VehTypes[veh.TypeId-1];
             
             //Solution = null;
             RouteList = new List<AbsNode>();
@@ -137,11 +286,10 @@ namespace OP.Data
         /// </summary>
         /// <param name="problem"></param>
         /// <param name="seedCustomer">已选的种子顾客</param>
-        public Route(Problem problem, Customer seedCustomer)
+        public Route(Customer seedCustomer)
         {
-            Depot startdepot = problem.StartDepot;
-            Depot enddepot = problem.EndDepot;
-            Problem = problem;
+            Depot startdepot = Problem.StartDepot;
+            Depot enddepot = Problem.EndDepot;
             //Solution = null;
             RouteList = new List<AbsNode>();
             ServiceBeginingTimes = new List<double>();
@@ -177,7 +325,8 @@ namespace OP.Data
             else //如果该线路非首趟线路，则其最早开始时间依赖于其前一趟的结束时间
             {
                 string pre_id = this.AssignedVeh.VehRouteList[this.RouteIndexofVeh - 1];
-                double ArrivalTimeofpreRoute = this.AssignedVeh.solution.GetRouteByID(pre_id).GetArrivalTime();
+                int pos_Solution = -1;
+                double ArrivalTimeofpreRoute = this.AssignedVeh.solution.GetRouteByID(pre_id,out pos_Solution).GetArrivalTime();
                 return ArrivalTimeofpreRoute + Problem.MinWaitTimeAtDepot;
             }
         }
@@ -505,10 +654,14 @@ namespace OP.Data
             double currentRange = CapacityRange; //车辆离开某点时的剩余里程
             for (int i = 0; i < RouteList.Count-1; i++)
             {
+                //if (battery_level[i] < 0)
+                //{
+                //    return i;
+                //} 
                 double dis_ij = RouteList[i].TravelDistance(RouteList[i + 1]);
                 currentRange -= dis_ij; //达到j点时的剩余里程
 
-                if (currentRange<0) //如果达到j点时的剩余里程小于0，则返回j点所在点位置
+                if (currentRange < 0) //如果达到j点时的剩余里程小于0，则返回j点所在点位置
                 {
                     return i + 1;
                 }
@@ -588,6 +741,32 @@ namespace OP.Data
             }
             return waittime;
         }
+        /// <summary>
+        /// 线路上每个点的等待时间，包括起终点但默认为0.（在起点的1个小时充电+装货时间不算等待时间）  
+        /// </summary>
+        /// <returns></returns>
+        internal List<double> GetWaitTimeAtNode()
+        {
+            List<double> list_waittime = new List<double>();
+            list_waittime.Add(0); //  起点    
+            for (int i = 1; i < this.RouteList.Count - 1; i++)
+            {
+                double arrivetime = ServiceBeginingTimes[i - 1] + RouteList[i - 1].Info.ServiceTime + RouteList[i - 1].TravelTime(RouteList[i]);
+                double servicestarttime = ServiceBeginingTimes[i];
+
+               
+                if (arrivetime < servicestarttime)
+                {
+                    list_waittime.Add(servicestarttime - arrivetime);
+                }
+                else
+                {
+                    list_waittime.Add(0);
+                }
+            }
+            list_waittime.Add(0);
+            return list_waittime;
+        }
 
        
         /// <summary>
@@ -622,7 +801,7 @@ namespace OP.Data
         {
             var newRouteList = new List<AbsNode>(RouteList.Count);
             newRouteList.AddRange(RouteList.Select(node => node.ShallowCopy()));
-            var r = new Route(Problem);
+            var r = new Route();
             r.AssignedVehType = this.AssignedVehType;
             r.AssignedVeh = this.AssignedVeh;
             r.RouteIndexofVeh = this.RouteIndexofVeh;
@@ -703,14 +882,24 @@ namespace OP.Data
                 }
             }
            return true;}
-
-		public Tuple<double, double, double, int> routeCost(double TransCostRate,double ChargeCostRate)
+        /// <summary>
+        /// 计算一条线路的可变成本，包括运输费用，等待费用，充电费用
+        /// </summary>
+        /// <param name="TransCostRate"></param>
+        /// <param name="ChargeCostRate"></param>
+        /// <returns>返回一个元组（TransCost, WaitCost, ChargeCost, chargeCount）</returns>
+		public Tuple<double, double, double, int> routeCost(double TransCostRate=0.0,double ChargeCostRate=0.0)
 		{
 			double WaitCost = 0;
 			double TransCost = 0;
 			double ChargeCost = 0;
 			int chargeCount = 0;
-
+            if (TransCostRate == 0.0)
+            {
+                TransCostRate = this.AssignedVehType.VariableCost;
+                ChargeCostRate = this.AssignedVehType.ChargeCostRate;
+            }
+            
             for (int i = 1; i<RouteList.Count; i++)
             {
                 //等待成本

@@ -12,11 +12,14 @@ namespace rich_VRP.Neighborhoods
     /// 下面是使用方法说明
     /// 在初始化时，需要输入Problem，以及分类角度一个int型的list
     /// 分类角度要求是角度和需要小于360度，否则将会弹出报错（如果小于360，最后部分会自动分为一类）
-    /// 初始化后，就能够进行类的输出，有两个输出方式
+    /// 初始化后，就能够进行类的输出，有以下输出函数
     /// 第一个是getCluster，输入节点ID，输出所在聚类(int)
     /// 第二个是getNodes，输入聚类ID，输出聚类中的节点信息(List<NodeInfo>)
     /// 第三个是getClusterNum，输出所在聚类数目
     /// 第四个是coverAll，输出是否全部节点都有簇id，（如果是否，就可以利用getNodes(0)查询所有没被覆盖节点）
+    /// 第五个是getRoutePointsCluster返回路径上的每一个点所在区域,在遍历时没有考虑路径起点和终点（0）
+    /// 第六个是getRouteCluster返回含有路径点最多区域
+    /// 第七个是getRouteArea返回路径覆盖区域（和第五个函数类似，只是去重复）
     /// </summary>
     class AC
     {
@@ -24,7 +27,7 @@ namespace rich_VRP.Neighborhoods
         public List<int> clusterAngel;
         public List<clusterPoint> clusterPoints;
         public NodeInfo datum;
-        public AC(Problem P, List<int> Angel)
+        public AC(List<int> Angel)
         {
             int cheak = 0;
             foreach (var angel in Angel)
@@ -43,9 +46,9 @@ namespace rich_VRP.Neighborhoods
             {
                 clusterAngel = Angel;
                 clusterNum = 0;
-                datum = P.AllNodes[0];
+                datum = Problem.AllNodes[0];
                 clusterPoints = new List<clusterPoint>();
-                setClusterPoint(P.AllNodes);
+                setClusterPoint(Problem.AllNodes);
                 clustering();
             }
         }
@@ -152,6 +155,65 @@ namespace rich_VRP.Neighborhoods
                 }
             }
             return Nodes;
+        }
+        /// <summary>
+        /// 返回路径上的点所在区域，有重复
+        /// </summary>
+        /// <param name="r"></param>
+        /// <returns></returns>
+        public List<int> getRoutePointsCluster(Route r)
+        {
+            List<int> RouteCluster = new List<int>() ;
+            for (int i = 1; i < r.RouteList.Count-1; i++)
+            {
+                int c = getCluster(r.RouteList[i].Info.Id);
+                RouteCluster.Add(c);
+            }
+            return RouteCluster;
+        }
+
+        /// <summary>
+        /// 返回含有路径点最多区域
+        /// </summary>
+        /// <param name="r"></param>
+        /// <returns></returns>
+        public int getRouteCluster(Route r)
+        {
+            List<int> RouteCluster = getRoutePointsCluster(r);
+            var qry = from x in RouteCluster
+                      group x by x into s
+                      orderby s.Count() descending
+                      select new
+                      {
+                          V = s.Key,
+                          N = s.Count()
+                      };
+            var result = qry.ToArray();
+            return result[0].V;
+        }
+        /// <summary>
+        /// 返回路径覆盖区域
+        /// </summary>
+        /// <param name="r"></param>
+        /// <returns></returns>
+        public List<int> getRouteArea(Route r)
+        {
+            List<int> RouteCluster = getRoutePointsCluster(r);
+            var qry = from x in RouteCluster
+                      group x by x into s
+                      orderby s.Count() descending
+                      select new
+                      {
+                          V = s.Key,
+                          N = s.Count()
+                      };
+            var result = qry.ToArray();
+            List<int> RouteArea = new List<int>();
+            for (int i = 0; i < result.Length; i++)
+            {
+                RouteArea.Add(result[i].V);
+            }
+            return RouteArea;
         }
         /// <summary>
         /// 查询聚类数目

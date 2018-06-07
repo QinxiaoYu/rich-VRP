@@ -5,30 +5,30 @@ using System.Collections.Generic;
 // Analysis disable once CheckNamespace
 namespace OP.Data
 {
-    public class Problem
+    public static class Problem
     {   //数据集名称
-        public string Abbr { get; set; }
-        public double Tmax { get; set; }
-        public int VehicleNum { get; set; }
-        public Depot StartDepot { get; set; }
-        public Depot EndDepot { get; set; }
-        public List<Customer> Customers { get; set; }
-        public List<Station> Stations { get; set; }
-        public List<NodeInfo> AllNodes { get; set; }
+        public static string Abbr { get; set; }
+        public static double Tmax { get; set; }
+        public static int VehicleNum { get; set; }
+        public static Depot StartDepot { get; set; }
+        public static Depot EndDepot { get; set; }
+        public static List<Customer> Customers { get; set; }
+        public static List<Station> Stations { get; set; }
+        public static List<NodeInfo> AllNodes { get; set; }
       
-        public List<VehicleType> VehTypes { get; set; }
+        public static List<VehicleType> VehTypes { get; set; }
 
         static int[,] DistanceBetween { get; set; }
         static int[,] TravelTimeBetween { get; set; }
-        public static double[,] AngelBetween { get; set; }
+        public static double[,] AngleBetween { get; set; }
 
         public static double MinWaitTimeAtDepot { get; set; }
         public static double WaitCostRate { get; set; }
-        public List<int[]> NearDistanceCus;
-        public List<int[]> NearDistanceSta;
+        public static List<int[]> NearDistanceCus;
+        public static List<int[]> NearDistanceSta;
 
 
-        public void SetNodes(List<NodeInfo> nodes, string abbr, double t_max, int numV, int numD, int numC, int numS)
+        public static void SetNodes(List<NodeInfo> nodes, string abbr, double t_max, int numV, int numD, int numC, int numS)
         {
             Tmax = t_max;
             VehicleNum = numV;
@@ -49,19 +49,70 @@ namespace OP.Data
             int NodeNumber = AllNodes.Count;
             DistanceBetween = new int[NodeNumber, NodeNumber];
             TravelTimeBetween = new int[NodeNumber, NodeNumber];
+            AngleBetween = new double [NodeNumber, NodeNumber];
+            setAngleBetween();
         }
 
-        public void SetVehicleTypes(List<VehicleType> _types)
+        public static void SetVehicleTypes(List<VehicleType> _types)
         {
             VehTypes = _types;
         }
 
-        public void SetDistanceIJ(int i, int j, int dis)
+        public static void SetDistanceIJ(int i, int j, int dis)
         {
             DistanceBetween[i, j] = dis;
         }
+        /// <summary>
+        /// 两点之间的角度，所有设定的ioj均为逆时针方向的角度，均为[0,360],比如（1，3）= 60 ，则（3，1）= 300 使用时记得要判断
+        /// 其中如果是（0，i），能够获取点i到水平线之间的角度
+        /// </summary>
+        public static void setAngleBetween()
+        {
+            for (int i = 0; i < AllNodes.Count; i++)
+            {
+                for (int j = 0; j < AllNodes.Count; j++)
+                {
+                    double angle1, angle2;
+                    if (i == 0)
+                    {
+                        angle1 = 0;
+                    }
+                    else
+                    {
+                        angle1 = Math.Atan2((AllNodes[i].Y - AllNodes[0].Y), (AllNodes[i].X - AllNodes[0].Y)) * 180 / Math.PI;
+                        if (angle1 < 0)
+                        {
+                            angle1 = angle1 + 360;
+                        }
+                    }
+                    if (j == 0)
+                    {
+                        angle2 = 0;
+                    }
+                    else
+                    {
+                        angle2 = Math.Atan2((AllNodes[j].Y - AllNodes[0].Y), (AllNodes[j].X - AllNodes[0].Y)) * 180 / Math.PI;
+                        if (angle2 < 0)
+                        {
+                            angle2 = angle2 + 360;
+                        }
+                    }
+                    double angle = angle2 - angle1;
+                    if (angle < 0)
+                    {
+                        angle = angle + 360;
+                    }
+                    setAngleBetweenIJ(i, j, angle);
 
-        public void SetTravelTimeIJ(int i, int j, int tt)
+                }
+
+            }
+        }
+        public static void setAngleBetweenIJ(int i, int j, double angle)
+        {
+            AngleBetween[i, j] = angle;
+        }
+        public static void SetTravelTimeIJ(int i, int j, int tt)
         {
             TravelTimeBetween[i, j] = tt;
         }
@@ -79,10 +130,10 @@ namespace OP.Data
 
         public static double GetAngelIJ(int i, int j)
         {
-            return AngelBetween[i, j];
+            return AngleBetween[i, j];
         }
 
-        public Customer SearchCusbyId(int id)
+        public static Customer SearchCusbyId(int id)
         {
             foreach (var customer in Customers)
                 if (customer.Info.Id == id)
@@ -90,9 +141,14 @@ namespace OP.Data
             throw new Exception("Customer not found");
         }
 
-        public VehicleType GetVehTypebyID(int _vehtypeid)
+        public static Station SearchStaById(int id)
         {
-            foreach (VehicleType vehtype in this.VehTypes)
+            return Stations[id - 1001];
+        }
+
+        public static VehicleType GetVehTypebyID(int _vehtypeid)
+        {
+            foreach (VehicleType vehtype in VehTypes)
             {
                 if (vehtype.VehTypeID == _vehtypeid)
                 {
@@ -102,14 +158,14 @@ namespace OP.Data
             return null;
         }
 
-        public void SetAllNodes()
+        public static void SetAllNodes()
         {
             AllNodes = new List<NodeInfo> { StartDepot.Info, EndDepot.Info };
             foreach (var customer in Customers)
                 AllNodes.Add(customer.Info);
         }
 
-        internal void SetDistanceANDTravelIJ(int i, int j, int tt_ij, int dis_ij)
+        internal static void SetDistanceANDTravelIJ(int i, int j, int tt_ij, int dis_ij)
         {
             SetDistanceIJ(i, j, dis_ij);
             SetTravelTimeIJ(i, j, tt_ij);
@@ -120,7 +176,7 @@ namespace OP.Data
         /// </summary>
         /// <param name="_numNNCus"></param>
         /// <param name="_numNNSta"></param>
-        public void SetNearDistanceCusAndSta(int _numNNCus, int _numNNSta)
+        public static  void SetNearDistanceCusAndSta(int _numNNCus, int _numNNSta)
         {
             NearDistanceCus = new List<int[]>();
             NearDistanceSta = new List<int[]>();
@@ -197,7 +253,7 @@ namespace OP.Data
         /// </summary>
         /// <param name="_cus_id"></param>
         /// <returns></returns>
-        public int[] GetNearDistanceCus(int _cus_id)
+        public static int[] GetNearDistanceCus(int _cus_id)
         {
             return NearDistanceCus[_cus_id];
         }
@@ -206,9 +262,9 @@ namespace OP.Data
         /// </summary>
         /// <param name="_cus_id"></param>
         /// <returns></returns>
-        public int[] GetNearDistanceSta(int _cus_id)
+        public static int[] GetNearDistanceSta(int _cus_id)
         {
-            return NearDistanceSta[_cus_id];
+            return NearDistanceSta[_cus_id-1];
         }
     }
 

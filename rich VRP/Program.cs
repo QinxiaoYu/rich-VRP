@@ -9,6 +9,7 @@ using System.IO;
 using rich_VRP.Constructive;
 using rich_VRP.ObjectiveFunc;
 using rich_VRP.Neighborhoods.Remove;
+using rich_VRP.Neighborhoods.Intra;
 
 namespace rich_VRP
 {
@@ -17,21 +18,21 @@ namespace rich_VRP
         static void Main(string[] args)
         {
             OpProblemReader reader = new OpProblemReader();
-            string dir = Directory.GetCurrentDirectory();
-            
-            Problem problem = reader.Read(dir);
+            string dir = Directory.GetCurrentDirectory();   
+            reader.Read(dir);
             Problem.MinWaitTimeAtDepot = 60; //在配送中心的最少等待时间 
             Problem.WaitCostRate = 0.4;
-            //problem.SetNearDistanceCusAndSta(10, 2); //计算每个商户的小邻域
+            Problem.SetNearDistanceCusAndSta(10, 10); //计算每个商户的小邻域
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
             outfilename = dir + "//" + "test_0605.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
-            for (int i = 0; i < 1; i++)
+            for (int i = 0; i < 500; i++)
             {
                 sb.Clear();
                 sb.AppendLine("============== "+ i.ToString() + " ===============");
-                Initialization initial = new Initialization(problem);
+                CW4sveh initial = new CW4sveh();
+                //Initialization initial = new Initialization();
                 Solution ini_solution = initial.initial_construct();
                 OriginObjFunc evaluate = new OriginObjFunc();
                 double cost = evaluate.CalObjCost(ini_solution);
@@ -47,9 +48,18 @@ namespace rich_VRP
                 {
                     sb.AppendLine("====RemoveSta=====");
                     double newcost = evaluate.CalObjCost(ini_solution);
-                    if (newcost<290805)
-                    {
+
+                    Console.WriteLine("ObjVal = " + newcost.ToString("0.00"));
+
+                    StationPosition sp = new StationPosition();
+                    ini_solution = sp.StationExchage(ini_solution, 0.3);
+                    double newcost2 = evaluate.CalObjCost(ini_solution);
+                    Console.WriteLine("ObjVal = " + newcost2.ToString("0.00"));
+                    
+                    if (newcost<340000)
+
                         ini_solution.PrintResult();
+                        Console.WriteLine(ini_solution.PrintToString());
                     }
                    
                     sb.AppendLine(newcost.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
