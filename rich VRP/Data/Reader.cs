@@ -11,23 +11,18 @@ using System.Data.OleDb;
 using ExcelDataReader;
 namespace OP.Data
 {
-    interface IProblemReader
-    {
-        Problem Read(string source);
-    }
 
 
-    internal class OpProblemReader : IProblemReader
+    internal class OpProblemReader
     {
       
-        public Problem Read(string txtFilePath)
+        public void Read(string txtFilePath)
         {
 			string nodefile = txtFilePath + "/input_node.xlsx";
 			string disfile = txtFilePath + "/input_distance-time.txt";
 			string vehfile = txtFilePath + "/input_vehicle_type.xlsx";
             var nodes = new List<NodeInfo>();
-            var types = new List<VehicleType>();
-            var p = new Problem();
+            var types = new List<VehicleType>();         
             string abbr = "DOGGY"; //数据集名称，如C100.txt, 则abbr = C100;此处无用
             double Tmax = 14400; //可能没用
             int numV = 1000; //车辆数
@@ -95,7 +90,7 @@ namespace OP.Data
                    
      
             }
-			p.SetNodes(nodes, abbr, Tmax, numV, numD, numC, numS);
+			Problem.SetNodes(nodes, abbr, Tmax, numV, numD, numC, numS);
 			int max_dis = int.MinValue;
 			int min_dis = int.MaxValue;
 			int max_tt = int.MinValue;
@@ -112,7 +107,7 @@ namespace OP.Data
                     int _j = int.Parse(paras[2]);
                     int _dis_ij = int.Parse(paras[3]);
                     int _tt_ij = int.Parse(paras[4]);
-                    p.SetDistanceANDTravelIJ(_i, _j, _tt_ij, _dis_ij); 
+                    Problem.SetDistanceANDTravelIJ(_i, _j, _tt_ij, _dis_ij); 
                     str_Dis = Dreader.ReadLine();
                     if (_dis_ij>max_dis)
                     {
@@ -166,9 +161,7 @@ namespace OP.Data
             }
 
 
-            p.SetVehicleTypes(types);
-
-            return p;
+            Problem.SetVehicleTypes(types);   
             
         }    
 

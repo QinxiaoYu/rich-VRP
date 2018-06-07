@@ -24,7 +24,7 @@ namespace rich_VRP.Neighborhoods
         public List<int> clusterAngel;
         public List<clusterPoint> clusterPoints;
         public NodeInfo datum;
-        public AC(Problem P, List<int> Angel)
+        public AC(List<int> Angel)
         {
             int cheak = 0;
             foreach (var angel in Angel)
@@ -43,9 +43,9 @@ namespace rich_VRP.Neighborhoods
             {
                 clusterAngel = Angel;
                 clusterNum = 0;
-                datum = P.AllNodes[0];
+                datum = Problem.AllNodes[0];
                 clusterPoints = new List<clusterPoint>();
-                setClusterPoint(P.AllNodes);
+                setClusterPoint(Problem.AllNodes);
                 clustering();
             }
         }
