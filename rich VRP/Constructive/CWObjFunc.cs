@@ -3,41 +3,24 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
-
-namespace rich_VRP.Constructive
-{
-    using System;
-    using System.Collections.Generic;
-    using System.Linq;
-    using System.Text;
-    using System.Threading.Tasks;
 using OP.Data;
 
 namespace rich_VRP.Constructive
 {
-    class CW
-    {
-
-    }
-    ////////////在route类和vehicle类增加了几个方法和属性
-    class Initialization
-    {
-           
+    class CWObjFunc
+    {     
         Fleet fleet;
         Random rand = new Random();//随机operter
         List<Customer> unrouted_Cus = new List<Customer>();
         List<Station> charge_sta = new List<Station>();
-            public Initialization()//把带初始化的问题传进来
-        {
-                
-        }
+       
 
 
         public Solution initial_construct()
         {
-                Solution solution = new Solution();
+            Solution solution = new Solution();
             fleet = solution.fleet;
-                var unroute_cus = new List<Customer>(Problem.Customers); //没有访问的点
+            var unroute_cus = new List<Customer>(Problem.Customers); //没有访问的点
             Vehicle veh = null;
             
             while (unroute_cus.Count > 0)
@@ -47,7 +30,7 @@ namespace rich_VRP.Constructive
                 veh = fleet.addNewVeh(type);
              
 
-                    Route newRoute = new Route(veh); ////////产生一条该车的路径,已经把车分配给了路径
+                Route newRoute = new Route(veh); ////////产生一条该车的路径,已经把车分配给了路径
                 //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
                 double earliest_departure_time = newRoute.GetEarliestDepartureTime();//该路径的最早出发时间
                 //只要新产生路径的最早出发时间小于最晚时间限制就可以为其分配customer
@@ -64,7 +47,7 @@ namespace rich_VRP.Constructive
                         }
                         else
                         {
-                                newRoute = new Route(veh);
+                            newRoute = new Route(veh);
                             //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
                             earliest_departure_time = newRoute.GetEarliestDepartureTime();
                         }
@@ -101,7 +84,7 @@ namespace rich_VRP.Constructive
             while (insert_feasible == 0)
             {
                 double best_cost = double.MaxValue; //一个无穷大的数
-                    double alefa = 0; //产生0~1的随机数，评价标准的参数
+                double alefa = rand.NextDouble(); //产生0~1的随机数，评价标准的参数
                 route = best_route;
                 bool inserted = false;//记录本次循环是否插入了点
                 Customer inserted_cus = null;//最终确定要插入的点
@@ -124,7 +107,7 @@ namespace rich_VRP.Constructive
                         AbsNode after_sta1 = null;
                         if (j == num_cus - 1)
                         {
-                                after_sta1 = Problem.EndDepot;
+                            after_sta1 = Problem.EndDepot;
                         }
                         else
                         {
@@ -156,11 +139,11 @@ namespace rich_VRP.Constructive
                         ////////////////选择最优的一次插入////////////////////////////////////////////////////
                         if (cur_route.IsFeasible())//如果插入customer和相应的station后满足所有约束
                         {
-                                double insertcus_dis = insert_cus.TravelDistance(Problem.StartDepot) + insert_cus.TravelDistance(Problem.EndDepot);
+                            double insertcus_dis = insert_cus.TravelDistance(Problem.StartDepot) + insert_cus.TravelDistance(Problem.EndDepot);
                             double waittime_after_insert = cur_route.GetWaitTime();
                             double add_waittime = waittime_after_insert - waittime_before_insert;//增加的等待时间
                             //double add_waittime = 0;
-                                double TransCostRate = Problem.GetVehTypebyID(cur_route.AssignedVeh.TypeId).VariableCost;//行驶费率
+                            double TransCostRate = Problem.GetVehTypebyID(cur_route.AssignedVeh.TypeId).VariableCost;//行驶费率
                             double cost = TransCostRate * (add_distance - alefa * insertcus_dis) + Problem.WaitCostRate * add_waittime;//评价插入质量的标准
                             if (cost < best_cost)
                             {
@@ -193,6 +176,4 @@ namespace rich_VRP.Constructive
 
 
     }
-    }
-
 }

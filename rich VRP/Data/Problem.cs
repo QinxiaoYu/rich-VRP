@@ -1,11 +1,10 @@
-using System;
+﻿using System;
 using System.Collections;
 using System.Collections.Generic;
 
 // Analysis disable once CheckNamespace
 namespace OP.Data
 {
-
     public static class Problem
     {   //数据集名称
         public static string Abbr { get; set; }
@@ -67,13 +66,18 @@ namespace OP.Data
             TravelTimeBetween[i, j] = tt;
         }
 
-		public virtual AbsNode ShallowCopy()
-		{
-			throw new Exception("You cannot copy abstract node");
-		}
 
 
-       public static double GetAngelIJ(int i, int j)
+        public static int GetDistanceIJ(int i, int j)
+        {
+            return DistanceBetween[i, j];
+        }
+        public static int GetTravelTimeIJ(int i, int j)
+        {
+            return TravelTimeBetween[i, j];
+        }
+
+        public static double GetAngelIJ(int i, int j)
         {
             return AngelBetween[i, j];
         }
@@ -313,63 +317,48 @@ namespace OP.Data
 
     public class Depot : AbsNode
     {
-
-		public override AbsNode ShallowCopy()
-		{
-			return new Depot(Info);
-		}
-	}
-
-	public class Station : AbsNode
-	{
-		     public Station(NodeInfo info)
+        public Depot(NodeInfo info)
         {
             Info = info;
         }
 
-		public override AbsNode ShallowCopy()
-		{
-			return new Station(Info);
-		}
-	}
 
-	public class Customer : AbsNode
-	{
-		public Route Route { get; set; }
+        public override AbsNode ShallowCopy()
+        {
+            return new Depot(Info);
+        }
+    }
 
-		public Customer(NodeInfo info)
-		{
-			Info = info;
-			Route = null;
-		}
+    public class Station : AbsNode
+    {
+        public Station(NodeInfo info)
+        {
+            Info = info;
+        }
 
-
-		public override AbsNode ShallowCopy()
-		{
-			return DeepCopy();
-		}
-
-		public Customer DeepCopy()
-		{
-			return new Customer(Info)
-			{
-				Route = Route
-			};
-		}
+        public override AbsNode ShallowCopy()
+        {
+            return new Station(Info);
+        }
+    }
 
 
-		/// <summary>
-		/// Find the position that customer in route.
-		/// </summary>
-		/// <returns>The position of customer in route.</returns>
-		public int Index()
-		{
-			for (var i = 0; i < Route.RouteList.Count; ++i)
-				if (Route.RouteList[i].Info.Id == Info.Id)
-					return i;
-			return -1;
-		}
-	}
+
+    public class Customer : AbsNode
+    {
+
+        public Customer(NodeInfo info)
+        {
+            Info = info;
+         
+        }
+        public override AbsNode ShallowCopy()
+        {
+            return new Customer(Info);
+        }
+
+    }
+    
 
 }
 
