@@ -257,10 +257,17 @@ namespace OP.Data
             AddNode(enddepot);
         }
 
-
+        /// <summary>
+        /// 判断该路径是否饱和（重量、体积、等待时间、返回仓库的时间）
+        /// </summary>
+        /// <returns></returns>
         public bool IsSaturated()
         {
-            bool saturated = true;
+            bool saturated = false;
+            if (GetTotalVolume()< GetRouteVolumeCap() && GetTotalWeight()<GetRouteWeightCap())
+            {
+                saturated = true;
+            }
             return saturated;
         }
    

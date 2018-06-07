@@ -102,7 +102,7 @@ namespace rich_VRP.Neighborhoods.Insert
         //选择最优的位置插入
         //若没有可以插入的位置，现有的车新的路径；若还不行，新产生车，新路径。
 
-        Problem problem;
+       
         AC AC;
         Fleet fleet;
         Random rand = new Random();//随机operter
@@ -111,6 +111,7 @@ namespace rich_VRP.Neighborhoods.Insert
         {
             fleet = solution.fleet;
             bool inserted;
+            int pos_inSolution = -1;
             foreach ( Customer customer in Cus_Pool)
             {
                 int Cus_cluster = AC.getCluster(customer.Info.Id);
@@ -121,8 +122,8 @@ namespace rich_VRP.Neighborhoods.Insert
                 {
                     Route route = solution.Routes[i];
                     int Route_cluster = AC.getRouteCluster(route);
-                    double TransCostRate = problem.GetVehTypebyID(route.AssignedVeh.TypeId).VariableCost;//行驶费率
-                    double ChargeCostRate = problem.GetVehTypebyID(route.AssignedVeh.TypeId).ChargeCostRate;//行驶费率
+                    double TransCostRate = Problem.GetVehTypebyID(route.AssignedVeh.TypeId).VariableCost;//行驶费率
+                    double ChargeCostRate = Problem.GetVehTypebyID(route.AssignedVeh.TypeId).ChargeCostRate;//行驶费率
                     var VariableCost = route.routeCost(TransCostRate, ChargeCostRate);
                     double cost_before_insert = VariableCost.Item1 + VariableCost.Item2 + VariableCost.Item3;
                     if (Route_cluster >= Cus_cluster - 1 || Route_cluster <= Cus_cluster + 1)
@@ -156,12 +157,13 @@ namespace rich_VRP.Neighborhoods.Insert
                     {
                         Vehicle veh = solution.fleet.VehFleet[i];
                         string last_routeID = veh.VehRouteList[veh.VehRouteList.Count-1];
-                        Route last_route = solution.GetRouteByID(last_routeID);
+                        Route last_route = solution.GetRouteByID(last_routeID,out pos_inSolution);
+
                         double overwork_time = last_route.GetArrivalTime();//车结束所有任务的时间
                         double DueDate = customer.Info.DueDate;
                         if (overwork_time + Problem.MinWaitTimeAtDepot+customer.TravelTime(last_route.RouteList[0]) < DueDate)
                         {
-                            Route newRoute = new Route(problem, veh);
+                            Route newRoute = new Route(veh);
                             Route cur_newRoute = InsertCusToRoute(newRoute, customer, out inserted);
                             newRoute = cur_newRoute; 
                         }
@@ -172,7 +174,7 @@ namespace rich_VRP.Neighborhoods.Insert
                     Vehicle veh = null;
                     int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机） 
                     veh = fleet.addNewVeh(type);
-                    Route newRoute = new Route(problem, veh);
+                    Route newRoute = new Route(veh);
                     Route cur_newRoute = InsertCusToRoute(newRoute, customer, out inserted);
                     newRoute = cur_newRoute;
                 }
@@ -186,21 +188,24 @@ namespace rich_VRP.Neighborhoods.Insert
         public Route InsertCusToRoute(Route route, Customer customer, out bool inserted)
         {
             
-            bool insert = true;
+            bool insert = false;
             int num_cus = route.RouteList.Count;
+            double best_cost = double.MaxValue; //一个无穷大的数
+            Route best_route = route;
             for (int i = 1; i < route.RouteList.Count - 1; i++)
             {
                 Route cur_route = route.Copy();
+
                 cur_route.InsertNode(customer, i);//插入
                 double add_distance = customer.TravelDistance(cur_route.RouteList[i - 1]) + customer.TravelDistance(cur_route.RouteList[i + 1])
                                               - cur_route.RouteList[i - 1].TravelDistance(cur_route.RouteList[i + 1]);//增加的距离（dik + dkj - dij）
 
-
+                //==========================充电站的判断=============
                 Station after_sta = cur_route.insert_sta(customer);//若要在insert_cus后插入电站，应该插入哪个？
                 AbsNode after_sta1 = null;
                 if (i == num_cus - 1)
                 {
-                    after_sta1 = problem.EndDepot;
+                    after_sta1 = Problem.EndDepot;
                 }
                 else
                 {
@@ -212,7 +217,7 @@ namespace rich_VRP.Neighborhoods.Insert
                 if (cur_route.battery_level[i] < after_dis)//如果剩余电量不能坚持到下次充电
                 {
                     cur_route.InsertNode(after_sta, i + 1);//在insert-cus后插入电站
-                    add_distance += after_sta.TravelDistance(customer) + after_sta.TravelDistance(cur_route.RouteList[j + 2])
+                    add_distance += after_sta.TravelDistance(customer) + after_sta.TravelDistance(cur_route.RouteList[i + 2])
                                     - customer.TravelDistance(cur_route.RouteList[i + 2]); //插入电站后增加的行驶距离
                 }
                 ///判断是否需要在插入点前插入充电站
@@ -226,16 +231,29 @@ namespace rich_VRP.Neighborhoods.Insert
                 }
 
 
+                //==========================选择最优的位置=============
+                double delay = cur_route.GetArrivalTime() - route.GetArrivalTime();
+
                 if (cur_route.IsFeasible())//如果插入customer和相应的station后满足所有约束
                 {
-
+                    Vehicle veh = cur_route.AssignedVeh;
+                    if (veh.CheckNxtRoutesFeasible(cur_route.RouteIndexofVeh, delay))//如果下游路径也可行
+                    {
+                        double TransCostRate = Problem.GetVehTypebyID(route.AssignedVeh.TypeId).VariableCost;//行驶费率
+                        double add_waittime = cur_route.GetWaitTime() - route.GetWaitTime();
+                        double cost = TransCostRate * add_distance  + Problem.WaitCostRate * add_waittime;//评价插入质量的标准
+                        if (cost < best_cost)
+                        {
+                            best_cost = cost;
+                            best_route = cur_route;
+                            insert = true;
+                        }
+                    }
                 }
-
             }
 
-
             inserted = insert;
-            return cur_route;
+            return best_route;
         }
 
     }

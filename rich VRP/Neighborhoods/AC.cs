@@ -116,25 +116,6 @@ namespace rich_VRP.Neighborhoods
         }
 
 
-
-
-        /// <summary>
-        /// 输入路径，返回该路径的cluster
-        /// </summary>
-        /// <param name="id"></param>
-        /// <returns></returns>
-        public int getRouteCluster(Route route)
-        {
-            int clusterID = 0;
-
-            return clusterID;
-
-        }
-
-
-
-
-
         /// <summary>
         /// 查询该簇下的所有节点信息
         /// </summary>
