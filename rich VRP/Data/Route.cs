@@ -108,6 +108,15 @@ namespace OP.Data
             AddNode(enddepot);
         }
 
+
+        public bool IsSaturated()
+        {
+            bool saturated = true;
+            return saturated;
+        }
+   
+
+
         internal void UpdateDepartureTime()
         {
             

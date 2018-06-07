@@ -93,10 +93,13 @@ namespace rich_VRP.Constructive
             {
                 double best_cost = double.MaxValue; //一个无穷大的数
                 //double alefa = rand.NextDouble(); //产生0~1的随机数，评价标准的参数
-                double alefa = 0;
+                //double alefa = 0;
                 route = best_route;
                 bool inserted = false;//记录本次循环是否插入了点
                 Customer inserted_cus = null;//最终确定要插入的点
+                double TransCostRate = problem.GetVehTypebyID(route.AssignedVeh.TypeId).VariableCost;//行驶费率
+                double ChargeCostRate = problem.GetVehTypebyID(route.AssignedVeh.TypeId).ChargeCostRate;//行驶费率
+
                 for (int i = 0; i < unroute_cus.Count; i++)
                 {
                     Customer insert_cus = unroute_cus[i];
@@ -104,14 +107,17 @@ namespace rich_VRP.Constructive
                     for (int j = 1; j < route.RouteList.Count; j++)//第一个位置和最后一个位置不能插入
                     {
                         Route cur_route = route.Copy();
-                        double waittime_before_insert = cur_route.GetWaitTime();
+                        //double waittime_before_insert = cur_route.GetWaitTime();
+                        var VariableCost = cur_route.routeCost(TransCostRate, ChargeCostRate);
+                        double cost_before_insert = VariableCost.Item1 + VariableCost.Item2 + VariableCost.Item3;
 
                         cur_route.InsertNode(insert_cus, j);//插入
                         double add_distance = insert_cus.TravelDistance(cur_route.RouteList[j - 1]) + insert_cus.TravelDistance(cur_route.RouteList[j + 1])
                                               - cur_route.RouteList[j - 1].TravelDistance(cur_route.RouteList[j + 1]);//增加的距离（dik + dkj - dij）
                         
+
+
                         ///////////////插入电站:在插入点前、后、前和后或者都不插入四种情况////////////////////////////////////
-                        
                         Station after_sta = cur_route.insert_sta(insert_cus);//若要在insert_cus后插入电站，应该插入哪个？
                         AbsNode after_sta1 = null;
                         if (j == num_cus - 1)
@@ -145,15 +151,18 @@ namespace rich_VRP.Constructive
                         }
 
 
+
                         ////////////////选择最优的一次插入////////////////////////////////////////////////////
                         if (cur_route.IsFeasible())//如果插入customer和相应的station后满足所有约束
                         {
-                            double insertcus_dis = insert_cus.TravelDistance(problem.StartDepot) + insert_cus.TravelDistance(problem.EndDepot);
-                            double waittime_after_insert = cur_route.GetWaitTime();
+                            //double insertcus_dis = insert_cus.TravelDistance(problem.StartDepot) + insert_cus.TravelDistance(problem.EndDepot);
+                            //double waittime_after_insert = cur_route.GetWaitTime();
                             //double add_waittime = waittime_after_insert - waittime_before_insert;//增加的等待时间
-                            double add_waittime = 0;
-                            double TransCostRate = problem.GetVehTypebyID(cur_route.AssignedVeh.TypeId).VariableCost;//行驶费率
-                            double cost = TransCostRate * (add_distance - alefa * insertcus_dis) + Problem.WaitCostRate * add_waittime;//评价插入质量的标准
+                            //double add_waittime = 0;
+                            //double cost = TransCostRate * (add_distance - alefa * insertcus_dis) + Problem.WaitCostRate * add_waittime;//评价插入质量的标准
+                            var VariableCost1 = cur_route.routeCost(TransCostRate, ChargeCostRate);
+                            double cost_after_insert = VariableCost1.Item1 + VariableCost1.Item2 + VariableCost1.Item3;
+                            double cost = cost_after_insert - cost_before_insert;
                             if (cost < best_cost)
                             {
                                 best_cost = cost;
@@ -201,8 +210,8 @@ namespace rich_VRP.Constructive
             while (insert_feasible == 0)
             {
                 double best_cost = double.MaxValue; //一个无穷大的数
-                double alefa = rand.NextDouble(); //产生0~1的随机数，评价标准的参数
-                //double alefa = 0;
+                //double alefa = rand.NextDouble(); //产生0~1的随机数，评价标准的参数
+                double alefa = 0;
                 route = best_route;
                 bool inserted = false;//记录本次循环是否插入了点
                 Customer inserted_cus = null;//最终确定要插入的点
@@ -254,14 +263,10 @@ namespace rich_VRP.Constructive
 
 
             InsertSta InsertSta = new InsertSta();
-            best_route = InsertSta.InsertStaInRoute(best_route);
-            if (best_route == null)
-            {
-                best_route = BIA_2(route_be4inerted, unrouteCus_b4inerted, out unroute_cus);
-                Console.WriteLine("+++++++++++++++++++++++++++++++++++++++++++BIA_2");
-
-            }
-           
+            List<Customer> deleted_cus = new List<Customer>();
+            best_route = InsertSta.InsertStaInRoute(best_route,out deleted_cus);
+            unroute_cus.AddRange(deleted_cus);
+                 
             left_unroute_cus = unroute_cus;
             return best_route;
 
