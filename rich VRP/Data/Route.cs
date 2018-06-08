@@ -61,6 +61,18 @@ namespace OP.Data
         }
 
         /// <summary>
+        /// 批量删除点集
+        /// </summary>
+        /// <param name="cuslist">Cuslist.</param>
+        internal void Remove(List<AbsNode> cuslist)
+        {
+            foreach (var node in cuslist)
+            {
+                Remove((Customer)node);
+            }
+        }
+
+        /// <summary>
         /// 一条线路最多充电3次
         /// </summary>
         /// <param name="cnt_charge"></param>
@@ -443,12 +455,12 @@ namespace OP.Data
 
 
 
-        internal void InsertCustomer(List<Customer> unroutedCustomers)
+        internal void InsertCustomer(List<AbsNode> unroutedCustomers)
         {
             
             for (int i = 0; i < unroutedCustomers.Count; i++)
             {
-                Customer cusToInsert = unroutedCustomers.ElementAt(i);
+                Customer cusToInsert = (Customer)unroutedCustomers.ElementAt(i);
                 InsertNode(cusToInsert, this.RouteList.Count - 1);
             }            
 
