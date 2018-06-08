@@ -1,4 +1,5 @@
 ﻿using OP.Data;
+using rich_VRP.ObjectiveFunc;
 using System;
 using System.Collections.Generic;
 
@@ -14,10 +15,10 @@ namespace rich_VRP.Neighborhoods.Inter
 
         }
 
-        public Solution Cross(Solution solution, out bool isImpr)
+        public Solution Cross(Solution solution)
         {
-            isImpr = false;
-            Solution bst_sol = solution.Copy();
+            //Console.WriteLine(solution.PrintToString());
+            Solution bst_sol = null;
             double bst_obj_change = 0;
 
             int num_route_sol = solution.Routes.Count;
@@ -129,9 +130,15 @@ namespace rich_VRP.Neighborhoods.Inter
                             {
                                 if (obj_change>bst_obj_change)
                                 {
+                                    
+                                    Console.WriteLine(r_i.PrintToStringSample());
+                                    Console.WriteLine(r_j.PrintToStringSample());
+                                    Console.WriteLine(copy_ri.PrintToStringSample());
+                                    Console.WriteLine(copy_rj.PrintToStringSample());
+                                    
                                     bst_obj_change = obj_change;
-                                    bst_sol = new_sol.Copy();
-                                    isImpr = true;
+                                    bst_sol = new_sol.Copy();    
+                                                                 
                                 }
                             }
                         }//结束对第二条路 各个截断位置的遍历
@@ -139,7 +146,12 @@ namespace rich_VRP.Neighborhoods.Inter
                 }//结束对第二条路的枚举
             }//结束对第一路对枚举
 
-
+            if (bst_sol != null)
+            {
+                Console.WriteLine(new OriginObjFunc().CalObjCost(solution));
+                Console.WriteLine(new OriginObjFunc().CalObjCost(bst_sol));
+                Console.WriteLine(bst_obj_change);
+            }
             return bst_sol;
             
         }

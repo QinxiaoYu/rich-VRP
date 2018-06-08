@@ -26,7 +26,7 @@ namespace rich_VRP.Constructive
             fleet = solution.fleet;
             var unroute_cus = new List<Customer>(Problem.Customers); //没有访问的点
             Vehicle veh = null;
-            List<int> BigCustomers = new List<int> { 154,608,657,718,745,822};
+            List<int> BigCustomers = new List<int>();// new List<int> { 154,608,657,718,745,822};
             int type = 1; //默认小车
             Route newRoute = null;
             while (unroute_cus.Count > 0)

@@ -43,7 +43,7 @@ namespace rich_VRP.Constructive
                 while (unroute_cus.Count > 0)
                 {
                     int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机）
-                    //int type = 2;
+                    //int type = 1;
                     veh = fleet.addNewVeh(type);
 
 
@@ -168,6 +168,7 @@ namespace rich_VRP.Constructive
                                     best_route = cur_route;
                                     inserted = true;
                                     inserted_cus = insert_cus;
+                                    break;
                                 }
                             }
 

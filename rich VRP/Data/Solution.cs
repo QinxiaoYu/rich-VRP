@@ -140,7 +140,7 @@ namespace OP.Data
                 if (route.RouteList.Count >= 2)
                    sol.AddRoute(route.Copy());
             }
-            //sol.fleet.solution = this;
+            sol.fleet.solution = this;
             sol.fleet.EverUsedVeh = this.fleet.EverUsedVeh;
             foreach (Vehicle veh in this.fleet.VehFleet)
             {

@@ -862,6 +862,33 @@ namespace OP.Data
             return TourInfo;
         }
 
+        public string PrintToStringSample(bool printTime = true, bool printCapacity = false, bool printCapacityUnit = false)
+        {
+            string routeText = "";
+            //string serviceText = "";
+            //string serviceBeginText = "";
+            
+            for (int i = 1; i < RouteList.Count - 1; ++i)
+            {
+                routeText += RouteList[i].Info.Id;
+                ////serviceText += RouteList[i].Info.ServiceTime.ToString("0.00") + " ";
+                //serviceText += ServiceTimes[i].ToString("0.00") + " ";
+                //serviceBeginText += ServiceBeginingTimes[i].ToString("0.00") + " ";
+
+                if (i != RouteList.Count - 1)
+                {
+                    routeText += "-";
+                    //serviceText += " ";
+                    //serviceBeginText += " ";
+                }
+            }
+            
+
+                return routeText;
+ 
+           
+            
+        }
 
         private void UpdateId()
         {

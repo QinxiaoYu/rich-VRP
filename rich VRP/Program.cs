@@ -12,6 +12,7 @@ using rich_VRP.Neighborhoods.Remove;
 using rich_VRP.Neighborhoods.Intra;
 using rich_VRP.Constructive.rich_VRP.Constructive;
 using rich_VRP.Neighborhoods.DestroyRepair;
+using rich_VRP.Neighborhoods.Inter;
 
 namespace rich_VRP
 {
@@ -21,7 +22,7 @@ namespace rich_VRP
         {
             OpProblemReader reader = new OpProblemReader();
             string dir = Directory.GetCurrentDirectory();
-            reader.Read(dir);
+            reader.ReadSmall(dir);
             Problem.MinWaitTimeAtDepot = 60; //在配送中心的最少等待时间 
             Problem.WaitCostRate = 0.4;
             Problem.SetNearDistanceCusAndSta(10, 10); //计算每个商户的小邻域
@@ -64,17 +65,32 @@ namespace rich_VRP
                     //ini_solution = DR.DestroyWasteRoute(ini_solution, 0.2);
                     //ini_solution = DR.DestroyAfternoonNodes(ini_solution, 780, 0.2);
                     //ini_solution = DR.Repair(ini_solution);
-                    ini_solution = new Relocate().RelocateIntra(ini_solution,true);
-                    double newcost3 = evaluate.CalObjCost(ini_solution);
-                    Console.WriteLine("ObjVal 3 = " + newcost3.ToString("0.00"));
-
+                    //ini_solution = new Relocate().RelocateIntra(ini_solution,true);
+                    //double newcost3 = evaluate.CalObjCost(ini_solution);
+                    //Console.WriteLine("ObjVal 3 = " + newcost3.ToString("0.00"));
+                    
+                    double newcost4 = 0;
+                    Solution tmp_sol = ini_solution.Copy();
+                    while (tmp_sol!=null)
+                    {
+                        tmp_sol = new CrossInter().Cross(ini_solution);
+                        if (tmp_sol!=null)
+                        {
+                            ini_solution = tmp_sol.Copy();
+                            newcost4 = evaluate.CalObjCost(ini_solution);
+                            Console.WriteLine("ObjVal 4 = " + newcost4.ToString("0.00"));
+                        }
+                        
+                    }
+                    //double newcost5 = evaluate.CalObjCost(ini_solution);
+                    //Console.WriteLine("ObjVal 5 = " + newcost5.ToString("0.00"));
                     if (newcost < 340000)
                     {
                         ini_solution.PrintResult();
                         Console.WriteLine(ini_solution.PrintToString());
                     }
 
-                    sb.AppendLine(newcost3.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
+                    sb.AppendLine(newcost4.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
                     //sb.AppendLine(newcost.ToString("0.00"));
                     //sb.AppendLine(ini_solution.PrintToString());
 

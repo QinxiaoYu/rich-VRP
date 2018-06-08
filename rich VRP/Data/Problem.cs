@@ -143,7 +143,14 @@ namespace OP.Data
 
         public static Station SearchStaById(int id)
         {
-            return Stations[id - 1001];
+            foreach (var station in Stations)
+            {
+                if (station.Info.Id == id)
+                {
+                    return station;
+                }
+            }
+            throw new Exception("Station not found");
         }
 
         public static VehicleType GetVehTypebyID(int _vehtypeid)
