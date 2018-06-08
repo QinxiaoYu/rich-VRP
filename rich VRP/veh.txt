@@ -1,2 +1,0 @@
-1	IVECO	12	2	unlimited	100000	0.5	12	200
-2	TRUCK	16	2.5	unlimited	120000	0.5	14	300
