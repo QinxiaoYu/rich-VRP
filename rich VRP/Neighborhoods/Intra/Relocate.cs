@@ -37,19 +37,21 @@ namespace rich_VRP.Neighborhoods.Intra
                         tmp_r = DeterRelocateInRoute(tmp_r);//对当前路径进行重定位遍历     
                     }                                                
                     double delay = tmp_r.GetArrivalTime() - route.GetArrivalTime();
-                    if (delay<0)
+                    if (delay<=0)
                     {
                         solution.UpdateTripChainTime(veh);
                         solution.Routes[pos_route_sol] = tmp_r;
                         solution.fleet.VehFleet[i].VehRouteList[tmp_r.RouteIndexofVeh] = tmp_r.RouteId;
                         solution.fleet.VehFleet[i].solution = solution;
+                        solution.fleet.solution = solution;
 
                     }
                     else if (veh.CheckNxtRoutesFeasible(tmp_r.RouteIndexofVeh, delay))
                     {                       
                         solution.Routes[pos_route_sol] = tmp_r;
                         solution.fleet.VehFleet[i].VehRouteList[tmp_r.RouteIndexofVeh] = tmp_r.RouteId;
-                        solution.fleet.VehFleet[i].solution = solution;                      
+                        solution.fleet.VehFleet[i].solution = solution;
+                        solution.fleet.solution = solution;            
                     }
                 }//结束对同一辆车下每条路的遍历
             }//结束对所有车的遍历

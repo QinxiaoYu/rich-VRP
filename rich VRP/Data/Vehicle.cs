@@ -279,14 +279,15 @@ namespace OP.Data
             return Str_Otherinfo;
         }
 
-        public Vehicle Copy()
+        public Vehicle Copy(Solution solution)
         {
             Vehicle v = new Vehicle(this.TypeId, this.VehId);
             foreach (string r_id in this.VehRouteList)
             {
                 v.VehRouteList.Add(r_id);
-                v.solution = this.solution;
+                //v.solution = this.solution;
             }
+            v.solution = solution;
             return v;
         }
 	
@@ -402,8 +403,9 @@ namespace OP.Data
             {
             Fleet f = new Fleet();
             foreach (Vehicle veh in this.VehFleet)
-                {
-                f.VehFleet.Add(veh.Copy());
+            { 
+                f.VehFleet.Add(veh.Copy(f.solution));
+
             }
             return f;
         }
