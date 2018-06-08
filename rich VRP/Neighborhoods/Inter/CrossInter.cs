@@ -14,11 +14,11 @@ namespace rich_VRP.Neighborhoods.Inter
 
         }
 
-        public bool Cross(Solution solution)
+        public Solution Cross(Solution solution, out bool isImpr)
         {
-            bool isImpr = false;
+            isImpr = false;
             Solution bst_sol = solution.Copy();
-            double bst_obj_change = double.MaxValue;
+            double bst_obj_change = 0;
 
             int num_route_sol = solution.Routes.Count;
             for (int i = 0; i < num_route_sol - 1; i++) //第一条路
@@ -51,7 +51,7 @@ namespace rich_VRP.Neighborhoods.Inter
                             double duetime_fstNode_r2p2 = route2part2[0].Info.DueDate;
                             double earlytime_lstNode_r1p1 = r_i.ServiceBeginingTimes[split1 - 1] + r_i.RouteList[split1 - 1].Info.ServiceTime + r_i.RouteList[split1 - 1].TravelTime(route1part2[0]);
                             double earlytime_lstNode_r2p1 = r_j.ServiceBeginingTimes[split2 - 1] + r_j.RouteList[split2 - 1].Info.ServiceTime + r_j.RouteList[split2 - 1].TravelTime(route2part2[0]);
-                            if (duetime_fstNode_r1p2>earlytime_lstNode_r2p1 || duetime_fstNode_r2p2>earlytime_lstNode_r1p1)
+                            if (duetime_fstNode_r1p2<earlytime_lstNode_r2p1 || duetime_fstNode_r2p2<earlytime_lstNode_r1p1)
                             {
                                 break;
                             }
@@ -127,7 +127,7 @@ namespace rich_VRP.Neighborhoods.Inter
                             double obj_change = (old_ri_obj + old_rj_obj) - (new_obj_i + new_obj_j);
                             if (obj_change>0)//如果变好
                             {
-                                if (obj_change<bst_obj_change)
+                                if (obj_change>bst_obj_change)
                                 {
                                     bst_obj_change = obj_change;
                                     bst_sol = new_sol.Copy();
@@ -140,8 +140,8 @@ namespace rich_VRP.Neighborhoods.Inter
             }//结束对第一路对枚举
 
 
-            solution = bst_sol;
-            return isImpr;
+            return bst_sol;
+            
         }
     }
 }
