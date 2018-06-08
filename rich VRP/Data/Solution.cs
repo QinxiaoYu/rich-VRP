@@ -120,7 +120,7 @@ namespace OP.Data
                 {
                     solution += i.ToString(CultureInfo.InvariantCulture);
                     solution += ") ";
-                    solution += Routes[i].PrintToString() + "; ";
+                    solution += Routes[i].PrintToStringSample() + "; ";
                     solution += "(dist: " + ((int)Routes[i].GetRouteLength()).ToString(CultureInfo.InvariantCulture) + ")";
                     solution += "\r\n";
                 }
@@ -131,20 +131,33 @@ namespace OP.Data
             return solution;
         }
 
+        public double CalObjCost()
+        {
+            //全部成本
+            double totalCost = 0;
+
+            foreach (var veh in fleet.VehFleet) //遍历每一个被使用的车辆
+            {
+                totalCost += veh.calculCost();
+            }
+            ObjVal = totalCost;
+            return totalCost;
+        }
 
         public Solution Copy()
         {
             Solution sol = new Solution();
+            sol.ObjVal = ObjVal;
             foreach (Route route in Routes)
             {
                 if (route.RouteList.Count >= 2)
                    sol.AddRoute(route.Copy());
             }
             sol.fleet.solution = this;
-            sol.fleet.EverUsedVeh = this.fleet.EverUsedVeh;
-            foreach (Vehicle veh in this.fleet.VehFleet)
+            sol.fleet.EverUsedVeh = fleet.EverUsedVeh;
+            foreach (Vehicle veh in fleet.VehFleet)
             {
-                sol.fleet.VehFleet.Add(veh.Copy(fleet.solution));
+                sol.fleet.VehFleet.Add(veh.Copy(sol.fleet.solution));
             }            
             return sol;
         }

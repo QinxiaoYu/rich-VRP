@@ -7,7 +7,7 @@ using OP.Data;
 
 using System.IO;
 using rich_VRP.Constructive;
-using rich_VRP.ObjectiveFunc;
+//using rich_VRP.ObjectiveFunc;
 using rich_VRP.Neighborhoods.Remove;
 using rich_VRP.Neighborhoods.Intra;
 using rich_VRP.Constructive.rich_VRP.Constructive;
@@ -22,7 +22,7 @@ namespace rich_VRP
         {
             OpProblemReader reader = new OpProblemReader();
             string dir = Directory.GetCurrentDirectory();
-            reader.ReadSmall(dir);
+            reader.Read(dir);
             Problem.MinWaitTimeAtDepot = 60; //在配送中心的最少等待时间 
             Problem.WaitCostRate = 0.4;
             Problem.SetNearDistanceCusAndSta(10, 10); //计算每个商户的小邻域
@@ -38,8 +38,8 @@ namespace rich_VRP
                 //CWObjFunc initial = new CWObjFunc(); //这个效果最差
                 Initialization initial = new Initialization(); //这个效果最好
                 Solution ini_solution = initial.initial_construct();
-                OriginObjFunc evaluate = new OriginObjFunc();
-                double cost = evaluate.CalObjCost(ini_solution);
+                //OriginObjFunc evaluate = new OriginObjFunc();
+                double cost = ini_solution.CalObjCost();
                 //ini_solution.PrintResult();
 
 
@@ -48,16 +48,16 @@ namespace rich_VRP
 
                 RemoveSta oper = new RemoveSta();
                 bool isIprv = oper.Remove(ini_solution);
-                if (isIprv)
+                if (true)
                 {
                     sb.AppendLine("====RemoveSta=====");
-                    double newcost = evaluate.CalObjCost(ini_solution);
+                    double newcost = ini_solution.CalObjCost();
 
                     Console.WriteLine("ObjVal 1 = " + newcost.ToString("0.00"));
 
                     StationPosition sp = new StationPosition();
                     ini_solution = sp.StationExchage(ini_solution, 0.3);
-                    double newcost2 = evaluate.CalObjCost(ini_solution);
+                    double newcost2 = ini_solution.CalObjCost();
                     Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
 
                     //DestroyAndRepair DR = new DestroyAndRepair();
@@ -77,14 +77,14 @@ namespace rich_VRP
                         if (tmp_sol!=null)
                         {
                             ini_solution = tmp_sol.Copy();
-                            newcost4 = evaluate.CalObjCost(ini_solution);
+                            newcost4 = ini_solution.CalObjCost();
                             Console.WriteLine("ObjVal 4 = " + newcost4.ToString("0.00"));
                         }
                         
                     }
                     //double newcost5 = evaluate.CalObjCost(ini_solution);
                     //Console.WriteLine("ObjVal 5 = " + newcost5.ToString("0.00"));
-                    if (newcost < 340000)
+                    if (newcost < 290000)
                     {
                         ini_solution.PrintResult();
                         Console.WriteLine(ini_solution.PrintToString());

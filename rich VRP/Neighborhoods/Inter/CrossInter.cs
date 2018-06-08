@@ -1,5 +1,5 @@
 ﻿using OP.Data;
-using rich_VRP.ObjectiveFunc;
+//using rich_VRP.ObjectiveFunc;
 using System;
 using System.Collections.Generic;
 
@@ -19,18 +19,26 @@ namespace rich_VRP.Neighborhoods.Inter
         {
             //Console.WriteLine(solution.PrintToString());
             Solution bst_sol = null;
+            double old_obj = solution.ObjVal;
             double bst_obj_change = 0;
+            //Console.WriteLine("=====solution========");
+            //Console.WriteLine(solution.PrintToString());
+            //Console.WriteLine("=====solution in fleet========");
+            //Console.WriteLine(solution.fleet.solution.PrintToString());
+            //Console.WriteLine("=====solution in vehicle=======");
+            //Console.WriteLine(solution.fleet.VehFleet[0].solution.PrintToString());
+                   
 
             int num_route_sol = solution.Routes.Count;
             for (int i = 0; i < num_route_sol - 1; i++) //第一条路
             {
                 Route r_i = solution.Routes[i].Copy();
-                double old_ri_obj = r_i.AssignedVeh.calculCost();
+                //double old_ri_obj = r_i.AssignedVeh.calculCost();
                 r_i.RemoveAllSta();
                 for (int j = i + 1; j < num_route_sol; j++) //第二条路
                 {
                     Route r_j = solution.Routes[j].Copy();
-                    double old_rj_obj = r_j.AssignedVeh.calculCost();
+                    //double old_rj_obj = r_j.AssignedVeh.calculCost();
                     if (r_i.AssignedVeh.VehId == r_j.AssignedVeh.VehId) //如果两条路属于同一辆车，则不交换
                     {
                         continue;
@@ -122,20 +130,17 @@ namespace rich_VRP.Neighborhoods.Inter
                                 new_sol.UpdateTripChainTime(new_veh_j);
 
                             }
-                          
-                            double new_obj_i = new_veh_i.calculCost();
-                            double new_obj_j = new_veh_j.calculCost();
-                            double obj_change = (old_ri_obj + old_rj_obj) - (new_obj_i + new_obj_j);
+
+                            //double new_obj_i = new_veh_i.calculCost();
+                            //double new_obj_j = new_veh_j.calculCost();
+                            double new_obj = new_sol.CalObjCost();
+                            double obj_change = old_obj-new_obj;
                             if (obj_change>0)//如果变好
                             {
+                          
+                                return new_sol;
                                 if (obj_change>bst_obj_change)
                                 {
-                                    
-                                    Console.WriteLine(r_i.PrintToStringSample());
-                                    Console.WriteLine(r_j.PrintToStringSample());
-                                    Console.WriteLine(copy_ri.PrintToStringSample());
-                                    Console.WriteLine(copy_rj.PrintToStringSample());
-                                    
                                     bst_obj_change = obj_change;
                                     bst_sol = new_sol.Copy();    
                                                                  
@@ -148,8 +153,8 @@ namespace rich_VRP.Neighborhoods.Inter
 
             if (bst_sol != null)
             {
-                Console.WriteLine(new OriginObjFunc().CalObjCost(solution));
-                Console.WriteLine(new OriginObjFunc().CalObjCost(bst_sol));
+                Console.WriteLine(solution.CalObjCost());
+                Console.WriteLine(bst_sol.CalObjCost());
                 Console.WriteLine(bst_obj_change);
             }
             return bst_sol;

@@ -5,7 +5,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using rich_VRP.Neighborhoods;
-using rich_VRP.ObjectiveFunc;
+//using rich_VRP.ObjectiveFunc;
 
 
 namespace rich_VRP.Neighborhoods.Insert

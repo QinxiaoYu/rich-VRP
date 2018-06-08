@@ -256,18 +256,18 @@ namespace OP.Data
                     int _j = int.Parse(paras[2]);
                     int _dis_ij = int.Parse(paras[3]);
                     int _tt_ij = int.Parse(paras[4]);
-                    if (_i>100 && _i<1001 || _j>100 && _j<1001)
+                    if (_i>30 && _i<1001 || _j>30 && _j<1001)
                     {
                         str_Dis = Dreader.ReadLine();
                         continue;
                     }
                     if (_i>1000 )
                     {
-                        _i -= 900;
+                        _i -= 970;
                     }
                     if (_j>1000)
                     {
-                        _j -= 900;
+                        _j -= 970;
                     }
                     Problem.SetDistanceANDTravelIJ(_i, _j, _tt_ij, _dis_ij);
                     str_Dis = Dreader.ReadLine();
