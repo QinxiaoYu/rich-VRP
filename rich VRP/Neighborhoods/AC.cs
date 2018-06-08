@@ -114,6 +114,8 @@ namespace rich_VRP.Neighborhoods
             }
             return 0;
         }
+
+
         /// <summary>
         /// 查询该簇下的所有节点信息
         /// </summary>
