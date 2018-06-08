@@ -48,6 +48,34 @@ namespace OP.Data
                 }
             }
         }
+        /// <summary>
+        /// 从当前解中删除一条线路，并且更新车队中这条线路的信息
+        /// </summary>
+        /// <param name="r"></param>
+        internal void Remove(Route r)
+        {
+            Vehicle veh = fleet.GetVehbyID(r.AssignedVeh.VehId);
+            int idx_route_veh = r.RouteIndexofVeh;
+            for (int i = idx_route_veh+1 ; i < veh.VehRouteList.Count; i++)
+            {
+                string nxt_route_id = veh.VehRouteList[i];
+                int nxt_route_idx_solution = -1;
+                GetRouteByID(nxt_route_id, out nxt_route_idx_solution);
+                Routes[nxt_route_idx_solution].RouteIndexofVeh -= 1;
+            }
+
+            string veh_id = r.AssignedVeh.VehId;
+            int idx_veh_fleet = fleet.GetVehIdxInFleet(veh_id);
+            fleet.VehFleet[idx_veh_fleet].VehRouteList.Remove(r.RouteId);
+            if (fleet.VehFleet[idx_veh_fleet].VehRouteList.Count==0)
+            {
+                fleet.VehFleet.RemoveAt(idx_veh_fleet);
+            }
+            int idx_route_solution = Routes.FindIndex(a => a.RouteId == r.RouteId);
+            Console.WriteLine(r.RouteId);
+            Routes.RemoveAt(idx_route_solution);
+
+        }
 
         public Route GetRouteByID(string route_id, out int pos_inSolution)
         {
@@ -101,12 +129,14 @@ namespace OP.Data
 
         public Solution Copy()
         {
-            var sol = new Solution();
+            Solution sol = new Solution();
             foreach (Route route in Routes)
             {
                 if (route.RouteList.Count >= 2)
                    sol.AddRoute(route.Copy());
             }
+            sol.fleet.solution = this;
+            sol.fleet.EverUsedVeh = this.fleet.EverUsedVeh;
             foreach (Vehicle veh in this.fleet.VehFleet)
             {
                 sol.fleet.VehFleet.Add(veh.Copy());

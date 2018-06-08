@@ -72,7 +72,7 @@ namespace OP.Data
             Route tmp_r = this.Copy();
             if (cnt_charge>3)
             {
-                return this;
+                return this; //算不了
             }
             if (old_obj==0)
             {
@@ -80,8 +80,6 @@ namespace OP.Data
                 old_obj = costs.Item1 + costs.Item2 + costs.Item3;
             }
 
-            List<double> waittime = this.GetWaitTimeAtNode();
-           
             for (int k = RouteList.Count - 1; k > 0; k--)
             {
                 if (RouteList[k].Info.Type == 3)//充电站
@@ -97,8 +95,8 @@ namespace OP.Data
             for (int i = 0; i < tmp_r.RouteList.Count-1; i++)
             {
                 Route tmp_route_i = tmp_r.Copy();
-                tmp_route_i.insert_sta_between(i, i + 1);
-                if (tmp_route_i.ViolationOfRange()>-1 || tmp_route_i.ViolationOfTimeWindow()>-1)
+                bool Finded = tmp_route_i.insert_sta_between(i, i + 1);
+                if (Finded == false || tmp_route_i.ViolationOfRange()>-1 || tmp_route_i.ViolationOfTimeWindow()>-1)
                 {
                     continue;
                 }
@@ -125,8 +123,8 @@ namespace OP.Data
                 for (int j = i+2; j < tmp_route_i.RouteList.Count-1; j++)
                 {
                     Route tmp_route_j = tmp_route_i.Copy();
-                    tmp_route_j.insert_sta_between(j, j + 1);
-                    if (tmp_route_j.ViolationOfRange()>-1 || tmp_route_j.ViolationOfTimeWindow()>-1)
+                    bool isFinded = tmp_route_j.insert_sta_between(j, j + 1);
+                    if (isFinded ==false || tmp_route_j.ViolationOfRange()>-1 || tmp_route_j.ViolationOfTimeWindow()>-1)
                     {
                         continue;
                     }
@@ -157,8 +155,8 @@ namespace OP.Data
                     for (int k = j+2; k <tmp_route_j.RouteList.Count-1 ; k++)
                     {
                         Route tmp_route_k = tmp_route_j.Copy();
-                        tmp_route_k.insert_sta_between(k, k + 1);
-                        if (tmp_route_k.ViolationOfRange() > -1 || tmp_route_k.ViolationOfTimeWindow() > -1)
+                        bool isFinded = tmp_route_k.insert_sta_between(k, k + 1);
+                        if (isFinded ==false || tmp_route_k.ViolationOfRange() > -1 || tmp_route_k.ViolationOfTimeWindow() > -1)
                         {
                             continue;
                         }
@@ -181,12 +179,14 @@ namespace OP.Data
         /// </summary>
         /// <param name="i"></param>
         /// <param name="j"></param>
-        private void insert_sta_between(int i, int j)
+        private bool insert_sta_between(int i, int j)
         {
+            bool isFindSta = true;
             var Node_i = this.RouteList[i];
             var Node_j = this.RouteList[j];
             List<int> NeighborSta_i = new List<int>();
             List<int> NeighborSta_j = new List<int>();
+
             if (Node_i.Info.Type==2)
             {
                 NeighborSta_i = Problem.GetNearDistanceSta(Node_i.Info.Id).ToList();
@@ -202,19 +202,30 @@ namespace OP.Data
                 NeighborSta_ij = NeighborSta_i.Union(NeighborSta_j).ToList();
             }
 
+            double battery_i = this.battery_level[i];
+
             Station bst_sta = null;
             double min_dist_ij = double.MaxValue;
             foreach (int sta_id in NeighborSta_ij)
             {
                 Station sta = Problem.SearchStaById(sta_id);
-                double dist_ij = Node_i.TravelDistance(sta) + sta.TravelDistance(Node_j);
-                if (dist_ij<min_dist_ij)
+                if (Node_i.TravelDistance(sta)<battery_i)
                 {
-                    bst_sta = sta;
-                    min_dist_ij = dist_ij;
-                }
+                    double dist_ij = Node_i.TravelDistance(sta) + sta.TravelDistance(Node_j);
+                    if (dist_ij < min_dist_ij)
+                    {
+                        bst_sta = sta;
+                        min_dist_ij = dist_ij;
+                    }
+                }          
+            }
+            if (bst_sta == null)
+            {
+                isFindSta = false;
+                return isFindSta;
             }
             this.InsertNode(bst_sta, j);
+            return isFindSta;
         }
 
         public Route(VehicleType vehtype)
@@ -389,11 +400,11 @@ namespace OP.Data
         internal double GetFloatTimeAtCus(int i)
         {
             double floattime = 960.0;
-            if (RouteList[i].Info.Type==2)//充电站
+            if (RouteList[i].Info.Type==2)//商户
             {
-                double arrivetime = ServiceBeginingTimes[i - 1] + RouteList[i - 1].Info.ServiceTime + RouteList[i - 1].TravelTime(RouteList[i]);
+                double duetime = RouteList[i].Info.DueDate;
                 double servicestarttime = ServiceBeginingTimes[i];
-                floattime = servicestarttime - arrivetime;
+                floattime = duetime - servicestarttime;
             }
             return floattime;
         }
