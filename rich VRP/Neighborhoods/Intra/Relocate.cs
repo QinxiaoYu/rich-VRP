@@ -9,9 +9,10 @@ namespace rich_VRP.Neighborhoods.Intra
 {
     class Relocate
     {
+        Random rd;
         public Relocate ()
         {
-
+            rd = new Random();
         }
         public Solution RelocateIntra(Solution solution, bool rand = false)
         {
@@ -114,10 +115,11 @@ namespace rich_VRP.Neighborhoods.Intra
             Route copy_route = route.Copy();
             List<AbsNode> Cus2Relocate = route.RouteList.GetRange(1, num_node_route - 2);
 
-            for (int i = 1; i < num_node_route - 1; i++) //遍历线路上的每一个点
+            while (Cus2Relocate.Count>0)
             {
-
-                Customer cus = (Customer)route.RouteList[i];
+                int rd_cus = rd.Next(Cus2Relocate.Count);
+                Customer cus = (Customer)Cus2Relocate[rd_cus];
+                Cus2Relocate.RemoveAt(rd_cus);
                 Route tmp_route = copy_route.Copy();
                 tmp_route.RemoveAllSta();
                 int pos_cus_route = tmp_route.RouteList.FindIndex(a => a.Info.Id == cus.Info.Id);
