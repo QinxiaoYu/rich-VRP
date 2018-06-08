@@ -104,7 +104,7 @@ namespace OP.Data
                 double new_obj = new_costs.Item1 + new_costs.Item2 + new_costs.Item3;
                 if (new_obj < old_obj)
                 {
-                    bst_route = tmp_route_i.Copy();
+                    bst_route = tmp_route_i.Copy();                  
                     old_obj = new_obj;
                     isFeasible = true;
                 }
@@ -174,6 +174,19 @@ namespace OP.Data
             return bst_route;
 
         }
+
+        internal void RemoveAllSta()
+        {
+            Route copy_route = this.Copy();
+            foreach (AbsNode node in copy_route.RouteList)
+            {
+                if (node.Info.Type==3)
+                {
+                    Remove((Station)node);
+                }
+            }
+        }
+
         /// <summary>
         /// 在路径的相邻两点之间插入充电站，该充电站距离这两个点的距离和最近
         /// </summary>

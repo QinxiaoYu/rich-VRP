@@ -33,9 +33,9 @@ namespace rich_VRP
             {
                 sb.Clear();
                 sb.AppendLine("============== " + i.ToString() + " ===============");
-                //CW4sveh initial = new CW4sveh(); 
-                CWObjFunc initial = new CWObjFunc(); //这个效果最差
-                //Initialization initial = new Initialization();
+                //CW4sveh initial = new CW4sveh(); //这个效果次之
+                //CWObjFunc initial = new CWObjFunc(); //这个效果最差
+                Initialization initial = new Initialization(); //这个效果最好
                 Solution ini_solution = initial.initial_construct();
                 OriginObjFunc evaluate = new OriginObjFunc();
                 double cost = evaluate.CalObjCost(ini_solution);
@@ -59,12 +59,12 @@ namespace rich_VRP
                     double newcost2 = evaluate.CalObjCost(ini_solution);
                     Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
 
-                    DestroyAndRepair DR = new DestroyAndRepair();
-                    ini_solution = DR.DestroyShortRoute(ini_solution, 5);
-                    ini_solution = DR.DestroyWasteRoute(ini_solution, 0.2);
-                    ini_solution = DR.DestroyAfternoonNodes(ini_solution, 780, 0.2);
-                    ini_solution = DR.Repair(ini_solution);
-
+                    //DestroyAndRepair DR = new DestroyAndRepair();
+                    //ini_solution = DR.DestroyShortRoute(ini_solution, 5);
+                    //ini_solution = DR.DestroyWasteRoute(ini_solution, 0.2);
+                    //ini_solution = DR.DestroyAfternoonNodes(ini_solution, 780, 0.2);
+                    //ini_solution = DR.Repair(ini_solution);
+                    ini_solution = new Relocate().RelocateIntra(ini_solution,true);
                     double newcost3 = evaluate.CalObjCost(ini_solution);
                     Console.WriteLine("ObjVal 3 = " + newcost3.ToString("0.00"));
 

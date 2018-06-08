@@ -34,20 +34,25 @@ namespace OP.Data
         {
             foreach (Vehicle veh in fleet.VehFleet)
             {
-                int num_trips_veh = veh.getNumofVisRoute();
-                if (num_trips_veh>1)
+                UpdateTripChainTime(veh);
+            }
+        }
+
+        internal void UpdateTripChainTime(Vehicle veh)
+        {
+            int num_trips_veh = veh.getNumofVisRoute();
+            if (num_trips_veh > 1)
+            {
+                for (int i = 1; i < num_trips_veh; i++)
                 {
-                    for (int i = 1; i < num_trips_veh; i++)
-                    {
-                        int pos;
-                        Route cur_route = GetRouteByID(veh.VehRouteList[i],out pos);
-                        double new_departure_cur = cur_route.GetEarliestDepartureTime();
-                        cur_route.ServiceBeginingTimes[0] = new_departure_cur;                    
-                              
-                    }
+                    int pos;
+                    Route cur_route = GetRouteByID(veh.VehRouteList[i], out pos);
+                    double new_departure_cur = cur_route.GetEarliestDepartureTime();
+                    cur_route.ServiceBeginingTimes[0] = new_departure_cur;
                 }
             }
         }
+
         /// <summary>
         /// 从当前解中删除一条线路，并且更新车队中这条线路的信息
         /// </summary>
