@@ -44,6 +44,10 @@ namespace rich_VRP.Neighborhoods.Inter
                         continue;
                     }
                     r_j.RemoveAllSta();
+                    if (r_i.overlapPercent(r_j)<=0)
+                    {
+                        continue;
+                    }
                     for (int split1 = 1; split1 < r_i.RouteList.Count - 1; split1++)
                     {
                         for (int split2 = 1; split2 < r_j.RouteList.Count - 1; split2++)

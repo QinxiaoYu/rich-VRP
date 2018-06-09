@@ -79,7 +79,7 @@ namespace OP.Data
                     }
                     else
                     {
-                        angle1 = Math.Atan2((AllNodes[i].Y - AllNodes[0].Y), (AllNodes[i].X - AllNodes[0].Y)) * 180 / Math.PI;
+                        angle1 = Math.Atan2((AllNodes[i].Y - AllNodes[0].Y), (AllNodes[i].X - AllNodes[0].X)) * (180 / Math.PI);
                         if (angle1 < 0)
                         {
                             angle1 = angle1 + 360;
@@ -91,7 +91,7 @@ namespace OP.Data
                     }
                     else
                     {
-                        angle2 = Math.Atan2((AllNodes[j].Y - AllNodes[0].Y), (AllNodes[j].X - AllNodes[0].Y)) * 180 / Math.PI;
+                        angle2 = Math.Atan2((AllNodes[j].Y - AllNodes[0].Y), (AllNodes[j].X - AllNodes[0].X)) * (180 / Math.PI);
                         if (angle2 < 0)
                         {
                             angle2 = angle2 + 360;

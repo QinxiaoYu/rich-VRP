@@ -993,6 +993,65 @@ namespace OP.Data
 
 			
         }
+
+        public Tuple<double,double> GetRouteBearing()
+        {
+            double sAngle = double.MaxValue;
+            double lAngle = double.MinValue;
+            for (int i = 1; i < RouteList.Count-1; i++)
+            {
+                double angle = Problem.GetAngelIJ(0,RouteList[i].Info.Id);
+                if (angle<sAngle)
+                {
+                    sAngle = angle;
+                }
+                if (angle>lAngle)
+                {
+                    lAngle = angle;
+                }
+            }
+            return new Tuple<double, double>(sAngle, lAngle);
+        }
+
+        /// <summary>
+        /// 获得两条路线的重叠区域所占百分比 = 重叠角度/（线路1覆盖角度+线路2覆盖角度的并集）
+        /// </summary>
+        /// <returns>The percent.</returns>
+        /// <param name="r1">R1.</param>
+        public double overlapPercent(Route r1)
+        {
+            double op = 0;
+            var r0_bearing = GetRouteBearing();
+            var r1_bearing = r1.GetRouteBearing();
+
+            if (r0_bearing.Item1<r1_bearing.Item1)
+            {
+                double op_area = r0_bearing.Item2 - r1_bearing.Item1;
+                if (op_area<=0)
+                {
+                    return 0;
+                }else
+                {
+                    double uni_area = Math.Max(r0_bearing.Item2, r1_bearing.Item2) - r0_bearing.Item1;
+                    return op_area / uni_area;
+                }
+            }
+
+            if (r1_bearing.Item1<r0_bearing.Item1)
+            {
+                double op_area = r1_bearing.Item2 - r0_bearing.Item1;
+                if (op_area<=0)
+                {
+                    return 0;
+                }
+                else
+                {
+                    double uni_area = Math.Max(r0_bearing.Item2, r1_bearing.Item2) - r1_bearing.Item1;
+                    return op_area / uni_area;
+                }
+            }
+            return op;
+        }
         
     }
 }

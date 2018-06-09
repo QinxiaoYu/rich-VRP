@@ -65,9 +65,9 @@ namespace rich_VRP
                     //ini_solution = DR.DestroyWasteRoute(ini_solution, 0.2);
                     //ini_solution = DR.DestroyAfternoonNodes(ini_solution, 780, 0.2);
                     //ini_solution = DR.Repair(ini_solution);
-                    //ini_solution = new Relocate().RelocateIntra(ini_solution,true);
-                    //double newcost3 = evaluate.CalObjCost(ini_solution);
-                    //Console.WriteLine("ObjVal 3 = " + newcost3.ToString("0.00"));
+                    ini_solution = new Relocate().RelocateIntra(ini_solution,true);
+                    double newcost3 = ini_solution.CalObjCost();
+                    Console.WriteLine("ObjVal 3 = " + newcost3.ToString("0.00"));
                     
                     double newcost4 = 0;
                     Solution tmp_sol = ini_solution.Copy();
