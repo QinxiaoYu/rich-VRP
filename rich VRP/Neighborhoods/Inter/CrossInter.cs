@@ -44,7 +44,8 @@ namespace rich_VRP.Neighborhoods.Inter
                         continue;
                     }
                     r_j.RemoveAllSta();
-                    if (r_i.overlapPercent(r_j)<=0)
+                    var Conditions = r_i.overlapPercent(r_j);
+                    if (Conditions.Item1<=0 || Conditions.Item2>50) //如果两条路不相交， 或者半径相差太大，都不进行交换
                     {
                         continue;
                     }

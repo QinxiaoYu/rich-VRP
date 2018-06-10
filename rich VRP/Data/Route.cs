@@ -725,7 +725,7 @@ namespace OP.Data
         }
 
         /// <summary>
-        /// 路径的长度，或服务时间
+        /// 路径的行驶长度
         /// </summary>
         /// <returns></returns>
         public double GetRouteLength()
@@ -994,13 +994,16 @@ namespace OP.Data
 			
         }
 
-        public Tuple<double,double> GetRouteBearing()
+        public Tuple<double,double,int,int> GetRouteBearing()
         {
             double sAngle = double.MaxValue;
             double lAngle = double.MinValue;
+            int sRadian = int.MaxValue;
+            int lRadian = int.MinValue;
             for (int i = 1; i < RouteList.Count-1; i++)
             {
                 double angle = Problem.GetAngelIJ(0,RouteList[i].Info.Id);
+                int radian = Problem.GetDistanceIJ(0, RouteList[i].Info.Id);
                 if (angle<sAngle)
                 {
                     sAngle = angle;
@@ -1009,8 +1012,16 @@ namespace OP.Data
                 {
                     lAngle = angle;
                 }
+                if (radian<sRadian)
+                {
+                    sRadian = radian;
+                }
+                if (radian>lRadian)
+                {
+                    lRadian = radian;
+                }
             }
-            return new Tuple<double, double>(sAngle, lAngle);
+            return new Tuple<double, double,int,int>(sAngle, lAngle,sRadian,lRadian);
         }
 
         /// <summary>
@@ -1018,22 +1029,31 @@ namespace OP.Data
         /// </summary>
         /// <returns>The percent.</returns>
         /// <param name="r1">R1.</param>
-        public double overlapPercent(Route r1)
+        public Tuple<double,int> overlapPercent(Route r1)
         {
             double op = 0;
+            int dis_radian = 0;
             var r0_bearing = GetRouteBearing();
             var r1_bearing = r1.GetRouteBearing();
+
+            if (r0_bearing.Item4>r1_bearing.Item4)
+            {
+                dis_radian = Math.Max(0, r0_bearing.Item3 - r1_bearing.Item4);
+            }else
+            {
+                dis_radian = Math.Max(0, r1_bearing.Item3 - r0_bearing.Item4);
+            }
 
             if (r0_bearing.Item1<r1_bearing.Item1)
             {
                 double op_area = r0_bearing.Item2 - r1_bearing.Item1;
                 if (op_area<=0)
                 {
-                    return 0;
+                    return new Tuple<double, int> (0,dis_radian);
                 }else
                 {
                     double uni_area = Math.Max(r0_bearing.Item2, r1_bearing.Item2) - r0_bearing.Item1;
-                    return op_area / uni_area;
+                    return new Tuple<double, int> (op_area / uni_area,dis_radian);
                 }
             }
 
@@ -1042,15 +1062,15 @@ namespace OP.Data
                 double op_area = r1_bearing.Item2 - r0_bearing.Item1;
                 if (op_area<=0)
                 {
-                    return 0;
+                    return new Tuple<double, int>(0, dis_radian);
                 }
                 else
                 {
                     double uni_area = Math.Max(r0_bearing.Item2, r1_bearing.Item2) - r1_bearing.Item1;
-                    return op_area / uni_area;
+                    return new Tuple<double, int>(op_area / uni_area, dis_radian);
                 }
             }
-            return op;
+            return new Tuple<double, int>(op,dis_radian);
         }
         
     }
