@@ -24,7 +24,13 @@ namespace OP.Data
 
         public static double MinWaitTimeAtDepot { get; set; }
         public static double WaitCostRate { get; set; }
+        /// <summary>
+        /// 列表记录了每一个点的商户邻域，其商户邻点按照可达性由近至远排序
+        /// </summary>
         public static List<int[]> NearDistanceCus;
+        /// <summary>
+        /// 列表记录了每一个点的充电站邻域，其充电站邻点由近至远排序
+        /// </summary>
         public static List<int[]> NearDistanceSta;
 
 
@@ -179,7 +185,7 @@ namespace OP.Data
 
         }
         /// <summary>
-        /// 计算每一个商户的小邻域，即离它可达的最近的前numNNCus个商户，以及前numNNSta个充电站
+        /// 计算每一个点的小邻域，即离它可达的最近的前numNNCus个商户，以及前numNNSta个充电站
         /// </summary>
         /// <param name="_numNNCus"></param>
         /// <param name="_numNNSta"></param>
@@ -187,22 +193,22 @@ namespace OP.Data
         {
             NearDistanceCus = new List<int[]>();
             NearDistanceSta = new List<int[]>();
-            for (int i = 0; i < Customers.Count; i++)
+            for (int i = 0; i < AllNodes.Count; i++)
             {
-                var node = Customers[i];
+                var node = AllNodes[i];
                 Hashtable neighbours_Distance = new Hashtable();
                 for (int j = 0; j < Customers.Count; j++)
                 {
                     if (i!=j)
                     {
                         var node_j = Customers[j];
-                        double et_i = node.Info.ReadyTime+node.Info.ServiceTime; //从商户i出发的最早可出发时间！=实际出发时间
-                        double tt_ij = node.TravelTime(node_j);
+                        double et_i = node.ReadyTime+node.ServiceTime; //从商户i出发的最早可出发时间！=实际出发时间
+                        double tt_ij = GetTravelTimeIJ(node.Id,node_j.Info.Id);
                         double at_j = et_i + tt_ij;
 
                         if (at_j < node_j.Info.DueDate) //可达性
                         {
-                            double dis_ij = node.TravelDistance(node_j);
+                            double dis_ij = GetDistanceIJ(node.Id,node_j.Info.Id);
                             neighbours_Distance.Add(node_j.Info.Id, dis_ij); //按照里程远近判断两点的距离关系
                         }
                     }
@@ -224,7 +230,7 @@ namespace OP.Data
                 for (int j = 0; j < Stations.Count; j++)
                 {
                     var station_j = Stations[j];
-                    double dis_ij = node.TravelDistance(station_j);
+                    double dis_ij = GetDistanceIJ(node.Id, station_j.Info.Id);
                     neighbours_Distance.Add(station_j.Info.Id, dis_ij);
                 }
                 double[] valueArray2 = new double[neighbours_Distance.Count];
@@ -256,13 +262,13 @@ namespace OP.Data
         //    }
         //}
         /// <summary>
-        /// 获得某个商户的商户小邻域，即离它可达的最近的前一些商户
+        /// 获得某个点的商户小邻域，即离它可达的最近的前一些商户
         /// </summary>
         /// <param name="_cus_id"></param>
         /// <returns></returns>
-        public static int[] GetNearDistanceCus(int _cus_id)
+        public static int[] GetNearDistanceCus(int _node_id)
         {
-            return NearDistanceCus[_cus_id];
+            return NearDistanceCus[_node_id];
         }
         /// <summary>
         ///  获得某个商户的充电站小邻域，即离它可达的最近的前一些充电站

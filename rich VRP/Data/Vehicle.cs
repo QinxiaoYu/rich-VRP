@@ -181,6 +181,42 @@ namespace OP.Data
             return Feasible;
         }
 
+        public bool CheckNxtRoutesFeasible(int cur_route_pos, double delaytime, List<Route> routesList)
+        {
+            if (delaytime <= 0 || cur_route_pos >= getNumofVisRoute() - 1)
+            {
+                return true;
+            }
+            bool Feasible = false;
+            int pos;
+            //递归检查紧邻下游线路的浮动时间
+            //Route nxt_route = solution.GetRouteByID(VehRouteList[cur_route_pos + 1], out pos);
+            Route nxt_route = routesList[cur_route_pos + 1];
+            Route tmp_nxt_route = nxt_route.Copy();
+            for (int i = 0; i < tmp_nxt_route.RouteList.Count; i++)
+            {
+                if (i == 0)
+                {
+                    tmp_nxt_route.ServiceBeginingTimes[i] += delaytime;
+                }
+                else
+                {
+                    tmp_nxt_route.ServiceBeginingTimes[i] = tmp_nxt_route.ServiceBeginingTimes[i - 1]
+                                                          + tmp_nxt_route.RouteList[i - 1].Info.ServiceTime
+                                                          + tmp_nxt_route.RouteList[i - 1].TravelDistance(tmp_nxt_route.RouteList[i]);
+                }
+            }
+            if (tmp_nxt_route.IsFeasible())
+            {
+                if (CheckNxtRoutesFeasible(cur_route_pos + 1, tmp_nxt_route.GetArrivalTime() - nxt_route.GetArrivalTime()))
+                {
+                    Feasible = true;
+                    nxt_route = tmp_nxt_route.Copy();
+                }
+            }
+            return Feasible;
+        }
+
         private void GetvehRoutesInfo()
         {
            
@@ -289,6 +325,69 @@ namespace OP.Data
             }
             v.solution = solution;
             return v;
+        }
+
+        public Vehicle Copy()
+        {
+            Vehicle v = new Vehicle(this.TypeId, this.VehId);
+            foreach (string r_id in this.VehRouteList)
+            {
+                v.VehRouteList.Add(r_id);
+                v.solution = this.solution;
+            }
+            v.dist_sep = this.dist_sep;
+            v.distribute_lea_tm = this.distribute_lea_tm;
+            v.distribute_arr_tm = this.distribute_arr_tm;
+            v.distance = this.distance;
+            v.tran_cost = this.tran_cost;
+            v.charge_cnt = this.charge_cnt;
+            v.wait_cost = this.wait_cost;
+            v.total_cost = this.total_cost;
+            v.fixed_use_cost = this.fixed_use_cost;
+            return v;
+        }
+
+        //指定给routes,给定vehicleType下计算成本
+        public static double calculCost(List<Route> routes, int VehicleType)
+        {
+            double fixed_use_cost = Problem.VehTypes[VehicleType - 1].FixedCost;
+            double TransCostRate = Problem.VehTypes[VehicleType - 1].VariableCost;
+            double ChargeCostRate = Problem.VehTypes[VehicleType - 1].ChargeCostRate;
+            double tran_cost = 0;
+            double distance = 0;
+            double wait_cost = 0;
+            double charge_cost = 0;
+            double charge_cnt = 0;
+            double total_cost = 0;
+
+            int Num_Trip_Veh = routes.Count;
+            double WaitCost1 = Problem.WaitCostRate * (Num_Trip_Veh - 1) * Problem.MinWaitTimeAtDepot;
+            int num_routes = routes.Count;
+            if (num_routes == 0)
+            {
+                //Console.WriteLine(this.VehId.ToString());
+            }
+            for (int i = 0; i < num_routes; i++)
+            {
+                Route cur_route = routes[i];
+                int num_nodes = cur_route.RouteList.Count;
+                if (num_nodes == 2)
+                {
+                    //Console.WriteLine(this.VehId.ToString() + ";" + cur_route.RouteId + ";" + cur_route.RouteIndexofVeh.ToString());
+                }
+                var VariableCost = cur_route.routeCost(TransCostRate, ChargeCostRate); //计算单条线路上所有可变成本=等待成本2+运输成本+充电成本
+                tran_cost += VariableCost.Item1;
+                distance += VariableCost.Item1 / TransCostRate;
+                wait_cost += VariableCost.Item2;
+                charge_cost += VariableCost.Item3;
+                charge_cnt += VariableCost.Item4;
+
+
+            }
+            wait_cost += WaitCost1;
+            total_cost = wait_cost + tran_cost + charge_cost + fixed_use_cost;
+            return total_cost;
+
         }
 	
 	}

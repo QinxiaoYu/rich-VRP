@@ -49,6 +49,9 @@ namespace OP.Data
         /// <summary>
         /// 专门用作route.copy
         /// </summary>
+        public double routecost;
+
+
         public Route()
         {
             Depot startdepot = Problem.StartDepot;
@@ -204,7 +207,7 @@ namespace OP.Data
         /// </summary>
         /// <param name="i"></param>
         /// <param name="j"></param>
-        private bool insert_sta_between(int i, int j)
+        internal bool insert_sta_between(int i, int j)
         {
             bool isFindSta = true;
             var Node_i = this.RouteList[i];
