@@ -11,12 +11,22 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
     {
         Random rand = new Random();
 
-        public DestroyAndRepair()
+        public Solution DR(Solution solution, int minCusNum)
         {
+            Solution tmp_sol = solution.Copy();
+            tmp_sol = DestroyShortRoute(tmp_sol, minCusNum);
+            tmp_sol = Repair(tmp_sol);
+            double obj = tmp_sol.CalObjCost();
+            if (obj<solution.ObjVal)
+            {
+                solution = tmp_sol;
+                solution.ObjVal = obj;
+            }
+            return solution;
         }
 
         /// <summary>
-        /// 如果一条路线上商户的数量小于threshold_node个，则删除此线路
+        /// 如果一条路线上点的数量小于threshold_node个，则删除此线路
         /// </summary>
         /// <param name="threshold_node"></param>
         public Solution DestroyShortRoute(Solution solution, int threshold_node)
@@ -42,10 +52,10 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
 
                 }
             }
-            foreach (var veh in solution.fleet.VehFleet)
-            {
-                Console.WriteLine(veh.VehId);
-            }
+            //foreach (var veh in solution.fleet.VehFleet)
+            //{
+            //    Console.WriteLine(veh.VehId);
+            //}
             return solution;
         }
         /// <summary>
@@ -177,6 +187,8 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     Route nr = solution.Routes[pos_route];
                     int idx_veh = solution.fleet.GetVehIdxInFleet(nr.AssignedVeh.VehId);
                     solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
+                    solution.fleet.solution = solution;
+                    solution.fleet.VehFleet[idx_veh].solution = solution;
                 }
                 else
                 {
@@ -186,6 +198,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     newRoute.InsertNode(cus, 1);
                     solution.AddRoute(newRoute);
                     veh.VehRouteList.Add(newRoute.RouteId);
+                    veh.solution = solution;
                 }
                 solution.UnVisitedCus.Remove(cus);
             }

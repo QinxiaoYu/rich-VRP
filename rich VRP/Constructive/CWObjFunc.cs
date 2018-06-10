@@ -25,8 +25,8 @@ namespace rich_VRP.Constructive
             
             while (unroute_cus.Count > 0)
             {
-                //int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机）
-                int type = 2;
+                int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机）
+                //int type = 2;
                 veh = fleet.addNewVeh(type);
              
 
@@ -84,7 +84,7 @@ namespace rich_VRP.Constructive
             while (insert_feasible == 0)
             {
                 double best_cost = double.MaxValue; //一个无穷大的数
-                double alefa = rand.NextDouble(); //产生0~1的随机数，评价标准的参数
+                double alefa = 0; //产生0~1的随机数，评价标准的参数
                 route = best_route;
                 bool inserted = false;//记录本次循环是否插入了点
                 Customer inserted_cus = null;//最终确定要插入的点

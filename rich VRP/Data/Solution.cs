@@ -77,9 +77,9 @@ namespace OP.Data
                 fleet.VehFleet.RemoveAt(idx_veh_fleet);
             }
             int idx_route_solution = Routes.FindIndex(a => a.RouteId == r.RouteId);
-            Console.WriteLine(r.RouteId);
+            Console.WriteLine("Remove route id = "+r.RouteId);
             Routes.RemoveAt(idx_route_solution);
-
+            fleet.solution = this;
         }
 
         public Route GetRouteByID(string route_id, out int pos_inSolution)
