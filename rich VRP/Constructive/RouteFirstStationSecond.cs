@@ -107,8 +107,8 @@ namespace rich_VRP.Constructive
             //之后，若还有未访问的商户，为他们新建路线
             while (unvisitedCus.Count>0)
             {
-                VehicleType rd_vt = problem.VehTypes[Num_VehTypes - 1]; //大车型
-                Route route = new Route(problem, rd_vt);
+                VehicleType rd_vt = Problem.VehTypes[Num_VehTypes - 1]; //大车型
+                Route route = new Route(rd_vt);
                 BuildFeasibleRoute(route);
                 solution.AddRoute(route);            
             }
@@ -205,24 +205,40 @@ namespace rich_VRP.Constructive
             for (int i = 0; i < num_route; i++)
             {
                 Route r = solution.Routes[i];
+                double dis_depot_fstNode = Problem.StartDepot.TravelDistance(r.RouteList[1]);
+                if (r.RouteList.Count==3) //当前线路上已经有一个点，由这个点确定这条线路是用大车还是小车
+                {
+                    
+                    if (dis_depot_fstNode<30)
+                    {
+                        r.ChangeToVehType(1);
+                    }
+                    if (dis_depot_fstNode>60)
+                    {
+                        r.ChangeToVehType(2);
+                    }
+                }
                 double r_v = r.GetTotalVolume(); //当前体积
                 double r_w = r.GetTotalWeight(); //当前重量
                 double r_l = r.GetRouteLength(); //当前长度
-                double dis_depot_fstNode = Problem.StartDepot.TravelDistance(r.RouteList[1]);
                 //判断这条路线是否open
                 while (solution.Routes[i].GetOpen())
                 {
-                    r = solution.Routes[i].Copy();
+                    Route tmp_r = solution.Routes[i];
                     int num_cus = r.RouteList.Count;
                     var preNode = r.RouteList[num_cus - 2]; //前一个点
                     var nxtNode = r.RouteList[num_cus - 1]; //后一个点
                     double departuretime_pre = r.ServiceBeginingTimes[num_cus - 2] + preNode.Info.ServiceTime; //从前一个点的出发时间
-                    if (preNode.Info.Type == 2 && dis_depot_fstNode < 30) //前一个点是近距离商户
+
+                    if (dis_depot_fstNode < 30) //第一个点是近距离商户,该线路默认用小车，不充电
                     {
-                        r.AssignedVehType = Problem.VehTypes[0]; //近距离用小车
-
+                        if (tmp_r.battery_level[num_cus-1]<tmp_r.AssignedVehType.MaxRange*0.1) //电量已不足，线路结束
+                        {
+                            solution.Routes[i].SetClosed();
+                            break;
+                        }
                         int[] Neighbours_id = Problem.GetNearDistanceCus(preNode.Info.Id); //从近至远排序的其他商户
-
+                        //检查插入哪个商户
                         for (int j = 0; j < Neighbours_id.Count(); j++)
                         {
 
@@ -245,27 +261,25 @@ namespace rich_VRP.Constructive
                                 continue;
                             }
                             //再次判断插入之后引起的长度增加量
-                            double trans_cost_change = (preNode.TravelDistance(cus2insert) + cus2insert.TravelDistance(nxtNode)
-                                - preNode.TravelDistance(nxtNode)) * r.AssignedVehType.VariableCost;
-                            if (r_l + trans_cost_change > r.AssignedVehType.MaxRange)
+                            double trans_change = preNode.TravelDistance(cus2insert) + cus2insert.TravelDistance(nxtNode)
+                                - preNode.TravelDistance(nxtNode);
+                            if (r_l + trans_change > r.AssignedVehType.MaxRange) // 超过里程，则排在后面都邻居不可能更优
                             {
                                 r.SetClosed();
-                                break; //邻点列表中其后节点都将违反里程约束
+                                break; //不充电的话，邻点列表中其后节点都将违反里程约束
                             }
-                            solution.Routes[i].InsertNode(cus2insert, r.RouteList.Count - 1); //将邻点插入路径中
-                            solution.Routes[i].AssignedVehType = Problem.VehTypes[0];
+                            solution.Routes[i].InsertNode(cus2insert, r.RouteList.Count - 1); //将邻点插入路径           
                             unvisitedCus.Remove(cus2insert);
                             r_w += cus2insert.Info.Weight;
                             r_v += cus2insert.Info.Volume;
-                            r_l += trans_cost_change;
+                            r_l += trans_change;
                             break; //已选择一个点插入线路，扩展下一个点
                         }
                         
                     }
-                    if (preNode.Info.Type == 2 && dis_depot_fstNode > 60) //第一个商户是远点
-                    {
-                        r.AssignedVehType = Problem.VehTypes[1]; //改用大车
 
+                    if (dis_depot_fstNode > 60) //第一个商户是远距离商户，默认用大车，可以充电，装的越多越好
+                    {
                         int[] Neighbours_id = Problem.GetNearDistanceCus(preNode.Info.Id); //从近至远排序的其他商户
 
                         for (int j = 0; j < Neighbours_id.Count(); j++)
@@ -277,19 +291,19 @@ namespace rich_VRP.Constructive
                             {
                                 continue;
                             }
-                            //首先判断重量、体积超限否
+                            //判断重量、体积超限否
                             if (cus2insert.Info.Volume + r_v > r.AssignedVehType.Volume ||
                                 cus2insert.Info.Weight + r_w > r.AssignedVehType.Weight)
                             {
                                 continue;
                             }
-                            //其次判断时间窗满足否                        
+                            //判断时间窗满足否                        
                             double at_cus = departuretime_pre + preNode.TravelTime(cus2insert);
-                            if (at_cus > cus2insert.Info.DueDate)
+                            if (at_cus > cus2insert.Info.DueDate) //不充电情况下，到达该商户仍不能满足其时间窗约束
                             {
                                 continue;
                             }
-                            //之后判断剩余电量能否到达
+                            //之后判断剩余电量能否到达其邻点商户j
                             double battery_ij = preNode.TravelDistance(cus2insert); //从i到j需要到电量
                             double battery_i = r.battery_level[num_cus - 2]; //在i点剩余电量（当前电量）
                             double battery_j = battery_i - battery_ij;//不充电情况下到j点的剩余电量
@@ -299,22 +313,19 @@ namespace rich_VRP.Constructive
                             if (battery_j-battery_j_sta>0) //在i点后不充电可安全到达j
                             {
                                 solution.Routes[i].InsertNode(cus2insert, r.RouteList.Count - 1); //将邻点插入路径中
-                                solution.Routes[i].AssignedVehType = Problem.VehTypes[0];
                                 unvisitedCus.Remove(cus2insert);
                                 r_w += cus2insert.Info.Weight;
                                 r_v += cus2insert.Info.Volume;
                                 break; //已选择一个点插入线路，扩展下一个点
-                            }else //在i点后需要充电
+                            }else //插入j点前需要先充电
                             {
-                                Route tmp_r = r.Copy();
-                                tmp_r.InsertNode(cus2insert, tmp_r.RouteList.Count - 1);
-
-                                bool isOKCharge = tmp_r.insert_sta_between(tmp_r.RouteList.Count - 2, tmp_r.RouteList.Count - 1);
-                                if (isOKCharge && tmp_r.ViolationOfTimeWindow()==-1) //如果能找到充电站，且不违反时间窗约束
+                                Route copy_r = tmp_r.Copy();
+                                copy_r.InsertNode(cus2insert, copy_r.RouteList.Count - 1); //先暂时把j插入到路径中
+                                //再检查能否在j点前找到一个充电站
+                                bool isOKCharge = copy_r.insert_sta_between(copy_r.RouteList.Count - 2, copy_r.RouteList.Count - 1);
+                                if (isOKCharge && copy_r.ViolationOfTimeWindow()==-1) //如果能找到充电站，且不违反时间窗约束
                                 {
-                                  
-                                    solution.Routes[i]=tmp_r; //将邻点插入路径中
-                                    solution.Routes[i].AssignedVehType = Problem.VehTypes[0];
+                                    solution.Routes[i]=copy_r; //将j点插入路径中
                                     unvisitedCus.Remove(cus2insert);
                                     r_w += cus2insert.Info.Weight;
                                     r_v += cus2insert.Info.Volume;
@@ -324,9 +335,11 @@ namespace rich_VRP.Constructive
                                 }
                             }
 
-                        }
+                        }//结束对邻点对遍历
 
-                    }
+                    }//远距离大车情况结束
+
+
 
                     if (preNode !=2 )
                     {

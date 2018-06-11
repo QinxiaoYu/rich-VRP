@@ -237,7 +237,7 @@ namespace rich_VRP.Neighborhoods.Insert
                 if (cur_route.IsFeasible())//如果插入customer和相应的station后满足所有约束
                 {
                     Vehicle veh = cur_route.AssignedVeh;
-                    if (veh.CheckNxtRoutesFeasible(cur_route.RouteIndexofVeh, delay))//如果下游路径也可行
+                    if (fleet.CheckNxtRoutesFeasible(veh,cur_route.RouteIndexofVeh, delay))//如果下游路径也可行
                     {
                         double TransCostRate = Problem.GetVehTypebyID(route.AssignedVeh.TypeId).VariableCost;//行驶费率
                         double add_waittime = cur_route.GetWaitTime() - route.GetWaitTime();

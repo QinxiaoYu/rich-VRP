@@ -187,8 +187,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     Route nr = solution.Routes[pos_route];
                     int idx_veh = solution.fleet.GetVehIdxInFleet(nr.AssignedVeh.VehId);
                     solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
-                    solution.fleet.solution = solution;
-                    solution.fleet.VehFleet[idx_veh].solution = solution;
+                    solution.fleet.solution = solution;           
                 }
                 else
                 {
@@ -198,7 +197,6 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     newRoute.InsertNode(cus, 1);
                     solution.AddRoute(newRoute);
                     veh.VehRouteList.Add(newRoute.RouteId);
-                    veh.solution = solution;
                 }
                 solution.UnVisitedCus.Remove(cus);
             }
@@ -244,7 +242,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                         if (tmp_r.IsFeasible()) //可行
                         {
                             double delay = tmp_r.GetArrivalTime() - route.GetArrivalTime();
-                            if (veh.CheckNxtRoutesFeasible(tmp_r.RouteIndexofVeh, delay))
+                            if (solution.fleet.CheckNxtRoutesFeasible(veh,tmp_r.RouteIndexofVeh, delay))
                             {
                                 var newcosts = tmp_r.routeCost();
                                 double new_obj = newcosts.Item1 + newcosts.Item2 + newcosts.Item3;

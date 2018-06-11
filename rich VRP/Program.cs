@@ -70,6 +70,11 @@ namespace rich_VRP
                     ini_solution = new Relocate().RelocateIntra(ini_solution,true);//线路内重定位
                     double newcost3 = ini_solution.CalObjCost();
                     Console.WriteLine("ObjVal 3 = " + newcost3.ToString("0.00"));
+
+                    ini_solution = new TwoOpt().intarChange(ini_solution);//线路内重定位
+                    double newcost31 = ini_solution.CalObjCost();
+                    Console.WriteLine("ObjVal 2opt = " + newcost31.ToString("0.00"));
+
                     if (newcost3 > 290000) continue;
 
                     double newcost4 = 0;
