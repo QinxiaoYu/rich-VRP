@@ -47,18 +47,18 @@ namespace rich_VRP
 
                 RemoveSta oper = new RemoveSta();
                 bool isIprv = oper.Remove(ini_solution); //删除多余的充电站
-                if (true)
+                sb.AppendLine("====RemoveSta=====");
+                double newcost = ini_solution.CalObjCost();
+
+                Console.WriteLine("ObjVal 1 = " + newcost.ToString("0.00"));
+
+                StationPosition sp = new StationPosition();
+                ini_solution = sp.StationExchage(ini_solution, 0.3);//优化充电站
+                double newcost2 = ini_solution.CalObjCost();
+                Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
+                int outiters = 5;
+                while (outiters>0)
                 {
-                    sb.AppendLine("====RemoveSta=====");
-                    double newcost = ini_solution.CalObjCost();
-
-                    Console.WriteLine("ObjVal 1 = " + newcost.ToString("0.00"));
-
-                    StationPosition sp = new StationPosition();
-                    ini_solution = sp.StationExchage(ini_solution, 0.3);//优化充电站
-                    double newcost2 = ini_solution.CalObjCost();
-                    Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
-
                     DestroyAndRepair DR = new DestroyAndRepair();
                     ini_solution = DR.DR(ini_solution, 4);
                     Console.WriteLine("ObjDR = "+ini_solution.ObjVal.ToString("0.00"));
@@ -66,11 +66,16 @@ namespace rich_VRP
                     //ini_solution = DR.DestroyWasteRoute(ini_solution, 0.2);
                     //ini_solution = DR.DestroyAfternoonNodes(ini_solution, 780, 0.2);
                     //ini_solution = DR.Repair(ini_solution);
-                    
+
+                    //ini_solution = new TwoOpt().intarChange(ini_solution);
+                    //double newcost31 = ini_solution.CalObjCost();
+                    //Console.WriteLine("ObjVal 2opt = " + newcost31.ToString("0.00"));
+
                     ini_solution = new Relocate().RelocateIntra(ini_solution,true);//线路内重定位
                     double newcost3 = ini_solution.CalObjCost();
-                    Console.WriteLine("ObjVal 3 = " + newcost3.ToString("0.00"));
-                    if (newcost3 > 290000) continue;
+                    Console.WriteLine("ObjVal Relocate = " + newcost3.ToString("0.00"));
+
+                    if (newcost3 > 296000) break ;
 
                     double newcost4 = 0;
                     Solution tmp_sol = ini_solution.Copy();
@@ -87,23 +92,28 @@ namespace rich_VRP
                     }
                     ini_solution = DR.DR(ini_solution, 4);
                     Console.WriteLine("ObjDR =" + ini_solution.ObjVal.ToString("0.00"));
+
                     ini_solution = new Relocate().RelocateIntra(ini_solution, true);//线路内重定位
                     double newcost5 = ini_solution.CalObjCost();
                     Console.WriteLine("ObjVal 5 = " + newcost5.ToString("0.00"));
                     //double newcost5 = evaluate.CalObjCost(ini_solution);
                     //Console.WriteLine("ObjVal 5 = " + newcost5.ToString("0.00"));
-                    if (newcost4 < 290000)
-                    {
-                        ini_solution.PrintResult();
-                        Console.WriteLine(ini_solution.PrintToString());
-                    }
-                    sb.AppendLine(newcost4.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
-                    
-                    sb.AppendLine(newcost5.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
+                    outiters--;
+             
+                    sb.AppendLine(outiters.ToString()+": "+ newcost5.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
                     //sb.AppendLine(newcost.ToString("0.00"));
                     //sb.AppendLine(ini_solution.PrintToString());
 
                 }
+                ini_solution = new TwoOpt().intarChange(ini_solution);
+                double newcost32 = ini_solution.CalObjCost();
+                Console.WriteLine("ObjVal 2opt = " + newcost32.ToString("0.00"));
+                if (newcost32 < 285000)
+                {
+                    ini_solution.PrintResult();
+                    Console.WriteLine(ini_solution.PrintToString());
+                }
+
                 sw.Write(sb);
                 sw.Flush();
             }

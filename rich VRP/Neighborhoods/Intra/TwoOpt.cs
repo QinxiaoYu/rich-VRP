@@ -83,6 +83,7 @@ namespace rich_VRP.Neighborhoods.Intra
                     {
                         //替换路径
                         BestRoute = tempRoute.Copy();
+                        Console.WriteLine("Change route is 2opt:" + BestRoute.RouteId);
 
                     }
                 }
@@ -126,7 +127,14 @@ namespace rich_VRP.Neighborhoods.Intra
                     routesList[index].RouteList.ForEach(k => solution.Routes[pos].RouteList.Add(k));
                     index += 1;
                 }
-
+               
+                int pos_veh_fleet = solution.fleet.GetVehIdxInFleet(vehicle.VehId);
+                solution.fleet.VehFleet[pos_veh_fleet].VehRouteList.Clear();
+                foreach (var route in routesList)
+                {
+                    solution.fleet.VehFleet[pos_veh_fleet].VehRouteList.Add(route.RouteId);
+                }
+                solution.fleet.VehFleet[pos_veh_fleet].solution = solution.Copy();
             }
             return solution;
 
