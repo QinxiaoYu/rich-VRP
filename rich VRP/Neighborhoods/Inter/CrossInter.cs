@@ -14,8 +14,14 @@ namespace rich_VRP.Neighborhoods.Inter
             rd = new Random();
 
         }
-
-        public Solution Cross(Solution solution)
+        /// <summary>
+        /// 两条线路之间的交换操作，如r1=A1B1, r2 = A2B2,交换后变为A1B2和A2B1
+        /// 其中参数：角度差-10，半径差50
+        /// </summary>
+        /// <param name="solution"></param>
+        /// <param name="select_strategy">选择策略：0:first improvement;1:best improvement </param>
+        /// <returns></returns>
+        public Solution Cross(Solution solution, int select_strategy=0)
         {
             //Console.WriteLine(solution.PrintToString());
             Solution bst_sol = null;
@@ -45,7 +51,7 @@ namespace rich_VRP.Neighborhoods.Inter
                     }
                     r_j.RemoveAllSta();
                     var Conditions = r_i.overlapPercent(r_j);
-                    if (Conditions.Item1<=0 || Conditions.Item2>50) //如果两条路不相交， 或者半径相差太大，都不进行交换
+                    if (Conditions.Item1<=-10 || Conditions.Item2>50) //如果两条路所在扇形区角度差太大， 或者半径相差太大，都不进行交换
                     {
                         continue;
                     }
@@ -104,22 +110,18 @@ namespace rich_VRP.Neighborhoods.Inter
                             Vehicle new_veh_j = new_sol.fleet.GetVehbyID(r_j.AssignedVeh.VehId);
                             int idx_vehi_fleet = new_sol.fleet.GetVehIdxInFleet(new_veh_i.VehId);
                             int idx_vehj_fleet = new_sol.fleet.GetVehIdxInFleet(new_veh_j.VehId);
-                            new_sol.fleet.VehFleet[idx_vehi_fleet].VehRouteList[r_i.RouteIndexofVeh] = copy_ri.RouteId;
-                            new_sol.fleet.VehFleet[idx_vehi_fleet].solution = new_sol;
-                            new_sol.fleet.VehFleet[idx_vehj_fleet].VehRouteList[r_j.RouteIndexofVeh] = copy_rj.RouteId;
-                            new_sol.fleet.VehFleet[idx_vehj_fleet].solution = new_sol;
-                            new_sol.fleet.solution = new_sol;
+                            new_sol.fleet.VehFleet[idx_vehi_fleet].VehRouteList[r_i.RouteIndexofVeh] = copy_ri.RouteId;                          
+                            new_sol.fleet.VehFleet[idx_vehj_fleet].VehRouteList[r_j.RouteIndexofVeh] = copy_rj.RouteId;                     
                             //以上检查发生交换的两条路，自身是否可行
-                            //以下检查这两条路对应的两辆车下的路径链是否可行
-                      
+                            //以下检查这两条路对应的两辆车下的路径链是否可行                   
                             double delay_i = copy_ri.GetArrivalTime() - r_i.GetArrivalTime();
                             double delay_j = copy_rj.GetArrivalTime() - r_j.GetArrivalTime();
                           
-                            if (delay_i>0 && new_veh_i.CheckNxtRoutesFeasible(copy_ri.RouteIndexofVeh,delay_i)==false)
+                            if (delay_i>0 && new_sol.CheckNxtRoutesFeasible(new_veh_i,copy_ri.RouteIndexofVeh,delay_i)==false)
                             {
                                 continue;
                             } //下游线路不可行
-                            if (delay_j>0 && new_veh_j.CheckNxtRoutesFeasible(copy_rj.RouteIndexofVeh,delay_j)==false)
+                            if (delay_j>0 && new_sol.CheckNxtRoutesFeasible(new_veh_j,copy_rj.RouteIndexofVeh,delay_j)==false)
                             {
                                 continue;
                             }//下游线路不可行
@@ -142,14 +144,21 @@ namespace rich_VRP.Neighborhoods.Inter
                             double obj_change = old_obj-new_obj;
                             if (obj_change>0)//如果变好
                             {
-                          
-                                return new_sol;
-                                if (obj_change>bst_obj_change)
+                                if (select_strategy == 0)//first improvement
                                 {
-                                    bst_obj_change = obj_change;
-                                    bst_sol = new_sol.Copy();    
-                                                                 
+                                    return new_sol;
                                 }
+                                else
+                                {
+                                    if (obj_change > bst_obj_change) //best improvement
+                                    {
+                                        bst_obj_change = obj_change;
+                                        bst_sol = new_sol.Copy();
+
+                                    }
+                                }                         
+                                
+                                
                             }
                         }//结束对第二条路 各个截断位置的遍历
                     }//结束对第一条路 各个截断位置的遍历

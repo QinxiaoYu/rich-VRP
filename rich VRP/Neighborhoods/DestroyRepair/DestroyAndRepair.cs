@@ -11,11 +11,11 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
     {
         Random rand = new Random();
 
-        public Solution DR(Solution solution, int minCusNum)
+        public Solution DR(Solution solution, int minCusNum, int selectstrategy = 0)
         {
             Solution tmp_sol = solution.Copy();
             tmp_sol = DestroyShortRoute(tmp_sol, minCusNum);
-            tmp_sol = Repair(tmp_sol);
+            tmp_sol = RepairToFeasible(tmp_sol);
             double obj = tmp_sol.CalObjCost();
             if (obj<solution.ObjVal)
             {
@@ -172,12 +172,16 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             }//结束对一辆车的遍历         
             return solution;
         }
-
-        public Solution Repair(Solution solution)
+        /// <summary>
+        /// 修复，将未服务商户插回部分解中，此方法返回的解不一定比原解费用低
+        /// </summary>
+        /// <param name="solution"></param>
+        /// <returns></returns>
+        public Solution RepairToFeasible(Solution solution)
         {
             while (solution.UnVisitedCus.Count>0)
             {
-                int rd = rand.Next(0, solution.UnVisitedCus.Count);
+                int rd = rand.Next(0, solution.UnVisitedCus.Count);//随机选一个未服务商户
                 Customer cus = solution.UnVisitedCus[rd];
                 int pos_route = -1; //第几条路
                 int pos = FindBstPosition(solution, cus, out pos_route); //路的第几个位置
@@ -186,14 +190,13 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     solution.Routes[pos_route].InsertNode(cus, pos);
                     Route nr = solution.Routes[pos_route];
                     int idx_veh = solution.fleet.GetVehIdxInFleet(nr.AssignedVeh.VehId);
-                    solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
-                    solution.fleet.solution = solution;           
+                    solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;                           
                 }
                 else
                 {
                     int type = 1;
                     Vehicle veh = solution.fleet.addNewVeh(type);
-                    Route newRoute = new Route(veh);
+                    Route newRoute = new Route(veh,veh.Early_time);
                     newRoute.InsertNode(cus, 1);
                     solution.AddRoute(newRoute);
                     veh.VehRouteList.Add(newRoute.RouteId);
@@ -204,14 +207,56 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             solution.UpdateTripChainTime();
             return solution;
         }
-                /// <summary>
-                /// 在当前解中为某一商户寻找一个可行的插入位置,不破坏当前解的路径结构
-                /// </summary>
-                /// <param name="solution">当前解</param>
-                /// <param name="customer">商户</param>
-                /// <param name="idx_pos_route">输出插入路线上的位置</param>
-                /// <returns>插入的路线，一找到可行方案就返回，不进行比较</returns>
-         private int FindBstPosition(Solution solution, Customer customer, out int idx_route)
+
+        public Solution RepairToBetter(Solution solution)
+        {
+            Solution bst_sol = solution.Copy();
+
+            while (solution.UnVisitedCus.Count > 0)
+            {
+                int rd = rand.Next(0, solution.UnVisitedCus.Count);//随机选一个未服务商户
+                Customer cus = solution.UnVisitedCus[rd];
+                int pos_route = -1; //第几条路
+                int pos = FindBstPosition(solution, cus, out pos_route); //路的第几个位置
+                if (pos_route != -1) //能找到一条路
+                {
+                    solution.Routes[pos_route].InsertNode(cus, pos);
+                    Route nr = solution.Routes[pos_route];
+                    int idx_veh = solution.fleet.GetVehIdxInFleet(nr.AssignedVeh.VehId);
+                    solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
+                }
+                else
+                {
+                    int type = 1;
+                    Vehicle veh = solution.fleet.addNewVeh(type);
+                    Route newRoute = new Route(veh,veh.Early_time);
+                    newRoute.InsertNode(cus, 1);
+                    solution.AddRoute(newRoute);
+                    veh.VehRouteList.Add(newRoute.RouteId);
+                }
+                solution.UnVisitedCus.Remove(cus);
+            }
+            solution.UpdateFirstTripTime();
+            solution.UpdateTripChainTime();
+            double new_obj = solution.CalObjCost();
+            if (solution.ObjVal<bst_sol.ObjVal)
+            {
+                return solution;
+            }
+            else
+            {
+                return bst_sol;
+            }
+           
+        }
+        /// <summary>
+        /// 在当前解中为某一商户寻找一个可行的插入位置,不破坏当前解的路径结构
+        /// </summary>
+        /// <param name="solution">当前解</param>
+        /// <param name="customer">商户</param>
+        /// <param name="idx_pos_route">输出插入路线上的位置</param>
+        /// <returns>插入的路线，找到能使插入后该路线成本增加最小的方案</returns>
+        private int FindBstPosition(Solution solution, Customer customer, out int idx_route)
         {
             idx_route = -1;
             int idx_pos_route = -1;
@@ -242,8 +287,8 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                         if (tmp_r.IsFeasible()) //可行
                         {
                             double delay = tmp_r.GetArrivalTime() - route.GetArrivalTime();
-                            if (solution.fleet.CheckNxtRoutesFeasible(veh,tmp_r.RouteIndexofVeh, delay))
-                            {
+                            if (solution.CheckNxtRoutesFeasible(veh,tmp_r.RouteIndexofVeh, delay))
+                            {                            
                                 var newcosts = tmp_r.routeCost();
                                 double new_obj = newcosts.Item1 + newcosts.Item2 + newcosts.Item3;
                                 double obj_change = new_obj - old_obj;

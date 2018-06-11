@@ -17,17 +17,17 @@ namespace rich_VRP.Neighborhoods.Intra
         public Solution RelocateIntra(Solution solution, bool rand = false)
         {
             Fleet fleet = solution.fleet;
-            int num_veh = fleet.GetNumOfUsedVeh();
-            for (int i = 0; i < num_veh; i++)
+            int num_veh = fleet.GetNumOfUsedVeh();//车的数量
+            for (int i = 0; i < num_veh; i++)//对每辆车做遍历
             {
                 Vehicle veh = fleet.VehFleet[i];
-                int num_routes_veh = veh.getNumofVisRoute();
-                for (int j = 0; j < num_routes_veh; j++)
+                int num_routes_veh = veh.getNumofVisRoute();//车i服务的路线数量
+                for (int j = 0; j < num_routes_veh; j++)//遍历车i下的所有路线
                 {
                     string route_id = veh.VehRouteList[j];
                     int pos_route_sol = -1;
-                    Route route = solution.GetRouteByID(route_id, out pos_route_sol);
-                    Route tmp_r = route.Copy();
+                    Route route = solution.GetRouteByID(route_id, out pos_route_sol);//定位车i的路线j在解中的位置
+                    Route tmp_r = route.Copy();//路线j的拷贝，将对此拷贝做更改
                     if (rand)
                     {
                         tmp_r = RandRelocateIntra(tmp_r);
@@ -38,20 +38,15 @@ namespace rich_VRP.Neighborhoods.Intra
                     }                                                
                     double delay = tmp_r.GetArrivalTime() - route.GetArrivalTime();
                     if (delay<=0)
-                    {
-                        solution.UpdateTripChainTime(veh);
-                        solution.Routes[pos_route_sol] = tmp_r;
-                        solution.fleet.VehFleet[i].VehRouteList[tmp_r.RouteIndexofVeh] = tmp_r.RouteId;
-                        solution.fleet.VehFleet[i].solution = solution;
-                        solution.fleet.solution = solution;
-
+                    {                  
+                        solution.Routes[pos_route_sol] = tmp_r; //将改过的线路赋值回解中
+                        solution.fleet.VehFleet[i].VehRouteList[tmp_r.RouteIndexofVeh] = tmp_r.RouteId; //更新解中车队下该车所存的访问线路id
+                        solution.UpdateTripChainTime(veh);//更新解中当前车的时间链                      
                     }
-                    else if (veh.CheckNxtRoutesFeasible(tmp_r.RouteIndexofVeh, delay))
+                    else if (solution.CheckNxtRoutesFeasible(veh,tmp_r.RouteIndexofVeh, delay))
                     {                       
                         solution.Routes[pos_route_sol] = tmp_r;
-                        solution.fleet.VehFleet[i].VehRouteList[tmp_r.RouteIndexofVeh] = tmp_r.RouteId;
-                        solution.fleet.VehFleet[i].solution = solution;
-                        solution.fleet.solution = solution;            
+                        solution.fleet.VehFleet[i].VehRouteList[tmp_r.RouteIndexofVeh] = tmp_r.RouteId;                                  
                     }
                 }//结束对同一辆车下每条路的遍历
             }//结束对所有车的遍历

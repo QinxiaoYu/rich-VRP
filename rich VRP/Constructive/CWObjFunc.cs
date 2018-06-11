@@ -30,9 +30,9 @@ namespace rich_VRP.Constructive
                 veh = fleet.addNewVeh(type);
              
 
-                Route newRoute = new Route(veh); ////////产生一条该车的路径,已经把车分配给了路径
+                Route newRoute = new Route(veh,veh.Early_time); ////////产生一条该车的路径,已经把车分配给了路径
                 //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
-                double earliest_departure_time = newRoute.GetEarliestDepartureTime();//该路径的最早出发时间
+                double earliest_departure_time = veh.Early_time;//该路径的最早出发时间
                 //只要新产生路径的最早出发时间小于最晚时间限制就可以为其分配customer
                 while (earliest_departure_time < veh.Late_time)
                 {
@@ -47,9 +47,8 @@ namespace rich_VRP.Constructive
                         }
                         else
                         {
-                            newRoute = new Route(veh);
-                            //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
-                            earliest_departure_time = newRoute.GetEarliestDepartureTime();
+                            earliest_departure_time = newRoute.GetArrivalTime() + Problem.MinWaitTimeAtDepot;
+                            newRoute = new Route(veh, earliest_departure_time);
                         }
                     }
                     else

@@ -277,7 +277,7 @@ namespace OP.Data
         /// </summary>
         /// <param name="problem"></param>
         /// <param name="veh">为该路径分配的车辆</param>
-        public Route(Vehicle veh)
+        public Route(Vehicle veh, double earliestDepartureTime)
         {
             Depot startdepot = Problem.StartDepot;
             Depot enddepot = Problem.EndDepot;
@@ -291,6 +291,8 @@ namespace OP.Data
 
             int numRouteofVeh = veh.VehRouteList.Count(); //当前车辆已经行驶的趟数
             this.RouteIndexofVeh = numRouteofVeh;
+
+            ServiceBeginingTimes.Add(earliestDepartureTime);
 
             AddNode(startdepot);
             AddNode(enddepot);
@@ -311,40 +313,21 @@ namespace OP.Data
         }
    
 
-
+        /// <summary>
+        /// 该方法仅适用于一天的首班线路
+        /// 根据线路第一个商户的服务开始时间，往回推起点的出发时间
+        /// </summary>
         internal void UpdateDepartureTime()
-        {
-            
-            double departuretime = this.ServiceBeginingTimes[0] + this.RouteList[0].Info.ServiceTime;
-            double arrivetime = departuretime + this.RouteList[0].TravelTime(RouteList[1]);
+        {          
+            double departuretime = ServiceBeginingTimes[0] + RouteList[0].Info.ServiceTime;
+            double arrivetime = departuretime + RouteList[0].TravelTime(RouteList[1]);
             double waittime_firstcus = Math.Max(0, ServiceBeginingTimes[1] - arrivetime);
             if (waittime_firstcus>0)
             {
-                this.ServiceBeginingTimes[0] = this.ServiceBeginingTimes[0] + waittime_firstcus;
+                ServiceBeginingTimes[0] = ServiceBeginingTimes[0] + waittime_firstcus;
             }
             
         }
-
-
-
-        /// <summary>
-        /// 初始化一条路径，该路径只包含一个种子顾客
-        /// </summary>
-        /// <param name="problem"></param>
-        /// <param name="seedCustomer">已选的种子顾客</param>
-        public Route(Customer seedCustomer)
-        {
-            Depot startdepot = Problem.StartDepot;
-            Depot enddepot = Problem.EndDepot;
-            //Solution = null;
-            RouteList = new List<AbsNode>();
-            ServiceBeginingTimes = new List<double>();
-            battery_level = new List<double>();
-            AddNode(startdepot);
-            AddNode(seedCustomer);
-            AddNode(enddepot);
-        }
-
 
         /// <summary>
         /// 把一条线路分配给一辆具体的车
@@ -357,24 +340,6 @@ namespace OP.Data
             this.RouteIndexofVeh = numRouteofVeh;
 
 
-        }
-        /// <summary>
-        /// 计算当前路径能从起点出发的最早时刻
-        /// </summary>
-        /// <returns></returns>
-        public double GetEarliestDepartureTime()
-        {
-            if (this.RouteIndexofVeh==0) //如果该线路为首趟线路，则其最早开始时间既为起点上班时间
-            {
-                return Problem.StartDepot.Info.ReadyTime;
-            }
-            else //如果该线路非首趟线路，则其最早开始时间依赖于其前一趟的结束时间
-            {
-                string pre_id = this.AssignedVeh.VehRouteList[this.RouteIndexofVeh - 1];
-                int pos_Solution = -1;
-                double ArrivalTimeofpreRoute = this.AssignedVeh.solution.GetRouteByID(pre_id,out pos_Solution).GetArrivalTime();
-                return ArrivalTimeofpreRoute + Problem.MinWaitTimeAtDepot;
-            }
         }
 
         /// <summary>
@@ -410,16 +375,6 @@ namespace OP.Data
             return DepatureTime;
         }
 
-        internal int FindGoodStationPosition(int rock_position, out Station goodSta)
-        {
-            goodSta = null;
-            int best_position_sta = -1;
-            for (int i = 1; i < rock_position; i++)
-            {
-
-            }
-            return best_position_sta;
-        }
         /// <summary>
         /// 获得某点处的浮动时间=该点处的等待时长
         /// </summary>
@@ -446,7 +401,7 @@ namespace OP.Data
             //线路上最后一个点
             AbsNode lastCustomer = RouteList.Count == 0 ? newNode : RouteList[RouteList.Count - 1];
             //线路上最后一个点 可以开始游览的时间 （如果到达时间早于时间窗的开始时间，则为时间窗开始时间；否则为实际达到时间）
-            double lastServiceTime = RouteList.Count == 0 ? Math.Max(GetEarliestDepartureTime(), newNode.Info.ReadyTime) : ServiceBeginingTimes[ServiceBeginingTimes.Count - 1];
+            double lastServiceTime = RouteList.Count == 0 ? ServiceBeginingTimes[0] : ServiceBeginingTimes[ServiceBeginingTimes.Count - 1];
             
             //新景点 可以开始游览的时间
             double serviceBegins = NextServiceBeginTime(newNode, lastCustomer, lastServiceTime);
@@ -471,7 +426,6 @@ namespace OP.Data
             }         
             return remainBattery;
         }
-
 
 
         internal void InsertCustomer(List<AbsNode> unroutedCustomers)
@@ -1028,7 +982,7 @@ namespace OP.Data
         }
 
         /// <summary>
-        /// 获得两条路线的重叠区域所占百分比 = 重叠角度/（线路1覆盖角度+线路2覆盖角度的并集）
+        /// 获得两条路线的重叠区域所占百分比 = 重叠角度/（线路1覆盖角度+线路2覆盖角度的并集）,如不相交，返回角度差为负值
         /// </summary>
         /// <returns>The percent.</returns>
         /// <param name="r1">R1.</param>
@@ -1036,27 +990,27 @@ namespace OP.Data
         {
             double op = 0;
             int dis_radian = 0;
-            var r0_bearing = GetRouteBearing();
-            var r1_bearing = r1.GetRouteBearing();
+            var r0_bearing = GetRouteBearing(); //线路1对应的扇形区域
+            var r1_bearing = r1.GetRouteBearing();//线路2对应的扇形区域
 
-            if (r0_bearing.Item4>r1_bearing.Item4)
+            if (r0_bearing.Item4>r1_bearing.Item4) //线路1的大半径长于线路2的长半径
             {
-                dis_radian = Math.Max(0, r0_bearing.Item3 - r1_bearing.Item4);
-            }else
+                dis_radian = Math.Max(0, r0_bearing.Item3 - r1_bearing.Item4); //两条线路的半径差
+            }else //反之
             {
                 dis_radian = Math.Max(0, r1_bearing.Item3 - r0_bearing.Item4);
             }
 
-            if (r0_bearing.Item1<r1_bearing.Item1)
+            if (r0_bearing.Item1<=r1_bearing.Item1) //线路1的小角度小于线路2的小角度
             {
-                double op_area = r0_bearing.Item2 - r1_bearing.Item1;
-                if (op_area<=0)
+                double op_area = r0_bearing.Item2 - r1_bearing.Item1; //两条线路的角度差
+                if (op_area<=0) //两条线路的扇形没有相交区域
                 {
-                    return new Tuple<double, int> (0,dis_radian);
+                    return new Tuple<double, int> (op_area,dis_radian);  //没有相交的话，返回相距角度差
                 }else
                 {
                     double uni_area = Math.Max(r0_bearing.Item2, r1_bearing.Item2) - r0_bearing.Item1;
-                    return new Tuple<double, int> (op_area / uni_area,dis_radian);
+                    return new Tuple<double, int> (op_area / uni_area,dis_radian); //相交的话，返回相交区域百分比
                 }
             }
 
@@ -1065,7 +1019,7 @@ namespace OP.Data
                 double op_area = r1_bearing.Item2 - r0_bearing.Item1;
                 if (op_area<=0)
                 {
-                    return new Tuple<double, int>(0, dis_radian);
+                    return new Tuple<double, int>(op_area, dis_radian);
                 }
                 else
                 {

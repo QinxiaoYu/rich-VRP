@@ -194,8 +194,18 @@ namespace OP.Data
             return total_cost;
 
         }
-	
-	}
+
+        internal void ResetCost()
+        {
+            distance = 0;
+            tran_cost = 0;
+            wait_cost = 0;
+            charge_cost = 0;
+            charge_cnt = 0;
+            total_cost = 0;
+            fixed_use_cost = 0;
+        }
+    }
 	/// <summary>
 	/// 车队管理类
 	/// </summary>

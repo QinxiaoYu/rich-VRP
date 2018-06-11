@@ -18,7 +18,6 @@ namespace OP.Data
         {
             Routes = new List<Route>();
             fleet = new Fleet();
-            fleet.solution = this;
             ObjVal = 0.0;
         }
         public void AddRoute(Route route)
@@ -45,9 +44,10 @@ namespace OP.Data
             {
                 for (int i = 1; i < num_trips_veh; i++)
                 {
-                    int pos;
+                    int pos = -1;
+                    Route pre_route = GetRouteByID(veh.VehRouteList[i - 1], out pos);               
                     Route cur_route = GetRouteByID(veh.VehRouteList[i], out pos);
-                    double new_departure_cur = cur_route.GetEarliestDepartureTime();
+                    double new_departure_cur = pre_route.GetArrivalTime() + Problem.MinWaitTimeAtDepot;
                     cur_route.ServiceBeginingTimes[0] = new_departure_cur;
                 }
             }
@@ -59,27 +59,28 @@ namespace OP.Data
         /// <param name="r"></param>
         internal void Remove(Route r)
         {
+            //定位当前线路r对应的车
             Vehicle veh = fleet.GetVehbyID(r.AssignedVeh.VehId);
-            int idx_route_veh = r.RouteIndexofVeh;
-            for (int i = idx_route_veh+1 ; i < veh.VehRouteList.Count; i++)
+            int idx_route_veh = r.RouteIndexofVeh; //定位当前路r排在车的第几个trip
+            for (int i = idx_route_veh+1 ; i < veh.VehRouteList.Count; i++)//更新其后trip的属性
             {
                 string nxt_route_id = veh.VehRouteList[i];
                 int nxt_route_idx_solution = -1;
-                GetRouteByID(nxt_route_id, out nxt_route_idx_solution);
+                GetRouteByID(nxt_route_id, out nxt_route_idx_solution);//定位其后trip所在解中的位置
                 Routes[nxt_route_idx_solution].RouteIndexofVeh -= 1;
             }
 
             string veh_id = r.AssignedVeh.VehId;
             int idx_veh_fleet = fleet.GetVehIdxInFleet(veh_id);
-            fleet.VehFleet[idx_veh_fleet].VehRouteList.Remove(r.RouteId);
-            if (fleet.VehFleet[idx_veh_fleet].VehRouteList.Count==0)
+            fleet.VehFleet[idx_veh_fleet].VehRouteList.Remove(r.RouteId);//更新车队中该车所存的routelists
+            if (fleet.VehFleet[idx_veh_fleet].VehRouteList.Count==0)//如果该车没有其他路径，则删除该车
             {
                 fleet.VehFleet.RemoveAt(idx_veh_fleet);
             }
             int idx_route_solution = Routes.FindIndex(a => a.RouteId == r.RouteId);
             Console.WriteLine("Remove route id = "+r.RouteId);
-            Routes.RemoveAt(idx_route_solution);
-            fleet.solution = this;
+            Routes.RemoveAt(idx_route_solution);//从解中删除该路径
+          
         }
 
         public Route GetRouteByID(string route_id, out int pos_inSolution)
@@ -138,7 +139,7 @@ namespace OP.Data
 
             foreach (var veh in fleet.VehFleet) //遍历每一个被使用的车辆
             {
-                totalCost += veh.calculCost();
+                totalCost += calculCost(veh);
             }
             ObjVal = totalCost;
             return totalCost;
@@ -152,12 +153,11 @@ namespace OP.Data
             {
                 if (route.RouteList.Count >= 2)
                    sol.AddRoute(route.Copy());
-            }
-            sol.fleet.solution = this;
+            }          
             sol.fleet.EverUsedVeh = fleet.EverUsedVeh;
             foreach (Vehicle veh in fleet.VehFleet)
             {
-                sol.fleet.VehFleet.Add(veh.Copy(sol.fleet.solution));
+                sol.fleet.VehFleet.Add(veh.Copy());
             }            
             return sol;
         }
@@ -168,7 +168,7 @@ namespace OP.Data
         /// <param name="cur_route_pos">当前线路所在位置</param>
         /// <param name="delaytime">延误时长</param>
         /// <returns></returns>
-        public bool CheckNxtRoutesFeasible(Solution solution, Vehicle veh, int cur_route_pos, double delaytime)
+        public bool CheckNxtRoutesFeasible(Vehicle veh, int cur_route_pos, double delaytime)
         {
             if (delaytime <= 0 || cur_route_pos >= veh.getNumofVisRoute() - 1)
             {
@@ -177,34 +177,38 @@ namespace OP.Data
             bool Feasible = false;
             int pos;
             //递归检查紧邻下游线路的浮动时间
-            Route nxt_route = solution.GetRouteByID(veh.VehRouteList[cur_route_pos + 1], out pos);
-            Route tmp_nxt_route = nxt_route.Copy();
+            Route nxt_route = GetRouteByID(veh.VehRouteList[cur_route_pos + 1], out pos); //定位下游线路的在解中的位置
+            Route tmp_nxt_route = nxt_route.Copy(); //拷贝，将在此拷贝上做更改
             for (int i = 0; i < tmp_nxt_route.RouteList.Count; i++)
             {
                 if (i == 0)
                 {
-                    tmp_nxt_route.ServiceBeginingTimes[i] += delaytime;
+                    tmp_nxt_route.ServiceBeginingTimes[i] += delaytime; //下游线路起点出发时间顺延 delaytime
                 }
                 else
                 {
-                    tmp_nxt_route.ServiceBeginingTimes[i] = tmp_nxt_route.ServiceBeginingTimes[i - 1]
+                    tmp_nxt_route.ServiceBeginingTimes[i] = tmp_nxt_route.ServiceBeginingTimes[i - 1] //下游线路中商户的开始服务时间依次更新
                                                           + tmp_nxt_route.RouteList[i - 1].Info.ServiceTime
                                                           + tmp_nxt_route.RouteList[i - 1].TravelDistance(tmp_nxt_route.RouteList[i]);
                 }
             }
-            if (tmp_nxt_route.IsFeasible())
+            if (tmp_nxt_route.IsFeasible()) //检查服务时间更新后，下游线路是否还可行
             {
-                if (CheckNxtRoutesFeasible(solution, veh, cur_route_pos + 1, tmp_nxt_route.GetArrivalTime() - nxt_route.GetArrivalTime()))
+                if (CheckNxtRoutesFeasible(veh, cur_route_pos + 1, tmp_nxt_route.GetArrivalTime() - nxt_route.GetArrivalTime()))
                 {
-                    Feasible = true;
-                    nxt_route = tmp_nxt_route.Copy();
+                    Feasible = true; //如果下游线路都可行
+                    Routes[pos] = tmp_nxt_route.Copy(); //更新解中该条线路
                 }
             }
             return Feasible;
         }
 
-
-        internal string vehOtherInfo(Solution solution, Vehicle veh)
+        /// <summary>
+        /// 输出当前解中某一车辆的非赛题需要信息，如路线上每个点的剩余电量、累计行程、载重量、体积
+        /// </summary>
+        /// <param name="veh"></param>
+        /// <returns></returns>
+        internal string vehOtherInfo(Vehicle veh)
         {
             VehicleType thisvt = Problem.GetVehTypebyID(veh.TypeId);
             List<int> CurtourLength = new List<int>();
@@ -220,7 +224,7 @@ namespace OP.Data
             foreach (var item in veh.VehRouteList)
             {
                 int pos;
-                Route cur_route = solution.GetRouteByID(item, out pos);
+                Route cur_route = GetRouteByID(item, out pos); //定位线路
                 for (int i = 0; i < cur_route.RouteList.Count; i++)
                 {
                     if (i == 0)
@@ -268,7 +272,11 @@ namespace OP.Data
             return Str_Otherinfo;
         }
 
-        private void GetvehRoutesInfo(Solution solution, Vehicle veh)
+        /// <summary>
+        /// 获得当前解中某一车辆的赛题需要信息，将这些信息更新到车的属性上
+        /// </summary>
+        /// <param name="veh"></param>
+        private void GetvehRoutesInfo(Vehicle veh)
         {
 
             double dt_veh = double.MaxValue;
@@ -279,7 +287,7 @@ namespace OP.Data
             foreach (var item in veh.VehRouteList)
             {
                 int pos;
-                Route cur_route = solution.GetRouteByID(item, out pos);
+                Route cur_route = GetRouteByID(item, out pos); //定位线路
                 for (int i = 0; i < cur_route.RouteList.Count - 1; i++)
                 {
                     nodes_id.Add(cur_route.RouteList[i].Info.Id.ToString());
@@ -303,19 +311,27 @@ namespace OP.Data
 
         }
 
-        //打印一辆车的各种信息
+        /// <summary>
+        /// 打印一辆车的各种信息
+        /// </summary>
+        /// <param name="veh"></param>
+        /// <returns></returns>
         public string vehCostInf(Vehicle veh)
         {
 
             string costInfs = "";
-            veh.GetvehRoutesInfo();
+            GetvehRoutesInfo(veh);
             costInfs = veh.VehId + "," + veh.TypeId + "," + veh.dist_sep + "," + veh.distribute_lea_tm + "," + veh.distribute_arr_tm + "," + veh.distance + "," + veh.tran_cost.ToString("0.00") + "," + veh.charge_cost + "," + veh.wait_cost.ToString("0.00") + "," + veh.fixed_use_cost + "," + veh.total_cost.ToString("0.00") + "," + veh.charge_cnt;
             return costInfs;
         }
-
+        /// <summary>
+        /// 计算当前解中某一辆车的所有费用，包括固定成本与可变成本
+        /// </summary>
+        /// <param name="veh"></param>
+        /// <returns></returns>
         public double calculCost(Vehicle veh)
         {
-            ResetCost(veh);
+            veh.ResetCost();
             int TypeId = veh.TypeId;
             veh.fixed_use_cost = Problem.VehTypes[TypeId - 1].FixedCost;
             double TransCostRate = Problem.VehTypes[TypeId - 1].VariableCost;
@@ -330,8 +346,8 @@ namespace OP.Data
             }
             for (int i = 0; i < veh.VehRouteList.Count; i++)
             {
-                int pos;
-                Route cur_route = solution.GetRouteByID(veh.VehRouteList[i], out pos);
+                int pos=0;
+                Route cur_route = GetRouteByID(veh.VehRouteList[i], out pos); //定位路线
                 int num_nodes = cur_route.RouteList.Count;
                 if (num_nodes == 2)
                 {
@@ -351,17 +367,7 @@ namespace OP.Data
             return veh.total_cost;
 
         }
-
-        private void ResetCost(Vehicle veh)
-        {
-            veh.distance = 0;
-            veh.tran_cost = 0;
-            veh.wait_cost = 0;
-            veh.charge_cost = 0;
-            veh.charge_cnt = 0;
-            veh.total_cost = 0;
-            veh.fixed_use_cost = 0;
-        }
+      
 
         public List<Route> Copy(List<Route> routes)
         {

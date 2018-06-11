@@ -45,12 +45,10 @@ namespace rich_VRP.Constructive
                     int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机）
                     //int type = 1;
                     veh = fleet.addNewVeh(type);
-
-
-                    Route newRoute = new Route(veh); ////////产生一条该车的路径,已经把车分配给了路径
-                                                              //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
-                    double earliest_departure_time = newRoute.GetEarliestDepartureTime();//该路径的最早出发时间
-                                                                                         //只要新产生路径的最早出发时间小于最晚时间限制就可以为其分配customer
+                    double earliest_departure_time =veh.Early_time; //初始化一条线路，该路径的最早出发时间默认为上班时间
+                    Route newRoute = new Route(veh, earliest_departure_time); ////////产生一条该车的路径,已经把车分配给了路径
+                                                             
+                    //只要新产生路径的最早出发时间小于最晚时间限制就可以为其分配customer
                     while (earliest_departure_time < veh.Late_time)
                     {
                         newRoute = BIA(newRoute, unroute_cus, out unroute_cus);
@@ -64,9 +62,10 @@ namespace rich_VRP.Constructive
                             }
                             else
                             {
-                                newRoute = new Route(veh);
+                                earliest_departure_time = newRoute.GetArrivalTime() + Problem.MinWaitTimeAtDepot;
+                                newRoute = new Route(veh,earliest_departure_time);
                                 //newRoute.RouteAssign2Veh(veh);//将路径分配给该车
-                                earliest_departure_time = newRoute.GetEarliestDepartureTime();
+                                
                             }
                         }
                         else
