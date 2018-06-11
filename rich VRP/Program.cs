@@ -47,68 +47,68 @@ namespace rich_VRP
 
                 RemoveSta oper = new RemoveSta();
                 bool isIprv = oper.Remove(ini_solution); //删除多余的充电站
-                if (true)
+                sb.AppendLine("====RemoveSta=====");
+                double newcost = ini_solution.CalObjCost();
+
+                Console.WriteLine("ObjVal 1 = " + newcost.ToString("0.00"));
+
+                StationPosition sp = new StationPosition();
+                ini_solution = sp.StationExchage(ini_solution, 0.3);//优化充电站
+                double newcost2 = ini_solution.CalObjCost();
+                Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
+
+                Solution bst_sol = ini_solution.Copy();
+
+                int outiters = 5;
+                while (outiters > 0)
                 {
-                    sb.AppendLine("====RemoveSta=====");
-                    double newcost = ini_solution.CalObjCost();
-
-                    Console.WriteLine("ObjVal 1 = " + newcost.ToString("0.00"));
-
-                    StationPosition sp = new StationPosition();
-                    ini_solution = sp.StationExchage(ini_solution, 0.3);//优化充电站
-                    double newcost2 = ini_solution.CalObjCost();
-                    Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
-
                     DestroyAndRepair DR = new DestroyAndRepair();
                     ini_solution = DR.DR(ini_solution, 4);
-                    Console.WriteLine("ObjDR = "+ini_solution.ObjVal.ToString("0.00"));
-                    //ini_solution = DR.DestroyShortRoute(ini_solution, 5);
-                    //ini_solution = DR.DestroyWasteRoute(ini_solution, 0.2);
-                    //ini_solution = DR.DestroyAfternoonNodes(ini_solution, 780, 0.2);
-                    //ini_solution = DR.Repair(ini_solution);
-                    
-                    ini_solution = new Relocate().RelocateIntra(ini_solution,true);//线路内重定位
+                    Console.WriteLine("ObjDR = " + ini_solution.ObjVal.ToString("0.00"));
+
+                    ini_solution = new TwoOpt().intarChange(ini_solution);
+                    double newcost32 = ini_solution.CalObjCost();
+                    Console.WriteLine("ObjVal 2opt = " + newcost32.ToString("0.00"));
+
+                    ini_solution = new Relocate().RelocateIntra(ini_solution, true);//线路内重定位
                     double newcost3 = ini_solution.CalObjCost();
-                    Console.WriteLine("ObjVal 3 = " + newcost3.ToString("0.00"));
+                    Console.WriteLine("ObjVal Relocate = " + newcost3.ToString("0.00"));
 
-                    ini_solution = new TwoOpt().intarChange(ini_solution);//线路内重定位
-                    double newcost31 = ini_solution.CalObjCost();
-                    Console.WriteLine("ObjVal 2opt = " + newcost31.ToString("0.00"));
-
-                    if (newcost3 > 290000) continue;
+                    if (newcost3 > 310000) break;
 
                     double newcost4 = 0;
                     Solution tmp_sol = ini_solution.Copy();
-                    while (tmp_sol!=null)
+                    while (tmp_sol != null)
                     {
                         tmp_sol = new CrossInter().Cross(ini_solution); //线路间交换
-                        if (tmp_sol!=null)
+                        if (tmp_sol != null)
                         {
                             ini_solution = tmp_sol.Copy();
                             newcost4 = ini_solution.CalObjCost();
                             Console.WriteLine("ObjVal 4 = " + newcost4.ToString("0.00"));
                         }
-                        
+
                     }
-                    ini_solution = DR.DR(ini_solution, 4);
-                    Console.WriteLine("ObjDR =" + ini_solution.ObjVal.ToString("0.00"));
-                    ini_solution = new Relocate().RelocateIntra(ini_solution, true);//线路内重定位
-                    double newcost5 = ini_solution.CalObjCost();
-                    Console.WriteLine("ObjVal 5 = " + newcost5.ToString("0.00"));
-                    //double newcost5 = evaluate.CalObjCost(ini_solution);
-                    //Console.WriteLine("ObjVal 5 = " + newcost5.ToString("0.00"));
-                    if (newcost4 < 290000)
+
+                    if (ini_solution.ObjVal<bst_sol.ObjVal)
                     {
-                        ini_solution.PrintResult();
-                        Console.WriteLine(ini_solution.PrintToString());
+                        bst_sol = ini_solution.Copy();
                     }
-                    sb.AppendLine(newcost4.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
                     
-                    sb.AppendLine(newcost5.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
+                    outiters--;
+
+                    sb.AppendLine(outiters.ToString() + ": " + bst_sol.ObjVal.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
                     //sb.AppendLine(newcost.ToString("0.00"));
                     //sb.AppendLine(ini_solution.PrintToString());
 
                 }
+                
+                if (bst_sol.ObjVal < 284000)
+                {
+                    bst_sol.PrintResult();
+                    Console.WriteLine(bst_sol.PrintToString());
+                }
+
                 sw.Write(sb);
                 sw.Flush();
             }

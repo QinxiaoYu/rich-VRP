@@ -137,7 +137,7 @@ namespace rich_VRP.Neighborhoods.Inter
                                 new_sol.UpdateTripChainTime(new_veh_j);
 
                             }
-
+                            Console.WriteLine(copy_ri.PrintToStringSample() + "  " + copy_rj.PrintToStringSample());
                             //double new_obj_i = new_veh_i.calculCost();
                             //double new_obj_j = new_veh_j.calculCost();
                             double new_obj = new_sol.CalObjCost();
