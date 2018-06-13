@@ -189,22 +189,33 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 {
                     solution.Routes[pos_route].InsertNode(cus, pos);
                     Route nr = solution.Routes[pos_route];
+                    solution.Routes[pos_route].AssignedVeh.VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;                 
                     int idx_veh = solution.fleet.GetVehIdxInFleet(nr.AssignedVeh.VehId);
                     solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;                           
                 }
                 else
                 {
-                    int type = 1;
-                    Vehicle veh = solution.fleet.addNewVeh(type);
-                    Route newRoute = new Route(veh,veh.Early_time);
+                    int type = 2;
+                    Vehicle veh = solution.fleet.addNewVeh(type); //先生成辆车
+                    int pos_veh_fleet = solution.fleet.GetVehIdxInFleet(veh.VehId);    //车在车队中的位置              
+                    Route newRoute = new Route(veh,veh.Early_time); //再生成个路线
                     newRoute.InsertNode(cus, 1);
-                    solution.AddRoute(newRoute);
-                    veh.VehRouteList.Add(newRoute.RouteId);
+                    veh.addRoute2Veh(newRoute);//把路分配给车
+                    
+                    if (newRoute.ViolationOfRange()>0)
+                    {
+                        newRoute = newRoute.InsertSta(3,double.MaxValue);
+                    }
+                    
+                    solution.AddRoute(newRoute); //把路添加到解里
+                    solution.fleet.VehFleet[pos_veh_fleet].VehRouteList[newRoute.RouteIndexofVeh] = newRoute.RouteId;//更新车队中此车的线路集合
+                    
                 }
                 solution.UnVisitedCus.Remove(cus);
             }
             solution.UpdateFirstTripTime();
             solution.UpdateTripChainTime();
+            Console.WriteLine(solution.SolutionIsFeasible().ToString());
             return solution;
         }
 
@@ -227,10 +238,14 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 }
                 else
                 {
-                    int type = 1;
+                    int type = 2;
                     Vehicle veh = solution.fleet.addNewVeh(type);
                     Route newRoute = new Route(veh,veh.Early_time);
                     newRoute.InsertNode(cus, 1);
+                    if (newRoute.ViolationOfRange() > 0)
+                    {
+                        newRoute = newRoute.InsertSta(3, double.MaxValue);
+                    }
                     solution.AddRoute(newRoute);
                     veh.VehRouteList.Add(newRoute.RouteId);
                 }

@@ -83,6 +83,7 @@ namespace rich_VRP.Neighborhoods.Intra
                     {
                         //替换路径
                         BestRoute = tempRoute.Copy();
+                        BestRoute.AssignedVeh.VehRouteList[BestRoute.RouteIndexofVeh] = tempRoute.RouteId;
 
                     }
                 }
@@ -95,8 +96,9 @@ namespace rich_VRP.Neighborhoods.Intra
         //转入solution的中的fleet,对里面的每一辆车中的路径进行变异
         public Solution intarChange(Solution solution)
         {
-            foreach (var vehicle in solution.fleet.VehFleet)
+            for (int v = 0; v < solution.fleet.VehFleet.Count; v++)
             {
+                Vehicle vehicle = solution.fleet.VehFleet[v];
                 //对车辆的中的找到vehicle的在solution的所有路径的副本
                 List<Route> routesList = new List<Route>();
                 //这些路径在solution中的位置
@@ -117,13 +119,13 @@ namespace rich_VRP.Neighborhoods.Intra
                     routesList = intraChange(routesList[i], vehicle, routesList);
                 }
 
-                //将优化的路替换solution中route,修改fleet中的vehicle
+                //将优化的路替换solution中route,修改fleet中的vehicle           
                 int index = 0;
                 foreach (var pos in routePos)
                 {
                     //solution.Routes[pos] = routesList[index];
-                    solution.Routes[pos].RouteList.Clear();
-                    routesList[index].RouteList.ForEach(k => solution.Routes[pos].RouteList.Add(k));
+                    solution.Routes[pos] = routesList[index].Copy();              
+                    solution.fleet.VehFleet[v].VehRouteList[routesList[index].RouteIndexofVeh] = routesList[index].RouteId;
                     index += 1;
                 }
 

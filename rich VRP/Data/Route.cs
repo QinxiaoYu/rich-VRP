@@ -61,6 +61,7 @@ namespace OP.Data
             RouteList = new List<AbsNode>();
             ServiceBeginingTimes = new List<double>();
             battery_level = new List<double>();
+            
         }
 
         /// <summary>
@@ -103,8 +104,7 @@ namespace OP.Data
                     tmp_r.RemoveAt(k);
                 }
             }
-
-            
+                       
             bool isFeasible = false;
             //1个充电站    
             for (int i = 0; i < tmp_r.RouteList.Count-1; i++)
@@ -119,7 +119,9 @@ namespace OP.Data
                 double new_obj = new_costs.Item1 + new_costs.Item2 + new_costs.Item3;
                 if (new_obj < old_obj)
                 {
-                    bst_route = tmp_route_i.Copy();                  
+                    bst_route = tmp_route_i.Copy();
+                    bst_route.AssignedVeh.VehRouteList[bst_route.RouteIndexofVeh] = bst_route.RouteId;
+                    bst_route.routecost = new_obj;                            
                     old_obj = new_obj;
                     isFeasible = true;
                 }
@@ -148,6 +150,8 @@ namespace OP.Data
                     if (new_obj < old_obj)
                     {
                         bst_route = tmp_route_j.Copy();
+                        bst_route.AssignedVeh.VehRouteList[bst_route.RouteIndexofVeh] = bst_route.RouteId;
+                        bst_route.routecost = new_obj;
                         old_obj = new_obj;
                         isFeasible = true;
                     }
@@ -180,6 +184,8 @@ namespace OP.Data
                         if (new_obj < old_obj)
                         {
                             bst_route = tmp_route_k.Copy();
+                            bst_route.AssignedVeh.VehRouteList[bst_route.RouteIndexofVeh] = bst_route.RouteId;
+                            bst_route.routecost = new_obj;
                             old_obj = new_obj;
                             isFeasible = true;
                         }
@@ -292,9 +298,10 @@ namespace OP.Data
             int numRouteofVeh = veh.VehRouteList.Count(); //当前车辆已经行驶的趟数
             this.RouteIndexofVeh = numRouteofVeh;
 
-            ServiceBeginingTimes.Add(earliestDepartureTime);
+            //ServiceBeginingTimes.Add(earliestDepartureTime);
 
             AddNode(startdepot);
+            ServiceBeginingTimes[0] = earliestDepartureTime;
             AddNode(enddepot);
         }
 
@@ -396,12 +403,12 @@ namespace OP.Data
         /// 插入新节点到路径末尾，并更新路径各节点的服务时间；
         /// </summary>
         /// <param name="newNode">抽象节点，可以是顾客也可是仓库</param>
-        private void AddNode(AbsNode newNode)
+        public void AddNode(AbsNode newNode)
         {
             //线路上最后一个点
             AbsNode lastCustomer = RouteList.Count == 0 ? newNode : RouteList[RouteList.Count - 1];
             //线路上最后一个点 可以开始游览的时间 （如果到达时间早于时间窗的开始时间，则为时间窗开始时间；否则为实际达到时间）
-            double lastServiceTime = RouteList.Count == 0 ? ServiceBeginingTimes[0] : ServiceBeginingTimes[ServiceBeginingTimes.Count - 1];
+            double lastServiceTime = RouteList.Count == 0 ? Problem.StartDepot.Info.ReadyTime : ServiceBeginingTimes[ServiceBeginingTimes.Count - 1];
             
             //新景点 可以开始游览的时间
             double serviceBegins = NextServiceBeginTime(newNode, lastCustomer, lastServiceTime);
@@ -618,6 +625,10 @@ namespace OP.Data
             double Violation = 0;
             double CurrentWeight = GetTotalWeight();
             double CapacityWeight = GetRouteWeightCap();
+            if (CurrentWeight-CapacityWeight>-0.000001)
+            {
+                Violation = CurrentWeight - CapacityWeight;
+            }
             Violation = Math.Max(0, CurrentWeight - CapacityWeight);
             return Violation;
         }
@@ -801,13 +812,16 @@ namespace OP.Data
         {
             var newRouteList = new List<AbsNode>(RouteList.Count);
             newRouteList.AddRange(RouteList.Select(node => node.ShallowCopy()));
-            var r = new Route();
+            var r = new Route()
+            {
+                RouteList = newRouteList,
+                ServiceBeginingTimes = new List<double>(ServiceBeginingTimes),
+                battery_level = new List<double>(battery_level),
+            };
             r.AssignedVehType = this.AssignedVehType;
-            r.AssignedVeh = this.AssignedVeh;
+            r.AssignedVeh = AssignedVeh.Copy();           
             r.RouteIndexofVeh = this.RouteIndexofVeh;
-            r.RouteList = newRouteList;
-            r.ServiceBeginingTimes = new List<double>(ServiceBeginingTimes);
-            r.battery_level = new List<double>(battery_level);
+            r.routecost = this.routecost;
             r.UpdateId();
             return r;
         }

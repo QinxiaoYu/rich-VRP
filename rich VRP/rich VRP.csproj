@@ -65,6 +65,7 @@
     <Compile Include="Constructive\CW.cs" />
     <Compile Include="Constructive\CWObjFunc.cs" />
     <Compile Include="Constructive\CW4sveh.cs" />
+    <Compile Include="Constructive\ReadInitialSolution.cs" />
     <Compile Include="Constructive\RouteFirstStationSecond.cs" />
     <Compile Include="MetaHeuristic\ALNS.cs" />
     <Compile Include="MetaHeuristic\ILS.cs" />

@@ -257,10 +257,9 @@ namespace OP.Data
         //    {
         //        int dis_0i = StartDepot.TravelTime(Customers[i]);
         //        int waittime = (int)Customers[i].Info.ReadyTime - dis_0i;
-
-
         //    }
         //}
+
         /// <summary>
         /// 获得某个点的商户小邻域，即离它可达的最近的前一些商户
         /// </summary>

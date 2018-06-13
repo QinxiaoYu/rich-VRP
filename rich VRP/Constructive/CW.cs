@@ -23,7 +23,7 @@ namespace rich_VRP.Constructive
         class Initialization
         {
            
-            Fleet fleet;
+            //Fleet fleet;
             Random rand = new Random();//随机operter
             List<Customer> unrouted_Cus = new List<Customer>();
             List<Station> charge_sta = new List<Station>();
@@ -36,7 +36,7 @@ namespace rich_VRP.Constructive
             public Solution initial_construct()
             {
                 Solution solution = new Solution();
-                fleet = solution.fleet;
+                //fleet = solution.fleet;
                 var unroute_cus = new List<Customer>(Problem.Customers); //没有访问的点
                 Vehicle veh = null;
 
@@ -44,7 +44,7 @@ namespace rich_VRP.Constructive
                 {
                     int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机）
                     //int type = 1;
-                    veh = fleet.addNewVeh(type);
+                    veh = solution.fleet.addNewVeh(type);
                     double earliest_departure_time =veh.Early_time; //初始化一条线路，该路径的最早出发时间默认为上班时间
                     Route newRoute = new Route(veh, earliest_departure_time); ////////产生一条该车的路径,已经把车分配给了路径
                                                              
@@ -54,6 +54,7 @@ namespace rich_VRP.Constructive
                         newRoute = BIA(newRoute, unroute_cus, out unroute_cus);
                         if (newRoute.RouteList.Count > 2)//此路线插入customer了
                         {
+                            newRoute.AssignedVeh.VehRouteList.Add(newRoute.RouteId);
                             veh.addRoute2Veh(newRoute);//将路径加入到vehicle中
                             solution.AddRoute(newRoute);
                             if (unroute_cus.Count == 0)//是否还有未插入的点
@@ -73,7 +74,7 @@ namespace rich_VRP.Constructive
                             earliest_departure_time = veh.Late_time;
                         }
                     }
-                    int a = fleet.GetNumOfUsedVeh();
+                    int a = solution.fleet.GetNumOfUsedVeh();
                     Console.WriteLine(a);
                 }
                 solution.UpdateFirstTripTime();

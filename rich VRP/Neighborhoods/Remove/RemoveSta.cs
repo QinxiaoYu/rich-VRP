@@ -15,10 +15,12 @@ namespace rich_VRP.Neighborhoods.Remove
             for (int i = 0; i < solution.Routes.Count; i++)
             {
                 Route impr_route = RemoveStaInRoute(solution.Routes[i]);
+                int pos_veh_fleet = solution.fleet.GetVehIdxInFleet(solution.Routes[i].AssignedVeh.VehId);
                 if (impr_route != null)
                 {
                     isImprove = true;
                     solution.Routes[i] = impr_route.Copy();
+                    solution.fleet.VehFleet[pos_veh_fleet].VehRouteList[impr_route.RouteIndexofVeh] = impr_route.RouteId;
                    
                 }
                     
@@ -51,6 +53,7 @@ namespace rich_VRP.Neighborhoods.Remove
                         if (tmp_r.IsFeasible())
                         {
                             route = tmp_r;
+                            tmp_r.AssignedVeh.VehRouteList[tmp_r.RouteIndexofVeh] = tmp_r.RouteId;
                             bst_route = tmp_r.Copy();
                             bst_route.AssignedVeh.VehRouteList[bst_route.RouteIndexofVeh] = bst_route.RouteId;
                             break;

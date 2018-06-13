@@ -16,7 +16,7 @@ namespace rich_VRP.Neighborhoods.Inter
         }
         /// <summary>
         /// 两条线路之间的交换操作，如r1=A1B1, r2 = A2B2,交换后变为A1B2和A2B1
-        /// 其中参数：角度差-10，半径差50
+        /// 其中参数：角度差-10，半径差50, 目标函数值下降超过20
         /// </summary>
         /// <param name="solution"></param>
         /// <param name="select_strategy">选择策略：0:first improvement;1:best improvement </param>
@@ -25,25 +25,23 @@ namespace rich_VRP.Neighborhoods.Inter
         {
             //Console.WriteLine(solution.PrintToString());
             Solution bst_sol = null;
-            double old_obj = solution.ObjVal;
+            //double old_obj = solution.ObjVal;
             double bst_obj_change = 0;
-            //Console.WriteLine("=====solution========");
-            //Console.WriteLine(solution.PrintToString());
-            //Console.WriteLine("=====solution in fleet========");
-            //Console.WriteLine(solution.fleet.solution.PrintToString());
-            //Console.WriteLine("=====solution in vehicle=======");
-            //Console.WriteLine(solution.fleet.VehFleet[0].solution.PrintToString());
-                   
 
             int num_route_sol = solution.Routes.Count;
-            for (int i = 0; i < num_route_sol - 1; i++) //第一条路
+            int r1_rand_start = rd.Next(num_route_sol - 1);
+            for (int i = r1_rand_start; i < num_route_sol - 1; i++) //第一条路
             {
                 Route r_i = solution.Routes[i].Copy();
+                Vehicle v_i = solution.fleet.GetVehbyID(solution.Routes[i].AssignedVeh.VehId);
+                double old_r1 = solution.calculCost(v_i);
                 //double old_ri_obj = r_i.AssignedVeh.calculCost();
                 r_i.RemoveAllSta();
                 for (int j = i + 1; j < num_route_sol; j++) //第二条路
                 {
                     Route r_j = solution.Routes[j].Copy();
+                    Vehicle v_j = solution.fleet.GetVehbyID(solution.Routes[j].AssignedVeh.VehId);
+                    double old_r2 = solution.calculCost(v_j);                  
                     //double old_rj_obj = r_j.AssignedVeh.calculCost();
                     if (r_i.AssignedVeh.VehId == r_j.AssignedVeh.VehId) //如果两条路属于同一辆车，则不交换
                     {
@@ -83,9 +81,9 @@ namespace rich_VRP.Neighborhoods.Inter
                             copy_ri.InsertCustomer(route2part2);//添加另一条路径的后半段进来,不可能产生空路线
                             copy_rj.InsertCustomer(route1part2);
 
-                            if (copy_ri.ViolationOfVolume() <= 0 && copy_ri.ViolationOfWeight() <= 0
-                                && copy_rj.ViolationOfVolume() <= 0 && copy_rj.ViolationOfWeight() <= 0
-                                && copy_ri.ViolationOfTimeWindow() > -1 && copy_rj.ViolationOfTimeWindow() > -1)
+                            if (copy_ri.ViolationOfVolume() > 0 || copy_ri.ViolationOfWeight() > 0
+                                 || copy_rj.ViolationOfVolume()> 0 || copy_rj.ViolationOfWeight() > 0
+                                 || copy_ri.ViolationOfTimeWindow() > -1 || copy_rj.ViolationOfTimeWindow() > -1)
                             {
                                 continue;
                             }
@@ -104,8 +102,10 @@ namespace rich_VRP.Neighborhoods.Inter
                             {
                                 continue;
                             }
-                            new_sol.Routes[i] = copy_ri;
-                            new_sol.Routes[j] = copy_rj;
+                            copy_ri.AssignedVeh.VehRouteList[copy_ri.RouteIndexofVeh] = copy_ri.RouteId;
+                            copy_rj.AssignedVeh.VehRouteList[copy_rj.RouteIndexofVeh] = copy_rj.RouteId;
+                            new_sol.Routes[i] = copy_ri.Copy();
+                            new_sol.Routes[j] = copy_rj.Copy();
                             Vehicle new_veh_i = new_sol.fleet.GetVehbyID(r_i.AssignedVeh.VehId);
                             Vehicle new_veh_j = new_sol.fleet.GetVehbyID(r_j.AssignedVeh.VehId);
                             int idx_vehi_fleet = new_sol.fleet.GetVehIdxInFleet(new_veh_i.VehId);
@@ -117,36 +117,35 @@ namespace rich_VRP.Neighborhoods.Inter
                             double delay_i = copy_ri.GetArrivalTime() - r_i.GetArrivalTime();
                             double delay_j = copy_rj.GetArrivalTime() - r_j.GetArrivalTime();
                           
-                            if (delay_i>0 && new_sol.CheckNxtRoutesFeasible(new_veh_i,copy_ri.RouteIndexofVeh,delay_i)==false)
+                            if (delay_i>0 && new_sol.CheckNxtRoutesFeasible(new_sol.fleet.VehFleet[idx_vehi_fleet], copy_ri.RouteIndexofVeh,delay_i)==false)
                             {
                                 continue;
                             } //下游线路不可行
-                            if (delay_j>0 && new_sol.CheckNxtRoutesFeasible(new_veh_j,copy_rj.RouteIndexofVeh,delay_j)==false)
+                            if (delay_j>0 && new_sol.CheckNxtRoutesFeasible(new_sol.fleet.VehFleet[idx_vehj_fleet], copy_rj.RouteIndexofVeh,delay_j)==false)
                             {
                                 continue;
                             }//下游线路不可行
 
                             if (delay_i < 0)
                             {
-                                new_sol.UpdateTripChainTime(new_veh_i);                             
+                                new_sol.UpdateTripChainTime(new_sol.fleet.VehFleet[idx_vehi_fleet]);                             
 
 
                             }
                             if (delay_j < 0)
                             {
-                                new_sol.UpdateTripChainTime(new_veh_j);
+                                new_sol.UpdateTripChainTime(new_sol.fleet.VehFleet[idx_vehj_fleet]);
 
                             }
-                            Console.WriteLine(copy_ri.PrintToStringSample() + "  " + copy_rj.PrintToStringSample());
-                            //double new_obj_i = new_veh_i.calculCost();
-                            //double new_obj_j = new_veh_j.calculCost();
-                            double new_obj = new_sol.CalObjCost();
-                            double obj_change = old_obj-new_obj;
-                            if (obj_change>0)//如果变好
+                            double new_obj_i = new_sol.calculCost(new_veh_i);
+                            double new_obj_j = new_sol.calculCost(new_veh_j);
+                            double obj_change = (old_r1 + old_r2) - (new_obj_i + new_obj_j);
+                            if (obj_change>20)//如果变好
                             {
                                 if (select_strategy == 0)//first improvement
                                 {
-                                    return new_sol;
+                                    new_sol.ObjVal = solution.ObjVal - obj_change;
+                                    return new_sol.Copy();
                                 }
                                 else
                                 {

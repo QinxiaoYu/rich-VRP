@@ -14,43 +14,73 @@ namespace rich_VRP.Neighborhoods.Intra
         {
             rd = new Random();
         }
-        public Solution RelocateIntra(Solution solution, bool rand = false)
+        public Solution RelocateIntra(Solution solution, int select_strategy = 1, bool rand = false)
         {
+            Solution bst_sol = solution.Copy();
+            double bst_obj_change = 0;
+
             Fleet fleet = solution.fleet;
             int num_veh = fleet.GetNumOfUsedVeh();//车的数量
             for (int i = 0; i < num_veh; i++)//对每辆车做遍历
             {
                 Vehicle veh = fleet.VehFleet[i];
+                double old_obj = solution.calculCost(veh);
                 int num_routes_veh = veh.getNumofVisRoute();//车i服务的路线数量
                 for (int j = 0; j < num_routes_veh; j++)//遍历车i下的所有路线
                 {
+                    Solution new_sol = solution.Copy();
                     string route_id = veh.VehRouteList[j];
                     int pos_route_sol = -1;
-                    Route route = solution.GetRouteByID(route_id, out pos_route_sol);//定位车i的路线j在解中的位置
+                    Route route = new_sol.GetRouteByID(route_id, out pos_route_sol);//定位车i的路线j在解中的位置
                     Route tmp_r = route.Copy();//路线j的拷贝，将对此拷贝做更改
                     if (rand)
                     {
                         tmp_r = RandRelocateIntra(tmp_r);
+                        tmp_r.AssignedVeh.VehRouteList[j] = tmp_r.RouteId;
+                        new_sol.fleet.VehFleet[i].VehRouteList[j] = tmp_r.RouteId;
+                        new_sol.Routes[pos_route_sol] = tmp_r.Copy();
                     }
                     else
                     {
-                        tmp_r = DeterRelocateInRoute(tmp_r);//对当前路径进行重定位遍历     
+                        tmp_r = DeterRelocateInRoute(tmp_r);//对当前路径进行重定位遍历   
+                        tmp_r.AssignedVeh.VehRouteList[j] = tmp_r.RouteId;
+                        new_sol.fleet.VehFleet[i].VehRouteList[j] = tmp_r.RouteId;
+                        new_sol.Routes[pos_route_sol] = tmp_r.Copy();
                     }                                                
                     double delay = tmp_r.GetArrivalTime() - route.GetArrivalTime();
-                    if (delay<=0)
-                    {                  
-                        solution.Routes[pos_route_sol] = tmp_r; //将改过的线路赋值回解中
-                        solution.fleet.VehFleet[i].VehRouteList[tmp_r.RouteIndexofVeh] = tmp_r.RouteId; //更新解中车队下该车所存的访问线路id
-                        solution.UpdateTripChainTime(veh);//更新解中当前车的时间链                      
+                    if (delay>0&&new_sol.CheckNxtRoutesFeasible(new_sol.fleet.VehFleet[i], tmp_r.RouteIndexofVeh,delay)==false)
+                    {
+                        continue;
                     }
-                    else if (solution.CheckNxtRoutesFeasible(veh,tmp_r.RouteIndexofVeh, delay))
-                    {                       
-                        solution.Routes[pos_route_sol] = tmp_r;
-                        solution.fleet.VehFleet[i].VehRouteList[tmp_r.RouteIndexofVeh] = tmp_r.RouteId;                                  
+                    if (delay<0)
+                    {
+                        new_sol.UpdateTripChainTime(new_sol.fleet.VehFleet[i]);                      
                     }
+
+                    double new_obj = new_sol.calculCost(new_sol.fleet.VehFleet[i]);
+                    double obj_change = old_obj - new_obj;
+                    if (obj_change>0)
+                    {
+                        if (select_strategy == 0)//first improvement
+                        {
+                            new_sol.ObjVal = solution.ObjVal - obj_change;
+                            return new_sol.Copy();
+                        }
+                        else
+                        {
+                            if (obj_change > bst_obj_change) //best improvement
+                            {
+                                bst_obj_change = obj_change;
+                                new_sol.ObjVal = solution.ObjVal - bst_obj_change;
+                                bst_sol = new_sol.Copy();
+
+                            }
+                        }
+                    }
+                    
                 }//结束对同一辆车下每条路的遍历
             }//结束对所有车的遍历
-            return solution;
+            return bst_sol;
         }
 
 
@@ -74,8 +104,8 @@ namespace rich_VRP.Neighborhoods.Intra
                 Route tmp_route = copy_route.Copy();
                 tmp_route.RemoveAllSta();
                 int pos_cus_route = tmp_route.RouteList.FindIndex(a => a.Info.Id == cus.Info.Id);
-                tmp_route.Remove(cus);
-                for (int j = 1; j < tmp_route.RouteList.Count-1; j++)
+                tmp_route.Remove(cus);  //删除一个点后的线路
+                for (int j = 1; j < tmp_route.RouteList.Count-1; j++)//遍历每一个可插入位置
                 {
                     if (j==pos_cus_route) //不插回原位置
                     {
@@ -90,12 +120,12 @@ namespace rich_VRP.Neighborhoods.Intra
                     tmp_route_j = tmp_route_j.InsertSta(cnt_charge,old_obj); //检查充电站，并返回更优的路线
                     if (tmp_route_j.IsFeasible())
                     {
-                        copy_route = tmp_route_j.Copy();
+                        old_obj = tmp_route_j.routecost;
                         bst_route = tmp_route_j.Copy();                       
                     }
                 }//结束遍历每一个可插入位置
-                old_costs = copy_route.routeCost();
-                old_obj = old_costs.Item1 + old_costs.Item2 + old_costs.Item3;
+                copy_route = bst_route.Copy();
+               
             }// 结束遍历每个待插入点    
             return bst_route;   
         }
@@ -136,12 +166,12 @@ namespace rich_VRP.Neighborhoods.Intra
                     tmp_route_j = tmp_route_j.InsertSta(cnt_charge, old_obj); //检查充电站，并返回更优的路线
                     if (tmp_route_j.IsFeasible())
                     {
-                        copy_route = tmp_route_j.Copy();
+                        old_obj = tmp_route_j.routecost;
                         bst_route = tmp_route_j.Copy();
                     }
                 }//结束遍历每一个可插入位置
-                old_costs = copy_route.routeCost();
-                old_obj = old_costs.Item1 + old_costs.Item2 + old_costs.Item3;
+                copy_route = bst_route.Copy();
+                
             }// 结束遍历每个待插入点    
             return bst_route;
         }

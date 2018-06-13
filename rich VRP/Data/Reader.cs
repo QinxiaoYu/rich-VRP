@@ -167,7 +167,7 @@ namespace OP.Data
 
         public void ReadSmall(string txtFilePath)
         {
-            string nodefile = txtFilePath + "/input_node_small.xlsx";
+            string nodefile = txtFilePath + "/input_node_small2.xlsx";
             string disfile = txtFilePath + "/input_distance-time.txt";
             string vehfile = txtFilePath + "/input_vehicle_type.xlsx";
             var nodes = new List<NodeInfo>();
@@ -256,19 +256,19 @@ namespace OP.Data
                     int _j = int.Parse(paras[2]);
                     int _dis_ij = int.Parse(paras[3]);
                     int _tt_ij = int.Parse(paras[4]);
-                    if (_i>30 && _i<1001 || _j>30 && _j<1001)
-                    {
-                        str_Dis = Dreader.ReadLine();
-                        continue;
-                    }
-                    if (_i>1000 )
-                    {
-                        _i -= 970;
-                    }
-                    if (_j>1000)
-                    {
-                        _j -= 970;
-                    }
+                    //if (_i>53 && _i<1001 || _j>53 && _j<1001)
+                    //{
+                    //    str_Dis = Dreader.ReadLine();
+                    //    continue;
+                    //}
+                    //if (_i>1000 )
+                    //{
+                    //    _i -= 947;
+                    //}
+                    //if (_j>1000)
+                    //{
+                    //    _j -= 947;
+                    //}
                     Problem.SetDistanceANDTravelIJ(_i, _j, _tt_ij, _dis_ij);
                     str_Dis = Dreader.ReadLine();
                     if (_dis_ij > max_dis)

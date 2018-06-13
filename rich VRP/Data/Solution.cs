@@ -48,7 +48,7 @@ namespace OP.Data
                     Route pre_route = GetRouteByID(veh.VehRouteList[i - 1], out pos);               
                     Route cur_route = GetRouteByID(veh.VehRouteList[i], out pos);
                     double new_departure_cur = pre_route.GetArrivalTime() + Problem.MinWaitTimeAtDepot;
-                    cur_route.ServiceBeginingTimes[0] = new_departure_cur;
+                    Routes[pos].ServiceBeginingTimes[0] = new_departure_cur;
                 }
             }
         }
@@ -68,6 +68,7 @@ namespace OP.Data
                 int nxt_route_idx_solution = -1;
                 GetRouteByID(nxt_route_id, out nxt_route_idx_solution);//定位其后trip所在解中的位置
                 Routes[nxt_route_idx_solution].RouteIndexofVeh -= 1;
+                Routes[nxt_route_idx_solution].AssignedVeh.VehRouteList.Remove(r.RouteId);
             }
 
             string veh_id = r.AssignedVeh.VehId;
@@ -363,7 +364,7 @@ namespace OP.Data
 
             }
             veh.wait_cost += WaitCost1;
-            veh.total_cost = veh.wait_cost + veh.tran_cost + veh.charge_cost + veh.fixed_use_cost;
+            veh.total_cost = veh.wait_cost + veh.tran_cost + veh.charge_cost + veh.fixed_use_cost;           
             return veh.total_cost;
 
         }
@@ -386,6 +387,26 @@ namespace OP.Data
                 }
 
             }
+        }
+
+        public bool SolutionIsFeasible()
+        {
+            foreach (Route route in Routes)
+            {
+                if (!route.IsFeasible())
+                {
+                    int range =  route.ViolationOfRange();
+                    int time = route.ViolationOfTimeWindow();
+                    double weight = route.ViolationOfWeight();
+                    double volume = route.ViolationOfVolume();
+                    string txt = string.Format("Range: {0}; Time:{1}; Weight: {2}; Volume:{3}",range,time,weight.ToString("0.00"),volume.ToString("0.00")); 
+                    System.Console.WriteLine(route.RouteId+" is not feasible. "+txt);
+                    
+                    return false;
+                   
+                }
+            }
+            return true;
         }
 		public void PrintResult()
 		{
@@ -423,7 +444,47 @@ namespace OP.Data
                 file_ohterinfo.Flush();
                 file_ohterinfo.Close();
             }
-		}
+        }
+        public void printCheckSolution()
+        {
+            foreach (Route route in Routes)
+            {
+                string txt = "";
+                txt += route.RouteId + "  " + route.AssignedVeh.VehId + " ";
+                //Console.Write(route.RouteId + "  " + route.AssignedVeh.VehId + " ");
+                bool isInVeh = false;
+                foreach (string routeid in route.AssignedVeh.VehRouteList)
+                {
+                    if (routeid == route.RouteId)
+                    {
+                        isInVeh = true;
+                    }
+                    txt += routeid + "  ";
+                    //Console.Write(routeid + "  ");
+                }
+                if (isInVeh == false)
+                {
+                    txt += "Route not in Veh.Routes=======\n";
+                    Console.Write(txt);
+                }
+             
+            }
+
+            foreach (Vehicle veh in fleet.VehFleet)
+            {
+                string txt_veh = "";
+                foreach (string routeid in veh.VehRouteList)
+                {
+                    int pos = -1;
+                    GetRouteByID(routeid, out pos);
+                    if (pos == -1)
+                    {
+                        txt_veh += veh.VehId + "   " + routeid + "not in solution\n";
+                        Console.Write(txt_veh);
+                    }
+                }
+            }
+        }     
     
 }
 }
