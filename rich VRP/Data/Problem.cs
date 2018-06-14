@@ -24,6 +24,9 @@ namespace OP.Data
 
         public static double MinWaitTimeAtDepot { get; set; }
         public static double WaitCostRate { get; set; }
+        public static double MinWeight { get; internal set; }
+        public static double MinVolume { get; internal set; }
+
         /// <summary>
         /// 列表记录了每一个点的商户邻域，其商户邻点按照可达性由近至远排序
         /// </summary>

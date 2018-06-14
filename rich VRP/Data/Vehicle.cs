@@ -68,7 +68,21 @@ namespace OP.Data
 			VehRouteList = new List<string>();
 		}
 
-		public void addRoute2Veh(Route _r)
+        internal Vehicle ChangeToAnotherType()
+        {
+            int anotherType = 1;
+            if (TypeId ==1)
+            {
+                anotherType = 2;
+            }
+            string antherVehID = anotherType + "-" + VehId.Split(new char[1] { '-' }, StringSplitOptions.RemoveEmptyEntries)[1];
+                                                      
+            Vehicle AnotherTypeVeh = new Vehicle(anotherType,antherVehID);
+            AnotherTypeVeh.VehRouteList.AddRange(VehRouteList);
+            return AnotherTypeVeh;
+        }
+
+        public void addRoute2Veh(Route _r)
 		{
 			this.VehRouteList.Add (_r.RouteId);
 			 
@@ -91,7 +105,6 @@ namespace OP.Data
                 return true;
             }
             bool Feasible = false;
-            int pos;
             //递归检查紧邻下游线路的浮动时间
             //Route nxt_route = solution.GetRouteByID(VehRouteList[cur_route_pos + 1], out pos);
             Route nxt_route = routesList[cur_route_pos + 1];

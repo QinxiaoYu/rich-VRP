@@ -27,7 +27,7 @@ namespace rich_VRP.Neighborhoods.Inter
             //Console.WriteLine(solution.PrintToString());
             Solution bst_sol = null;
             //double old_obj = solution.ObjVal;
-            double bst_obj_change = 0;
+            double bst_obj_change = -double.MaxValue;
             //Console.WriteLine("=====solution========");
             //Console.WriteLine(solution.PrintToString());
             //Console.WriteLine("=====solution in fleet========");
@@ -119,9 +119,9 @@ namespace rich_VRP.Neighborhoods.Inter
                             {
                                 continue;
                             }
-                            if (copy_ri.ViolationOfTimeWindow() > -1 && copy_rj.ViolationOfTimeWindow() > -1)
+                            if (copy_ri.ViolationOfTimeWindow() > -1 || copy_rj.ViolationOfTimeWindow() > -1)
                             {
-                                break;
+                                continue;
                             }
                             if (copy_ri.ViolationOfRange() > -1)
                             {
@@ -190,6 +190,7 @@ namespace rich_VRP.Neighborhoods.Inter
                                     {
                                         bst_obj_change = obj_change;
                                         bst_sol = new_sol.Copy();
+                                        bst_sol.ObjVal = solution.ObjVal - obj_change;
 
                                     }
                                 }                         
