@@ -29,16 +29,16 @@ namespace rich_VRP
             Problem.SetNearDistanceCusAndSta(10, 10); //计算每个商户的小邻域
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
-            outfilename = dir + "//" + "test610.txt";
+            outfilename = dir + "//" + "test613.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 10000; i++)
             {
                 sb.Clear();
                 sb.AppendLine("============== " + i.ToString() + " ===============");
                 //CW4sveh initial = new CW4sveh(); //这个效果次之
                 //CWObjFunc initial = new CWObjFunc(); //这个效果最差
-                Initialization initial = new Initialization(); //这个效果最好
-                //ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut6101565854.csv");
+                //Initialization initial = new Initialization(); //这个效果最好
+                ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut61403229739.csv");
 
                 Solution ini_solution = initial.initial_construct();
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
@@ -65,18 +65,23 @@ namespace rich_VRP
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                 Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
 
-                if (newcost2 > 298000)
+                if (newcost2 > 293000)
                 {
                     continue;
                 }
 
                 Solution bst_sol = ini_solution.Copy();
 
+                double percent_battery = 0.2;
+                int short_route = 4;
+                int select_strategy = 0; //0: first improve; 1:best improve
+                double change_obj = 20;
+
                 int outiters = 5;
                 while (outiters > 0)
                 {
                     DestroyAndRepair DR = new DestroyAndRepair();
-                    ini_solution = DR.DR(ini_solution, 6);
+                    ini_solution = DR.DR(ini_solution, short_route);
                     ini_solution.printCheckSolution();
                     Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                     Console.WriteLine("ObjDR = " + ini_solution.ObjVal.ToString("0.00"));
@@ -126,7 +131,7 @@ namespace rich_VRP
                     //tmp_sol = ini_solution.Copy();
                     while (tmp_sol != null)
                     {
-                        tmp_sol = new RelocateInter().Relocate(ini_solution, 1, 1); //线路间交换
+                        tmp_sol = new RelocateInter().Relocate(ini_solution, 1, 1,select_strategy); //线路间交换
                         if (tmp_sol != null)
                         {
                             ini_solution = tmp_sol.Copy();
@@ -139,7 +144,7 @@ namespace rich_VRP
                         tmp_sol = ini_solution.Copy();
                         while (tmp_sol != null)
                         {
-                            tmp_sol = new RelocateInter().Relocate(ini_solution, 2, 2); //线路间交换
+                            tmp_sol = new RelocateInter().Relocate(ini_solution, 2, 2,select_strategy); //线路间交换
                             if (tmp_sol != null)
                             {
                                 ini_solution = tmp_sol.Copy();
@@ -154,7 +159,7 @@ namespace rich_VRP
                     tmp_sol = ini_solution.Copy();
                     while (tmp_sol != null)
                     {
-                        tmp_sol = new CrossInter().Cross(ini_solution); //线路间交换
+                        tmp_sol = new CrossInter().Cross(ini_solution,select_strategy); //线路间交换
                         if (tmp_sol != null)
                         {
                             ini_solution = tmp_sol.Copy();
@@ -165,10 +170,24 @@ namespace rich_VRP
 
                     }
 
+                    ini_solution = sp.StationExchage(ini_solution, percent_battery);//优化充电站
+                    ini_solution.printCheckSolution();
+                    double newcost6 = ini_solution.CalObjCost();
+                    Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                    Console.WriteLine("ObjVal Sta = " + newcost6.ToString("0.00"));
+
                     if (ini_solution.ObjVal<bst_sol.ObjVal)
                     {
                         bst_sol = ini_solution.Copy();
                         outiters++;
+                        select_strategy = 0; //换成first improve
+                    }
+                    else
+                    {
+                        percent_battery = Math.Max(0.6, percent_battery + 0.1);
+                        short_route = Math.Max(7, short_route + 1);
+                        select_strategy = 1; //bst improve
+                        change_obj = Math.Min(0, change_obj - 5);
                     }
                     
                     outiters--;

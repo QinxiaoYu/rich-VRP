@@ -21,7 +21,7 @@ namespace rich_VRP.Neighborhoods.Inter
         /// <param name="solution"></param>
         /// <param name="select_strategy">选择策略：0:first improvement;1:best improvement </param>
         /// <returns></returns>
-        public Solution Cross(Solution solution, int select_strategy=0)
+        public Solution Cross(Solution solution, int select_strategy=0,double change_obj_threshold =20)
         {
             //Console.WriteLine(solution.PrintToString());
             Solution bst_sol = null;
@@ -140,7 +140,7 @@ namespace rich_VRP.Neighborhoods.Inter
                             double new_obj_i = new_sol.calculCost(new_veh_i);
                             double new_obj_j = new_sol.calculCost(new_veh_j);
                             double obj_change = (old_r1 + old_r2) - (new_obj_i + new_obj_j);
-                            if (obj_change>20)//如果变好
+                            if (obj_change> change_obj_threshold)//如果变好
                             {
                                 if (select_strategy == 0)//first improvement
                                 {

@@ -84,7 +84,7 @@ namespace rich_VRP.Constructive
                 Console.WriteLine(a);
                 
             }
-            solution.UpdateFirstTripTime();
+            //solution.UpdateFirstTripTime();
             return solution;
         }
 

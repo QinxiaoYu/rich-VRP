@@ -77,7 +77,7 @@ namespace rich_VRP.Constructive
                     int a = solution.fleet.GetNumOfUsedVeh();
                     Console.WriteLine(a);
                 }
-                solution.UpdateFirstTripTime();
+                //solution.UpdateFirstTripTime();
                 return solution;
             }
 

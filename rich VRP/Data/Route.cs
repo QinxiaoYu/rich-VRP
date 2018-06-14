@@ -321,7 +321,7 @@ namespace OP.Data
    
 
         /// <summary>
-        /// 该方法仅适用于一天的首班线路
+        /// 该方法仅适用于一天的首班线路,最后输出结果时候再用
         /// 根据线路第一个商户的服务开始时间，往回推起点的出发时间
         /// </summary>
         internal void UpdateDepartureTime()
@@ -940,13 +940,21 @@ namespace OP.Data
                 TransCostRate = this.AssignedVehType.VariableCost;
                 ChargeCostRate = this.AssignedVehType.ChargeCostRate;
             }
-            
+            int fisttrip = RouteIndexofVeh; //判断是否首趟
             for (int i = 1; i<RouteList.Count; i++)
             {
                 //等待成本
                 double AT_i = ServiceBeginingTimes[i - 1] + RouteList[i - 1].Info.ServiceTime + RouteList[i - 1].TravelTime(RouteList[i]);
 				double WT_i = Math.Max(ServiceBeginingTimes[i] - AT_i, 0);
-				WaitCost += WT_i * Problem.WaitCostRate;
+                if (fisttrip==0&&i==1)
+                {
+                    WaitCost += 0;
+                }
+                else
+                {
+                    WaitCost += WT_i * Problem.WaitCostRate;
+                }
+				
 				//运输成本
 				double Distance_ij = RouteList[i - 1].TravelDistance(RouteList[i]);
 				TransCost += TransCostRate* Distance_ij;

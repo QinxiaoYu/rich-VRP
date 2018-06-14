@@ -213,7 +213,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 }
                 solution.UnVisitedCus.Remove(cus);
             }
-            solution.UpdateFirstTripTime();
+            //solution.UpdateFirstTripTime();
             solution.UpdateTripChainTime();
             Console.WriteLine(solution.SolutionIsFeasible().ToString());
             return solution;
@@ -251,7 +251,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 }
                 solution.UnVisitedCus.Remove(cus);
             }
-            solution.UpdateFirstTripTime();
+            //solution.UpdateFirstTripTime();
             solution.UpdateTripChainTime();
             double new_obj = solution.CalObjCost();
             if (solution.ObjVal<bst_sol.ObjVal)
