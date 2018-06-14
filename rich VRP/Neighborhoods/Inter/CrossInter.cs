@@ -26,11 +26,11 @@ namespace rich_VRP.Neighborhoods.Inter
             //Console.WriteLine(solution.PrintToString());
             Solution bst_sol = null;
             //double old_obj = solution.ObjVal;
-            double bst_obj_change = 0;
+            double bst_obj_change = -double.MaxValue;
 
             int num_route_sol = solution.Routes.Count;
             int r1_rand_start = rd.Next(num_route_sol - 1);
-            for (int i = r1_rand_start; i < num_route_sol - 1; i++) //第一条路
+            for (int i = 0; i < num_route_sol - 1; i++) //第一条路
             {
                 Route r_i = solution.Routes[i].Copy();
                 Vehicle v_i = solution.fleet.GetVehbyID(solution.Routes[i].AssignedVeh.VehId);
@@ -151,9 +151,9 @@ namespace rich_VRP.Neighborhoods.Inter
                                 {
                                     if (obj_change > bst_obj_change) //best improvement
                                     {
-                                        bst_obj_change = obj_change;
+                                        bst_obj_change = obj_change;                                     
                                         bst_sol = new_sol.Copy();
-
+                                        bst_sol.ObjVal = solution.ObjVal - obj_change;
                                     }
                                 }                         
                                 

@@ -27,7 +27,7 @@ namespace rich_VRP.Neighborhoods.Inter
             //Console.WriteLine(solution.PrintToString());
             Solution bst_sol = null;
             //double old_obj = solution.ObjVal;
-            double bst_obj_change = 0;
+            double bst_obj_change = -double.MaxValue;
             //Console.WriteLine("=====solution========");
             //Console.WriteLine(solution.PrintToString());
             //Console.WriteLine("=====solution in fleet========");
@@ -37,7 +37,7 @@ namespace rich_VRP.Neighborhoods.Inter
                    
             int num_route_sol = solution.Routes.Count;
             int r1_rand_start = rd.Next(num_route_sol-1);
-            for (int i = r1_rand_start; i < num_route_sol - 1; i++) //第一条路
+            for (int i = 0; i < num_route_sol - 1; i++) //第一条路
             {
                
                 Route r_i = solution.Routes[i].Copy();
@@ -58,7 +58,7 @@ namespace rich_VRP.Neighborhoods.Inter
                     }
                     r_j.RemoveAllSta();
                     var Conditions = r_i.overlapPercent(r_j);
-                    if (Conditions.Item1<=0 || Conditions.Item2>50) //如果两条路所在扇形区角度差太大， 或者半径相差太大，都不进行交换
+                    if (Conditions.Item1<=-10 || Conditions.Item2>50) //如果两条路所在扇形区角度差太大， 或者半径相差太大，都不进行交换
                     {
                         continue;
                     }
@@ -119,9 +119,9 @@ namespace rich_VRP.Neighborhoods.Inter
                             {
                                 continue;
                             }
-                            if (copy_ri.ViolationOfTimeWindow() > -1 && copy_rj.ViolationOfTimeWindow() > -1)
+                            if (copy_ri.ViolationOfTimeWindow() > -1 || copy_rj.ViolationOfTimeWindow() > -1)
                             {
-                                break;
+                                continue ;
                             }
                             if (copy_ri.ViolationOfRange() > -1)
                             {
@@ -190,7 +190,7 @@ namespace rich_VRP.Neighborhoods.Inter
                                     {
                                         bst_obj_change = obj_change;
                                         bst_sol = new_sol.Copy();
-
+                                        bst_sol.ObjVal = solution.ObjVal - obj_change;
                                     }
                                 }                         
                                 

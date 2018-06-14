@@ -20,7 +20,7 @@ namespace rich_VRP
     {
         static void Main(string[] args)
         {
-           
+            Random rd = new  Random();
             OpProblemReader reader = new OpProblemReader();
             string dir = Directory.GetCurrentDirectory();
             reader.Read(dir);
@@ -65,7 +65,7 @@ namespace rich_VRP
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                 Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
 
-                if (newcost2 > 293000)
+                if (newcost2 > 298000)
                 {
                     continue;
                 }
@@ -74,10 +74,10 @@ namespace rich_VRP
 
                 double percent_battery = 0.2;
                 int short_route = 4;
-                int select_strategy = 0; //0: first improve; 1:best improve
-                double change_obj = 20;
+                int select_strategy = 1; //0: first improve; 1:best improve
+                double change_obj = 0;
 
-                int outiters = 5;
+                int outiters = 20;
                 while (outiters > 0)
                 {
                     DestroyAndRepair DR = new DestroyAndRepair();
@@ -101,7 +101,7 @@ namespace rich_VRP
                     //if (newcost3 >300000) break;
                     Solution tmp_sol = ini_solution.Copy();
                    
-                    double newcost42 = 0;
+                    double newcost42 = tmp_sol.ObjVal;
                     //tmp_sol = ini_solution.Copy();
                     //while (tmp_sol != null)
                     //{
@@ -131,41 +131,69 @@ namespace rich_VRP
                     //tmp_sol = ini_solution.Copy();
                     while (tmp_sol != null)
                     {
-                        tmp_sol = new RelocateInter().Relocate(ini_solution, 1, 1,select_strategy); //线路间交换
+                        tmp_sol = new RelocateInter().Relocate(ini_solution, 1, 1,select_strategy,change_obj); //线路间交换
                         if (tmp_sol != null)
                         {
+                            bool isWorse = false;
+                            if (tmp_sol.ObjVal>=newcost42)
+                            {
+                                isWorse = true;
+                            }
                             ini_solution = tmp_sol.Copy();
                             newcost42 = ini_solution.CalObjCost();
                             Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                             Console.WriteLine("ObjVal 1-1 swap = " + newcost42.ToString("0.00"));
+                            if (isWorse)
+                            {
+                                break;
+                            }
                         }
 
                      }
                         tmp_sol = ini_solution.Copy();
                         while (tmp_sol != null)
                         {
-                            tmp_sol = new RelocateInter().Relocate(ini_solution, 2, 2,select_strategy); //线路间交换
+                            tmp_sol = new RelocateInter().Relocate(ini_solution, 2, 2,select_strategy, change_obj); //线路间交换
                             if (tmp_sol != null)
                             {
+                                bool isWorse = false;
+                                if (tmp_sol.ObjVal >= newcost42)
+                                {
+                                    isWorse = true;
+                                }
                                 ini_solution = tmp_sol.Copy();
                                 newcost42 = ini_solution.CalObjCost();
-                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
-                            Console.WriteLine("ObjVal 2-2 swap = " + newcost42.ToString("0.00"));
+                                Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                                Console.WriteLine("ObjVal 2-2 swap = " + newcost42.ToString("0.00"));
+                                if (isWorse)
+                                {
+                                    break;
+                                }
                             }
 
                         }
 
-                    double newcost4 = 0;
+                    
                     tmp_sol = ini_solution.Copy();
+                    double newcost4 = tmp_sol.ObjVal;
                     while (tmp_sol != null)
                     {
-                        tmp_sol = new CrossInter().Cross(ini_solution,select_strategy); //线路间交换
+                        tmp_sol = new CrossInter().Cross(ini_solution,select_strategy, change_obj); //线路间交换
                         if (tmp_sol != null)
                         {
+                            bool isWorse = false;
+                            if (tmp_sol.ObjVal >= newcost4)
+                            {
+                                isWorse = true;
+                            }
                             ini_solution = tmp_sol.Copy();
                             newcost4 = ini_solution.CalObjCost();
                             Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                             Console.WriteLine("ObjVal CrossInter = " + newcost4.ToString("0.00"));
+                            if (isWorse)
+                            {
+                                break;
+                            }
                         }
 
                     }
@@ -180,14 +208,17 @@ namespace rich_VRP
                     {
                         bst_sol = ini_solution.Copy();
                         outiters++;
-                        select_strategy = 0; //换成first improve
+                        select_strategy = 1; //换成first improve
+                        change_obj = 0;
+                        //change_obj = Math.Max(20, change_obj + 5);
                     }
                     else
                     {
                         percent_battery = Math.Max(0.6, percent_battery + 0.1);
                         short_route = Math.Max(7, short_route + 1);
-                        select_strategy = 1; //bst improve
-                        change_obj = Math.Min(0, change_obj - 5);
+                        select_strategy = rd.Next(2); //bst improve
+                        change_obj = Math.Max(-100, change_obj - 5);
+
                     }
                     
                     outiters--;
