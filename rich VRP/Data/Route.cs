@@ -64,6 +64,25 @@ namespace OP.Data
             
         }
 
+        internal Route ChangeToAnotherType()
+        {
+            int anotherType = 1;
+            if (AssignedVehType.VehTypeID==1)
+            {
+                anotherType = 2;
+            }
+            double Range_Gap = AssignedVehType.MaxRange - Problem.GetVehTypebyID(anotherType).MaxRange;
+            Route new_route = Copy();
+            new_route.routecost = double.MaxValue;
+            new_route.AssignedVehType = Problem.GetVehTypebyID(anotherType);
+            for (int i = 0; i < new_route.battery_level.Count; i++)
+            {
+                new_route.battery_level[i] -= Range_Gap;
+            }
+            return new_route;
+
+        }
+
         /// <summary>
         /// 批量删除点集
         /// </summary>

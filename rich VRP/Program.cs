@@ -26,7 +26,7 @@ namespace rich_VRP
             reader.Read(dir);
             Problem.MinWaitTimeAtDepot = 60; //在配送中心的最少等待时间 
             Problem.WaitCostRate = 0.4;
-            Problem.SetNearDistanceCusAndSta(10, 10); //计算每个商户的小邻域
+            Problem.SetNearDistanceCusAndSta(36, 5); //计算每个商户的小邻域
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
             outfilename = dir + "//" + "test613.txt";
@@ -37,8 +37,8 @@ namespace rich_VRP
                 sb.AppendLine("============== " + i.ToString() + " ===============");
                 //CW4sveh initial = new CW4sveh(); //这个效果次之
                 //CWObjFunc initial = new CWObjFunc(); //这个效果最差
-                //Initialization initial = new Initialization(); //这个效果最好
-                ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut61403229739.csv");
+                Initialization initial = new Initialization(); //这个效果最好
+                //ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut61403229739.csv");
 
                 Solution ini_solution = initial.initial_construct();
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
@@ -76,23 +76,19 @@ namespace rich_VRP
                 int short_route = 4;
                 int select_strategy = 1; //0: first improve; 1:best improve
                 double change_obj = 0;
-
+                DestroyAndRepair DR = new DestroyAndRepair();
+                TwoOpt twoopt = new TwoOpt();
+                Relocate relointra = new Relocate();
                 int outiters = 20;
                 while (outiters > 0)
                 {
-                    DestroyAndRepair DR = new DestroyAndRepair();
+                    
                     ini_solution = DR.DR(ini_solution, short_route);
                     ini_solution.printCheckSolution();
                     Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                     Console.WriteLine("ObjDR = " + ini_solution.ObjVal.ToString("0.00"));
 
-                    ini_solution = new TwoOpt().intarChange(ini_solution);
-                    ini_solution.printCheckSolution();
-                    double newcost32 = ini_solution.CalObjCost();
-                    Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
-                    Console.WriteLine("ObjVal 2opt = " + newcost32.ToString("0.00"));
-
-                    ini_solution = new Relocate().RelocateIntra(ini_solution, 1, true);//线路内重定位
+                    ini_solution = relointra.RelocateIntra(ini_solution, 1, true);//线路内重定位
                     ini_solution.printCheckSolution();
                     double newcost3 = ini_solution.CalObjCost();
                     Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
@@ -102,31 +98,76 @@ namespace rich_VRP
                     Solution tmp_sol = ini_solution.Copy();
                    
                     double newcost42 = tmp_sol.ObjVal;
+
+                    while (tmp_sol != null)
+                    {
+                        tmp_sol = twoopt.intarChange(ini_solution);
+                                          
+                        if (tmp_sol != null)
+                        {
+                            bool isWorse = false;
+                            if (tmp_sol.ObjVal >= newcost42)
+                            {
+                                isWorse = true;
+                            }
+                            ini_solution = tmp_sol.Copy();
+                            newcost42 = ini_solution.CalObjCost();
+                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                            Console.WriteLine("ObjVal 2opt = " + newcost42.ToString("0.00"));
+                            if (isWorse)
+                            {
+                                break;
+                            }
+                        }
+
+                    }
+
+                    
                     //tmp_sol = ini_solution.Copy();
-                    //while (tmp_sol != null)
-                    //{
-                    //    tmp_sol = new RelocateInter().Relocate(ini_solution,0,1); //线路间交换
-                    //    if (tmp_sol != null)
-                    //    {
-                    //        ini_solution = tmp_sol.Copy();
-                    //        newcost42 = ini_solution.CalObjCost();
-                    //        Console.WriteLine("ObjVal 0-1 shift = " + newcost42.ToString("0.00"));
-                    //    }
+                    while (tmp_sol != null)
+                    {
+                        tmp_sol = new ShiftInter().Shift(ini_solution,1,select_strategy,change_obj); //线路间交换
+                        if (tmp_sol != null)
+                        {
+                            bool isWorse = false;
+                            if (tmp_sol.ObjVal >= newcost42)
+                            {
+                                isWorse = true;
+                            }
+                            ini_solution = tmp_sol.Copy();
+                            newcost42 = ini_solution.CalObjCost();
+                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                            Console.WriteLine("ObjVal 0-1 shift = " + newcost42.ToString("0.00"));
+                            if (isWorse)
+                            {
+                                break;
+                            }
+                        }
 
-                    //}
-
+                    }
+           
                     //tmp_sol = ini_solution.Copy();
-                    //while (tmp_sol != null)
-                    //{
-                    //    tmp_sol = new RelocateInter().Relocate(ini_solution,1, 0); //线路间交换
-                    //    if (tmp_sol != null)
-                    //    {
-                    //        ini_solution = tmp_sol.Copy();
-                    //        newcost42 = ini_solution.CalObjCost();
-                    //        Console.WriteLine("ObjVal 1-0 shift = " + newcost42.ToString("0.00"));
-                    //    }
+                    while (tmp_sol != null)
+                    {
+                        tmp_sol = new ShiftInter().Shift(ini_solution, 2, select_strategy, change_obj); //线路间交换
+                        if (tmp_sol != null)
+                        {
+                            bool isWorse = false;
+                            if (tmp_sol.ObjVal >= newcost42)
+                            {
+                                isWorse = true;
+                            }
+                            ini_solution = tmp_sol.Copy();
+                            newcost42 = ini_solution.CalObjCost();
+                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                            Console.WriteLine("ObjVal 0-2 shift = " + newcost42.ToString("0.00"));
+                            if (isWorse)
+                            {
+                                break;
+                            }
+                        }
 
-                    //}
+                    }
 
                     //tmp_sol = ini_solution.Copy();
                     while (tmp_sol != null)
@@ -217,7 +258,7 @@ namespace rich_VRP
                         percent_battery = Math.Max(0.6, percent_battery + 0.1);
                         short_route = Math.Max(7, short_route + 1);
                         select_strategy = rd.Next(2); //bst improve
-                        change_obj = Math.Max(-100, change_obj - 5);
+                        change_obj = Math.Max(-100, change_obj - 20);
 
                     }
                     
