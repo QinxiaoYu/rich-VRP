@@ -274,14 +274,15 @@ namespace rich_VRP
                     sb.Clear();
                     //sb.AppendLine(newcost.ToString("0.00"));
                     //sb.AppendLine(ini_solution.PrintToString());
+                    if (bst_sol.ObjVal < 283000)
+                    {
+                        bst_sol.PrintResult();
+                        Console.WriteLine(bst_sol.PrintToString());
+                    }
 
                 }
                 
-                if (bst_sol.ObjVal < 295000)
-                {
-                    bst_sol.PrintResult();
-                    Console.WriteLine(bst_sol.PrintToString());
-                }
+                
 
                 sw.Write(sb);
                 sw.Flush();

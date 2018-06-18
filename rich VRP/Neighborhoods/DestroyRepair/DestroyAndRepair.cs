@@ -42,7 +42,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             {
                 solution.UnVisitedCus = new List<Customer>();
             }
-            for (int i = new_sol.Routes.Count - 1; i > 0; i--)
+            for (int i = new_sol.Routes.Count - 1; i >= 0; i--)
             {
                 Route r = new_sol.Routes[i];
                 if (r.RouteList.Count < threshold_node)
