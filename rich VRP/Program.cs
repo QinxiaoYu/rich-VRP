@@ -26,10 +26,10 @@ namespace rich_VRP
             reader.Read(dir);
             Problem.MinWaitTimeAtDepot = 60; //在配送中心的最少等待时间 
             Problem.WaitCostRate = 0.4;
-            Problem.SetNearDistanceCusAndSta(36, 5); //计算每个商户的小邻域
+            Problem.SetNearDistanceCusAndSta(20, 5); //计算每个商户的小邻域
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
-            outfilename = dir + "//" + "test613.txt";
+            outfilename = dir + "//" + "test615.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
             for (int i = 0; i < 10000; i++)
             {
@@ -256,21 +256,24 @@ namespace rich_VRP
                     else
                     {
                         percent_battery = Math.Max(0.6, percent_battery + 0.1);
-                        short_route = Math.Max(7, short_route + 1);
+                        short_route = Math.Max(5, short_route + 1);
                         select_strategy = rd.Next(2); //bst improve
-                        change_obj = Math.Max(-100, change_obj - 20);
+                        change_obj = Math.Max(-200, change_obj - 20);
 
                     }
                     
                     outiters--;
 
                     sb.AppendLine(outiters.ToString() + ": " + bst_sol.ObjVal.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
+                    sw.Write(sb);
+                    sw.Flush();
+                    sb.Clear();
                     //sb.AppendLine(newcost.ToString("0.00"));
                     //sb.AppendLine(ini_solution.PrintToString());
 
                 }
                 
-                if (bst_sol.ObjVal < 285000)
+                if (bst_sol.ObjVal < 295000)
                 {
                     bst_sol.PrintResult();
                     Console.WriteLine(bst_sol.PrintToString());
