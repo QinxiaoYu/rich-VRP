@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Collections.Generic;
 using System.Linq;
 using System.Text;
@@ -26,7 +26,13 @@ namespace rich_VRP
             reader.Read(dir);
             Problem.MinWaitTimeAtDepot = 60; //在配送中心的最少等待时间 
             Problem.WaitCostRate = 0.4;
+<<<<<<< Updated upstream
             Problem.SetNearDistanceCusAndSta(36, 5); //计算每个商户的小邻域
+=======
+            Problem.MinWeight = 0.01;
+            Problem.MinVolume = 0.0122;
+            Problem.SetNearDistanceCusAndSta(20, 10); //计算每个商户的小邻域
+>>>>>>> Stashed changes
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
             outfilename = dir + "//" + "test613.txt";
@@ -37,8 +43,13 @@ namespace rich_VRP
                 sb.AppendLine("============== " + i.ToString() + " ===============");
                 //CW4sveh initial = new CW4sveh(); //这个效果次之
                 //CWObjFunc initial = new CWObjFunc(); //这个效果最差
+<<<<<<< Updated upstream
                 Initialization initial = new Initialization(); //这个效果最好
                 //ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut61403229739.csv");
+=======
+                //Initialization initial = new Initialization(); //这个效果最好
+                ReadInitialSolution initial = new ReadInitialSolution(@"/Users/litterfisher/Desktop/reslut61403229739.csv");
+>>>>>>> Stashed changes
 
                 Solution ini_solution = initial.initial_construct();
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
@@ -129,6 +140,7 @@ namespace rich_VRP
                         tmp_sol = new ShiftInter().Shift(ini_solution,1,select_strategy,change_obj); //线路间交换
                         if (tmp_sol != null)
                         {
+<<<<<<< Updated upstream
                             bool isWorse = false;
                             if (tmp_sol.ObjVal >= newcost42)
                             {
@@ -143,10 +155,32 @@ namespace rich_VRP
                                 break;
                             }
                         }
+=======
+                            ini_solution = tmp_sol.Copy();
+                            newcost42 = ini_solution.CalObjCost();
+                            Console.WriteLine("ObjVal 0-1 shift = " + newcost42.ToString("0.00"));
+                        }
+
+                    }
+
+                    //tmp_sol = ini_solution.Copy();
+                    //while (tmp_sol != null)
+                    //{
+                    //    tmp_sol = new RelocateInter().Relocate(ini_solution,1, 0); //线路间交换
+                    //    if (tmp_sol != null)
+                    //    {
+                    //        ini_solution = tmp_sol.Copy();
+                    //        newcost42 = ini_solution.CalObjCost();
+                    //        Console.WriteLine("ObjVal 1-0 shift = " + newcost42.ToString("0.00"));
+                    //    }
+
+                    //}
+>>>>>>> Stashed changes
 
                     }
            
                     //tmp_sol = ini_solution.Copy();
+<<<<<<< Updated upstream
                     while (tmp_sol != null)
                     {
                         tmp_sol = new ShiftInter().Shift(ini_solution, 2, select_strategy, change_obj); //线路间交换
@@ -211,9 +245,35 @@ namespace rich_VRP
                                     break;
                                 }
                             }
+=======
+                    //while (tmp_sol != null)
+                    //{
+                    //    tmp_sol = new RelocateInter().Relocate(ini_solution, 1, 1,select_strategy); //线路间交换
+                    //    if (tmp_sol != null)
+                    //    {
+                    //        ini_solution = tmp_sol.Copy();
+                    //        newcost42 = ini_solution.CalObjCost();
+                    //        Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                    //        Console.WriteLine("ObjVal 1-1 swap = " + newcost42.ToString("0.00"));
+                    //    }
 
-                        }
+                    // }
+                    //    tmp_sol = ini_solution.Copy();
+                    //    while (tmp_sol != null)
+                    //    {
+                    //        tmp_sol = new RelocateInter().Relocate(ini_solution, 2, 2,select_strategy); //线路间交换
+                    //        if (tmp_sol != null)
+                    //        {
+                    //            ini_solution = tmp_sol.Copy();
+                    //            newcost42 = ini_solution.CalObjCost();
+                    //        Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                    //        Console.WriteLine("ObjVal 2-2 swap = " + newcost42.ToString("0.00"));
+                    //        }
+>>>>>>> Stashed changes
 
+                    //    }
+
+<<<<<<< Updated upstream
                     
                     tmp_sol = ini_solution.Copy();
                     double newcost4 = tmp_sol.ObjVal;
@@ -236,8 +296,22 @@ namespace rich_VRP
                                 break;
                             }
                         }
+=======
+                    //double newcost4 = 0;
+                    //tmp_sol = ini_solution.Copy();
+                    //while (tmp_sol != null)
+                    //{
+                    //    tmp_sol = new CrossInter().Cross(ini_solution,select_strategy); //线路间交换
+                    //    if (tmp_sol != null)
+                    //    {
+                    //        ini_solution = tmp_sol.Copy();
+                    //        newcost4 = ini_solution.CalObjCost();
+                    //        Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                    //        Console.WriteLine("ObjVal CrossInter = " + newcost4.ToString("0.00"));
+                    //    }
+>>>>>>> Stashed changes
 
-                    }
+                    //}
 
                     ini_solution = sp.StationExchage(ini_solution, percent_battery);//优化充电站
                     ini_solution.printCheckSolution();

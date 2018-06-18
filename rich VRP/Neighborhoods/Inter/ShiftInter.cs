@@ -16,7 +16,7 @@ namespace rich_VRP.Neighborhoods.Inter
         }
         /// <summary>
         /// 将一条线路上的一些点，移动到另一条线路
-        /// 
+        /// 不会产生空线路
         /// </summary>
         /// <param name="solution"></param>
         /// <param name="select_strategy">选择策略：0:first improvement;1:best improvement </param>

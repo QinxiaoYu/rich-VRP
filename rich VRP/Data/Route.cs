@@ -42,6 +42,22 @@ namespace OP.Data
         /// 在某点处剩余电量可行驶的距离，插入新的点后需要更新
         /// </summary>
         public List<double> battery_level { get; set; }
+
+        internal int FindLongestArc()
+        {
+            int pos = -1;
+            int max_dist = int.MinValue;
+            for (int i = 1; i < RouteList.Count-2; i++)
+            {
+                int dist_ij = RouteList[i].TravelDistance(RouteList[i + 1]);
+                if (dist_ij>max_dist)
+                {
+                    pos = i + 1;
+                }
+            }
+            return pos;
+        }
+
         /// <summary>
         /// 在初始化中判断这条线路是否还可以插入
         /// </summary>
@@ -104,10 +120,11 @@ namespace OP.Data
         internal Route InsertSta(int cnt_charge, double old_obj =0)
         {
             Route bst_route = this.Copy();
+            bst_route.routecost = old_obj;
             Route tmp_r = this.Copy();
             if (cnt_charge>3)
             {
-                return this; //算不了
+                throw new Exception("一条路上不能多于3个充电站");
             }
             if (old_obj==0)
             {
@@ -362,9 +379,7 @@ namespace OP.Data
         public void RouteAssign2Veh(Vehicle veh)
         {
             this.AssignedVeh = veh;
-            int numRouteofVeh = veh.VehRouteList.Count(); //当前车辆已经行驶的趟数
-            this.RouteIndexofVeh = numRouteofVeh;
-
+            this.AssignedVeh.VehRouteList[this.RouteIndexofVeh] = this.RouteId;
 
         }
 
