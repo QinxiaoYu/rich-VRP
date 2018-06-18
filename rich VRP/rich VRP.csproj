@@ -75,6 +75,7 @@
     <Compile Include="Neighborhoods\AC.cs" />
     <Compile Include="Neighborhoods\DestroyRepair\Destory.cs" />
     <Compile Include="Neighborhoods\DestroyRepair\DestroyAndRepair.cs" />
+    <Compile Include="Neighborhoods\DestroyRepair\repair.cs" />
     <Compile Include="Neighborhoods\Insert\InsertDistance.cs" />
     <Compile Include="Neighborhoods\Inter\CrossInter.cs" />
     <Compile Include="Neighborhoods\Intra\Relocate.cs" />

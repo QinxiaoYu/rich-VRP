@@ -40,6 +40,7 @@ namespace rich_VRP
                 //Initialization initial = new Initialization(); //这个效果最好
                 ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut61403229739.csv");
 
+
                 Solution ini_solution = initial.initial_construct();
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                 //OriginObjFunc evaluate = new OriginObjFunc();
