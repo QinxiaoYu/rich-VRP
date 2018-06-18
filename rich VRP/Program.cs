@@ -29,7 +29,7 @@ namespace rich_VRP
             Problem.SetNearDistanceCusAndSta(20, 5); //计算每个商户的小邻域
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
-            outfilename = dir + "//" + "test615.txt";
+            outfilename = dir + "//" + "test618.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
             for (int i = 0; i < 10000; i++)
             {
@@ -37,8 +37,8 @@ namespace rich_VRP
                 sb.AppendLine("============== " + i.ToString() + " ===============");
                 //CW4sveh initial = new CW4sveh(); //这个效果次之
                 //CWObjFunc initial = new CWObjFunc(); //这个效果最差
-                Initialization initial = new Initialization(); //这个效果最好
-                //ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut61403229739.csv");
+                //Initialization initial = new Initialization(); //这个效果最好
+                ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut61403229739.csv");
 
                 Solution ini_solution = initial.initial_construct();
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
@@ -79,6 +79,7 @@ namespace rich_VRP
                 DestroyAndRepair DR = new DestroyAndRepair();
                 TwoOpt twoopt = new TwoOpt();
                 Relocate relointra = new Relocate();
+                BreakTwoRoute breakOneRoute = new BreakTwoRoute();
                 int outiters = 20;
                 while (outiters > 0)
                 {
@@ -245,6 +246,9 @@ namespace rich_VRP
                     Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                     Console.WriteLine("ObjVal Sta = " + newcost6.ToString("0.00"));
 
+                   
+
+
                     if (ini_solution.ObjVal<bst_sol.ObjVal)
                     {
                         bst_sol = ini_solution.Copy();
@@ -261,7 +265,7 @@ namespace rich_VRP
                         change_obj = Math.Max(-200, change_obj - 20);
 
                     }
-                    
+                    ini_solution = breakOneRoute.Break(ini_solution, 1);
                     outiters--;
 
                     sb.AppendLine(outiters.ToString() + ": " + bst_sol.ObjVal.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());

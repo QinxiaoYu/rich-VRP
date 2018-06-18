@@ -40,15 +40,20 @@ namespace OP.Data
         internal void UpdateTripChainTime(Vehicle veh)
         {
             int num_trips_veh = veh.getNumofVisRoute();
+            int pos = -1;
+            Route cur_route = GetRouteByID(veh.VehRouteList[0], out pos);
+            Routes[pos].ServiceBeginingTimes[0] = veh.Early_time;
+            double nxt_dt = Routes[pos].GetArrivalTime() + Problem.MinWaitTimeAtDepot;
+
+
             if (num_trips_veh > 1)
             {
                 for (int i = 1; i < num_trips_veh; i++)
-                {
-                    int pos = -1;
-                    Route pre_route = GetRouteByID(veh.VehRouteList[i - 1], out pos);               
-                    Route cur_route = GetRouteByID(veh.VehRouteList[i], out pos);
-                    double new_departure_cur = pre_route.GetArrivalTime() + Problem.MinWaitTimeAtDepot;
-                    Routes[pos].ServiceBeginingTimes[0] = new_departure_cur;
+                {                                 
+                    Route cur_route1 = GetRouteByID(veh.VehRouteList[i], out pos);
+                    Routes[pos].ServiceBeginingTimes[0] = nxt_dt;
+                    Routes[pos].UpdateServiceBeginningTimes();
+                    nxt_dt = Routes[pos].GetArrivalTime() + Problem.MinWaitTimeAtDepot;
                 }
             }
         }
@@ -62,6 +67,14 @@ namespace OP.Data
             //定位当前线路r对应的车
             Vehicle veh = fleet.GetVehbyID(r.AssignedVeh.VehId);
             int idx_route_veh = r.RouteIndexofVeh; //定位当前路r排在车的第几个trip
+            double nxt_dt = veh.Early_time;
+            if (idx_route_veh > 0)
+            {
+                string pre_route_id = veh.VehRouteList[idx_route_veh - 1];
+                int pre_route_idx_solution = -1;
+                GetRouteByID(pre_route_id, out pre_route_idx_solution);
+                nxt_dt = Routes[pre_route_idx_solution].GetArrivalTime() + Problem.MinWaitTimeAtDepot;
+            }
             for (int i = idx_route_veh+1 ; i < veh.VehRouteList.Count; i++)//更新其后trip的属性
             {
                 string nxt_route_id = veh.VehRouteList[i];
@@ -69,6 +82,10 @@ namespace OP.Data
                 GetRouteByID(nxt_route_id, out nxt_route_idx_solution);//定位其后trip所在解中的位置
                 Routes[nxt_route_idx_solution].RouteIndexofVeh -= 1;
                 Routes[nxt_route_idx_solution].AssignedVeh.VehRouteList.Remove(r.RouteId);
+                Routes[nxt_route_idx_solution].ServiceBeginingTimes[0] = nxt_dt;
+                Routes[nxt_route_idx_solution].UpdateServiceBeginningTimes();
+                nxt_dt = Routes[nxt_route_idx_solution].GetArrivalTime() + Problem.MinWaitTimeAtDepot;
+
             }
 
             string veh_id = r.AssignedVeh.VehId;
@@ -76,6 +93,7 @@ namespace OP.Data
             fleet.VehFleet[idx_veh_fleet].VehRouteList.Remove(r.RouteId);//更新车队中该车所存的routelists
             if (fleet.VehFleet[idx_veh_fleet].VehRouteList.Count==0)//如果该车没有其他路径，则删除该车
             {
+                Console.WriteLine("Remove vehicle id =" + fleet.VehFleet[idx_veh_fleet].VehId);
                 fleet.VehFleet.RemoveAt(idx_veh_fleet);
             }
             int idx_route_solution = Routes.FindIndex(a => a.RouteId == r.RouteId);
@@ -296,6 +314,11 @@ namespace OP.Data
 
                 double at_cur = cur_route.GetArrivalTime();
                 double dt_cur = cur_route.GetDepartureTime();
+                if (cur_route.RouteIndexofVeh==0)
+                {
+                    dt_cur = cur_route.ServiceBeginingTimes[1] - cur_route.RouteList[1].TravelTime(cur_route.RouteList[0]);
+                }
+                
                 if (dt_cur < dt_veh)
                 {
                     dt_veh = dt_cur;

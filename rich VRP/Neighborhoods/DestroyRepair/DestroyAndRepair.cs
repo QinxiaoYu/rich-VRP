@@ -13,9 +13,15 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
 
         public Solution DR(Solution solution, int minCusNum, int selectstrategy = 0)
         {
+            solution.printCheckSolution();
+            Console.WriteLine(solution.SolutionIsFeasible().ToString());
             Solution tmp_sol = solution.Copy();
             tmp_sol = DestroyShortRoute(tmp_sol, minCusNum);
+           
+            tmp_sol.printCheckSolution();
+            Console.WriteLine(solution.SolutionIsFeasible().ToString());
             tmp_sol = RepairToFeasible(tmp_sol);
+            tmp_sol.printCheckSolution();
             double obj = tmp_sol.CalObjCost();
             if (obj<solution.ObjVal)
             {
@@ -56,6 +62,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             //{
             //    Console.WriteLine(veh.VehId);
             //}
+            //solution.UpdateTripChainTime();
             return solution;
         }
         /// <summary>
@@ -191,7 +198,8 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     Route nr = solution.Routes[pos_route];
                     solution.Routes[pos_route].AssignedVeh.VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;                 
                     int idx_veh = solution.fleet.GetVehIdxInFleet(nr.AssignedVeh.VehId);
-                    solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;                           
+                    solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
+                    Console.WriteLine(solution.SolutionIsFeasible().ToString());
                 }
                 else
                 {
@@ -214,7 +222,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 solution.UnVisitedCus.Remove(cus);
             }
             //solution.UpdateFirstTripTime();
-            solution.UpdateTripChainTime();
+            //solution.UpdateTripChainTime();
             Console.WriteLine(solution.SolutionIsFeasible().ToString());
             return solution;
         }

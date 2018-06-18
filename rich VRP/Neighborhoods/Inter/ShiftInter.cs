@@ -16,7 +16,7 @@ namespace rich_VRP.Neighborhoods.Inter
         }
         /// <summary>
         /// 将一条线路上的一些点，移动到另一条线路
-        /// 
+        /// 不会产生空线路
         /// </summary>
         /// <param name="solution"></param>
         /// <param name="select_strategy">选择策略：0:first improvement;1:best improvement </param>
@@ -31,6 +31,7 @@ namespace rich_VRP.Neighborhoods.Inter
             for (int i = 0; i < num_route_sol; i++) //第一条路
             {
                 solution.printCheckSolution();
+                //Console.WriteLine(solution.SolutionIsFeasible());
                 Route old_ri = solution.Routes[i].Copy();
                 Vehicle old_vi = solution.fleet.GetVehbyID(old_ri.AssignedVeh.VehId); 
                 double old_obj_vi = solution.calculCost(old_vi); //第一条路所在车的总费用
@@ -164,7 +165,7 @@ namespace rich_VRP.Neighborhoods.Inter
 
                             if (delay_i < 0)
                             {
-                                new_sol.UpdateTripChainTime(new_sol.fleet.VehFleet[pos_vehj_fleet]);
+                                new_sol.UpdateTripChainTime(new_sol.fleet.VehFleet[pos_vehi_fleet]);
 
 
                             }
@@ -188,9 +189,11 @@ namespace rich_VRP.Neighborhoods.Inter
                             double obj_change = old_obj - new_obj;
                             if (obj_change > change_obj_threshold)//如果变好
                             {
+
                                 if (select_strategy == 0)//first improvement
                                 {
                                     new_sol.ObjVal = solution.ObjVal - obj_change;
+                                    //Console.WriteLine(new_sol.SolutionIsFeasible().ToString());
                                     return new_sol.Copy();
                                 }
                                 else
@@ -200,7 +203,7 @@ namespace rich_VRP.Neighborhoods.Inter
                                         bst_obj_change = obj_change;
                                         new_sol.ObjVal = solution.ObjVal - obj_change;
                                         Console.WriteLine(new_sol.ObjVal+"    "+ new_sol.CalObjCost());
-                                        
+                                        //Console.WriteLine(new_sol.SolutionIsFeasible().ToString());
                                         bst_sol = new_sol.Copy();
                                         
                                     }

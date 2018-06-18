@@ -11,7 +11,8 @@ namespace rich_VRP.Neighborhoods.Intra
     {
         Fleet fleet;
         public Solution StationExchage(Solution solution, double percent)
-        {          
+        {
+            Console.WriteLine(solution.SolutionIsFeasible());
             fleet = solution.fleet;
             int num_vehs = fleet.GetNumOfUsedVeh();           
             for (int i = 0; i < num_vehs; i++) //对当前解中每辆车进行遍历
