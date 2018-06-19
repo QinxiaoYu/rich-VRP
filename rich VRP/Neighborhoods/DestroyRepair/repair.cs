@@ -25,10 +25,11 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
         Random rand = new Random();//随机operter
 
 
-        public Solution InsertCusToSolution(Solution solution)
+        public Solution InsertCusToSolution(Solution old_solution)
         {
+            Solution solution = old_solution.Copy();
             fleet = solution.fleet;
-            bool inserted;
+            bool inserted = false;
             int pos_inSolution = -1;
             AC = new AC(angel);
             foreach (Customer customer in solution.UnVisitedCus)
@@ -49,7 +50,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     {
                         if (!route.IsSaturated())
                         {
-                            Route cur_route = InsertCusToRoute(route, customer, out inserted);
+                            Route cur_route = InsertCusToRoute(route, customer, solution, out inserted);
                             if (inserted)
                             {
                                 var VariableCost_1 = cur_route.routeCost(TransCostRate, ChargeCostRate);
@@ -59,6 +60,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                                 {
                                     best_cost = Insert_cost;
                                     best_insert_route = route;
+                                    pos_inSolution = i;
                                 }
                             }
                         }
@@ -66,27 +68,30 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 }
                 if (best_insert_route != null)
                 {
-                    best_insert_route = InsertCusToRoute(best_insert_route, customer, out inserted);
-                    inserted = false;
+                    best_insert_route = InsertCusToRoute(best_insert_route, customer, solution, out inserted);
+                    solution.Routes[pos_inSolution] = best_insert_route.Copy();
                 }
                 else
                 {
-                    inserted = false;
+                   
                     for (int i = 0; i < solution.fleet.VehFleet.Count - 1; i++)//现有车辆产生一条路径服务该任务
                     {
                         Vehicle veh = solution.fleet.VehFleet[i];
                         string last_routeID = veh.VehRouteList[veh.VehRouteList.Count - 1];
                         Route last_route = solution.GetRouteByID(last_routeID, out pos_inSolution);
-
                         double overwork_time = last_route.GetArrivalTime();//车结束所有任务的时间
                         double DueDate = customer.Info.DueDate;
                         if (overwork_time + Problem.MinWaitTimeAtDepot + customer.TravelTime(last_route.RouteList[0]) < DueDate)
                         {
-                            Route newRoute = new Route(veh);
-                            Route cur_newRoute = InsertCusToRoute(newRoute, customer, out inserted);
-                            newRoute = cur_newRoute;
-                            veh.addRoute2Veh(newRoute);//将路径加入到vehicle中
-                            solution.AddRoute(newRoute);
+                            Route newRoute = new Route(veh, overwork_time + Problem.MinWaitTimeAtDepot);
+                            Route cur_newRoute = InsertCusToRoute(newRoute, customer, solution, out inserted);
+                            if (inserted)
+                            {
+                                newRoute = cur_newRoute;
+                                veh.addRoute2Veh(newRoute);//将路径加入到vehicle中
+                                solution.AddRoute(newRoute);
+                                break;
+                            }   
                         }
                     }
                 }
@@ -95,8 +100,8 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     Vehicle veh = null;
                     int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机） 
                     veh = fleet.addNewVeh(type);
-                    Route newRoute = new Route(veh);
-                    Route cur_newRoute = InsertCusToRoute(newRoute, customer, out inserted);
+                    Route newRoute = new Route(veh,480);
+                    Route cur_newRoute = InsertCusToRoute(newRoute, customer, solution, out inserted);
                     newRoute = cur_newRoute;
                     veh.addRoute2Veh(newRoute);//将路径加入到vehicle中
                     solution.AddRoute(newRoute);
@@ -107,7 +112,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
 
 
 
-        public Route InsertCusToRoute(Route route, Customer customer, out bool inserted)
+        public Route InsertCusToRoute(Route route, Customer customer,Solution solution, out bool inserted)
         {
 
             bool insert = false;
@@ -159,7 +164,8 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 if (cur_route.IsFeasible())//如果插入customer和相应的station后满足所有约束
                 {
                     Vehicle veh = cur_route.AssignedVeh;
-                    if (veh.CheckNxtRoutesFeasible(cur_route.RouteIndexofVeh, delay))//如果下游路径也可行
+                    
+                    if (solution.CheckNxtRoutesFeasible(veh ,cur_route.RouteIndexofVeh, delay))//如果下游路径也可行
                     {
                         double TransCostRate = Problem.GetVehTypebyID(route.AssignedVeh.TypeId).VariableCost;//行驶费率
                         double add_waittime = cur_route.GetWaitTime() - route.GetWaitTime();
