@@ -31,18 +31,18 @@ namespace rich_VRP
             StringBuilder sb = new StringBuilder();
             outfilename = dir + "//" + "test618.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
-            for (int i = 0; i < 1000; i++)
+            for (int i = 0; i < 1; i++)
             {
                 sb.Clear();
                 sb.AppendLine("============== " + i.ToString() + " ===============");
                 //CW4sveh initial = new CW4sveh(); //这个效果次之
                 //CWObjFunc initial = new CWObjFunc(); //这个效果最差
                 //Initialization initial = new Initialization(); //这个效果最好
-                ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\年少\Desktop\reslut61403229739.csv");
+                ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\年少\Desktop\reslut619181220144.csv");
 
 
                 Solution ini_solution = initial.initial_construct();
-                //Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                 //OriginObjFunc evaluate = new OriginObjFunc();
                 ini_solution.printCheckSolution();
                 double cost = ini_solution.CalObjCost();
@@ -52,37 +52,45 @@ namespace rich_VRP
                 //sb.AppendLine(result);
 
 
-                RemoveSta oper = new RemoveSta();
-                bool isIprv = oper.Remove(ini_solution); //删除多余的充电站
-                sb.AppendLine("====RemoveSta=====");
-                ini_solution.printCheckSolution();
-                double newcost = ini_solution.CalObjCost();
-                //Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
-                Console.WriteLine("ObjVal 1 = " + newcost.ToString("0.00"));
-                sb.AppendLine(newcost.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
-
-
                 Destory destory = new Destory();
                 Solution solution_after_destory = destory.destoryBYcluster(ini_solution);
+                Console.WriteLine(solution_after_destory.SolutionIsFeasible());
+                solution_after_destory.printCheckSolution();
+
 
                 Repair repair = new Repair();
                 Solution solution_after_repair = repair.InsertCusToSolution(solution_after_destory);
 
+                double newcost3 = solution_after_repair.CalObjCost();
+                sb.AppendLine(newcost3.ToString("0.00") + ": Route Numbers = " + solution_after_repair.Routes.Count.ToString() + "Veh Number = " + solution_after_repair.fleet.VehFleet.Count.ToString());
+                Console.WriteLine("ObjVal 1 = " + newcost3.ToString("0.00"));
+                Console.WriteLine(solution_after_repair.SolutionIsFeasible());
+                solution_after_repair.printCheckSolution();
 
-                StationPosition sp = new StationPosition();
-                ini_solution = sp.StationExchage(ini_solution, 0.3);//优化充电站
-                ini_solution.printCheckSolution();
-                double newcost2 = ini_solution.CalObjCost();
-                //Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
-                Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
-                sb.AppendLine(newcost2.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
+                //RemoveSta oper = new RemoveSta();
+                //bool isIprv = oper.Remove(solution_after_repair); //删除多余的充电站
+                //sb.AppendLine("====RemoveSta=====");
+                //solution_after_repair.printCheckSolution();
+                //double newcost = solution_after_repair.CalObjCost();
+                ////Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                //Console.WriteLine("ObjVal 2 = " + newcost.ToString("0.00"));
+                //sb.AppendLine(newcost.ToString("0.00") + ": Route Numbers = " + solution_after_repair.Routes.Count.ToString() + "Veh Number = " + solution_after_repair.fleet.VehFleet.Count.ToString());
+
+
+                //StationPosition sp = new StationPosition();
+                //ini_solution = sp.StationExchage(solution_after_repair, 0.3);//优化充电站
+                //ini_solution.printCheckSolution();
+                //double newcost2 = ini_solution.CalObjCost();
+                ////Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                //Console.WriteLine("ObjVal 3 = " + newcost2.ToString("0.00"));
+                //sb.AppendLine(newcost2.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
 
 
 
 
-                if (ini_solution.ObjVal < 280000)
+                if (solution_after_repair.ObjVal < 276278)
                 {
-                    ini_solution.PrintResult();
+                    solution_after_repair.PrintResult();
                     //Console.WriteLine(ini_solution.PrintToString());
                 }
                 sw.Write(sb);
@@ -92,6 +100,19 @@ namespace rich_VRP
 
             sw.Flush();
             sw.Close();
+
+
+                
+                //StationPosition sp = new StationPosition();
+                //ini_solution = sp.StationExchage(ini_solution, 0.3);//优化充电站
+                //ini_solution.printCheckSolution();
+                //double newcost2 = ini_solution.CalObjCost();
+                ////Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                //Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
+                //sb.AppendLine(newcost2.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
+
+
+             
 
 
             //if (newcost2 > 298000)

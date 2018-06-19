@@ -12,7 +12,7 @@ namespace rich_VRP.Neighborhoods.Intra
         Fleet fleet;
         public Solution StationExchage(Solution solution, double percent)
         {
-            Console.WriteLine(solution.SolutionIsFeasible());
+            //Console.WriteLine(solution.SolutionIsFeasible());
             fleet = solution.fleet;
             int num_vehs = fleet.GetNumOfUsedVeh();           
             for (int i = 0; i < num_vehs; i++) //对当前解中每辆车进行遍历
@@ -24,10 +24,16 @@ namespace rich_VRP.Neighborhoods.Intra
                 {
                     int pos;
                     Route r = solution.GetRouteByID(veh.VehRouteList[j], out pos); //定位线路
+                    int Vio_Range = r.ViolationOfRange();
                     var costs = r.routeCost();
                     double old_obj = costs.Item1 + costs.Item2 + costs.Item3;
                     int cnt_charge = costs.Item4;
-                    if (cnt_charge == 0) //如果该trip上没有充电站，跳过
+                    if (Vio_Range>-1)
+                    {
+                        old_obj = double.MaxValue;
+                    }
+                         
+                    if (cnt_charge == 0 &&Vio_Range==-1) //如果该trip上没有充电站，跳过
                     {
                         continue;
                     }

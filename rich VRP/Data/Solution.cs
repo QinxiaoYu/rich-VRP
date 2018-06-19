@@ -177,7 +177,8 @@ namespace OP.Data
             foreach (Vehicle veh in fleet.VehFleet)
             {
                 sol.fleet.VehFleet.Add(veh.Copy());
-            }            
+            }
+            sol.UnVisitedCus = UnVisitedCus;            
             return sol;
         }
 

@@ -46,7 +46,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     double ChargeCostRate = Problem.GetVehTypebyID(route.AssignedVeh.TypeId).ChargeCostRate;//行驶费率
                     var VariableCost = route.routeCost(TransCostRate, ChargeCostRate);
                     double cost_before_insert = VariableCost.Item1 + VariableCost.Item2 + VariableCost.Item3;
-                    if (Route_cluster >= Cus_cluster - 1 || Route_cluster <= Cus_cluster + 1)
+                    if (Route_cluster >= Cus_cluster  && Route_cluster <= Cus_cluster )
                     {
                         if (!route.IsSaturated())
                         {
@@ -68,16 +68,23 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 }
                 if (best_insert_route != null)
                 {
-                    best_insert_route = InsertCusToRoute(best_insert_route, customer, solution, out inserted);
-                    solution.Routes[pos_inSolution] = best_insert_route.Copy();
+                    Route inserted_route = InsertCusToRoute(best_insert_route, customer, solution, out inserted);
+
+
+                    int veh_in_fleet_pos = solution.fleet.GetVehIdxInFleet(best_insert_route.AssignedVeh.VehId);
+                    solution.fleet.VehFleet[veh_in_fleet_pos].VehRouteList[best_insert_route.RouteIndexofVeh] = inserted_route.RouteId;
+                    solution.Routes[pos_inSolution] = inserted_route.Copy();
+                    solution.Routes[pos_inSolution].AssignedVeh = solution.fleet.VehFleet[veh_in_fleet_pos];
+
                 }
                 else
                 {
-                   
+
                     for (int i = 0; i < solution.fleet.VehFleet.Count - 1; i++)//现有车辆产生一条路径服务该任务
                     {
                         Vehicle veh = solution.fleet.VehFleet[i];
-                        string last_routeID = veh.VehRouteList[veh.VehRouteList.Count - 1];
+                        int numRoutesVeh = veh.getNumofVisRoute();
+                        string last_routeID = veh.VehRouteList[numRoutesVeh - 1];
                         Route last_route = solution.GetRouteByID(last_routeID, out pos_inSolution);
                         double overwork_time = last_route.GetArrivalTime();//车结束所有任务的时间
                         double DueDate = customer.Info.DueDate;
@@ -88,10 +95,11 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                             if (inserted)
                             {
                                 newRoute = cur_newRoute;
+                                newRoute.AssignedVeh.VehRouteList.Add(newRoute.RouteId);
                                 veh.addRoute2Veh(newRoute);//将路径加入到vehicle中
                                 solution.AddRoute(newRoute);
                                 break;
-                            }   
+                            }
                         }
                     }
                 }
@@ -100,9 +108,10 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     Vehicle veh = null;
                     int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机） 
                     veh = fleet.addNewVeh(type);
-                    Route newRoute = new Route(veh,480);
+                    Route newRoute = new Route(veh, 480);
                     Route cur_newRoute = InsertCusToRoute(newRoute, customer, solution, out inserted);
                     newRoute = cur_newRoute;
+                    newRoute.AssignedVeh.VehRouteList.Add(newRoute.RouteId);
                     veh.addRoute2Veh(newRoute);//将路径加入到vehicle中
                     solution.AddRoute(newRoute);
                 }
@@ -112,14 +121,14 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
 
 
 
-        public Route InsertCusToRoute(Route route, Customer customer,Solution solution, out bool inserted)
+        public Route InsertCusToRoute(Route route, Customer customer, Solution solution, out bool inserted)
         {
 
             bool insert = false;
             int num_cus = route.RouteList.Count;
             double best_cost = double.MaxValue; //一个无穷大的数
             Route best_route = route;
-            for (int i = 1; i < route.RouteList.Count - 1; i++)
+            for (int i = 1; i < route.RouteList.Count; i++)
             {
                 Route cur_route = route.Copy();
 
@@ -164,8 +173,8 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 if (cur_route.IsFeasible())//如果插入customer和相应的station后满足所有约束
                 {
                     Vehicle veh = cur_route.AssignedVeh;
-                    
-                    if (solution.CheckNxtRoutesFeasible(veh ,cur_route.RouteIndexofVeh, delay))//如果下游路径也可行
+
+                    if (solution.CheckNxtRoutesFeasible(veh, cur_route.RouteIndexofVeh, delay))//如果下游路径也可行
                     {
                         double TransCostRate = Problem.GetVehTypebyID(route.AssignedVeh.TypeId).VariableCost;//行驶费率
                         double add_waittime = cur_route.GetWaitTime() - route.GetWaitTime();
@@ -182,6 +191,107 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
 
             inserted = insert;
             return best_route;
+        }
+
+
+
+        /// <summary>
+        /// 修复，将未服务商户插回部分解中，此方法返回的解不一定比原解费用低
+        /// </summary>
+        /// <param name="solution"></param>
+        /// <returns></returns>
+        public Solution RepairToFeasible(Solution solution)
+        {
+            Random rand = new Random();
+            while (solution.UnVisitedCus.Count > 0)
+            {
+                int rd = rand.Next(0, solution.UnVisitedCus.Count);//随机选一个未服务商户
+                Customer cus = solution.UnVisitedCus[rd];
+                int pos_route = -1; //第几条路
+                int pos = FindBstPosition(solution, cus, out pos_route); //路的第几个位置
+                if (pos_route != -1) //能找到一条路
+                {
+                    solution.Routes[pos_route].InsertNode(cus, pos);
+                    Route nr = solution.Routes[pos_route];
+                    solution.Routes[pos_route].AssignedVeh.VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
+                    int idx_veh = solution.fleet.GetVehIdxInFleet(nr.AssignedVeh.VehId);
+                    solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
+                    Console.WriteLine(solution.SolutionIsFeasible().ToString());
+                }
+                else
+                {
+                    int type = 2;
+                    Vehicle veh = solution.fleet.addNewVeh(type); //先生成辆车
+                    int pos_veh_fleet = solution.fleet.GetVehIdxInFleet(veh.VehId);    //车在车队中的位置              
+                    Route newRoute = new Route(veh, veh.Early_time); //再生成个路线
+                    newRoute.InsertNode(cus, 1);
+                    veh.addRoute2Veh(newRoute);//把路分配给车
+
+                    if (newRoute.ViolationOfRange() > 0)
+                    {
+                        newRoute = newRoute.InsertSta(3, double.MaxValue);
+                    }
+
+                    solution.AddRoute(newRoute); //把路添加到解里
+                    solution.fleet.VehFleet[pos_veh_fleet].VehRouteList[newRoute.RouteIndexofVeh] = newRoute.RouteId;//更新车队中此车的线路集合
+
+                }
+                solution.UnVisitedCus.Remove(cus);
+            }
+            //solution.UpdateFirstTripTime();
+            //solution.UpdateTripChainTime();
+            Console.WriteLine(solution.SolutionIsFeasible().ToString());
+            return solution;
+        }
+
+        private int FindBstPosition(Solution solution, Customer customer, out int idx_route)
+        {
+            idx_route = -1;
+            int idx_pos_route = -1;
+            double min_obj_change = double.MaxValue;
+            for (int i = 0; i < solution.Routes.Count; i++)
+            {
+                Route route = solution.Routes[i];
+                Vehicle veh = route.AssignedVeh;
+                double v_route = route.GetTotalVolume();
+                if (v_route + customer.Info.Volume > route.AssignedVehType.Volume)
+                {
+                    continue;
+                }
+                double w_route = route.GetTotalWeight();
+                if (w_route + customer.Info.Weight > route.AssignedVehType.Weight)
+                {
+                    continue;
+                }
+                var costs = route.routeCost();
+                double old_obj = costs.Item1 + costs.Item2 + costs.Item3;
+                for (int j = 1; j < route.RouteList.Count; j++)
+                {
+                    double floattime_j = route.GetFloatTimeAtCus(j);
+                    if (floattime_j > customer.Info.ServiceTime) //某点有浮动时间，才有可能往其前面加入商户
+                    {
+                        Route tmp_r = solution.Routes[i].Copy();
+                        tmp_r.InsertNode(customer, j);
+                        if (tmp_r.IsFeasible()) //可行
+                        {
+                            double delay = tmp_r.GetArrivalTime() - route.GetArrivalTime();
+                            if (solution.CheckNxtRoutesFeasible(veh, tmp_r.RouteIndexofVeh, delay))
+                            {
+                                var newcosts = tmp_r.routeCost();
+                                double new_obj = newcosts.Item1 + newcosts.Item2 + newcosts.Item3;
+                                double obj_change = new_obj - old_obj;
+                                if (obj_change < min_obj_change)
+                                {
+                                    idx_pos_route = j;
+                                    idx_route = i;
+                                }
+                            }
+                        }
+                    }
+
+                }
+            }
+            return idx_pos_route;
         }
 
 
