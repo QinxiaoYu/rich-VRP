@@ -747,6 +747,7 @@ namespace OP.Data
                     currentRange = CapacityRange; //在j点充满电出发
                 }
             }
+
             return VioPosition; 
         }
 
