@@ -62,7 +62,11 @@ namespace rich_VRP
                 sb.AppendLine(newcost.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
 
 
+                Destory destory = new Destory();
+                Solution solution_after_destory = destory.destoryBYcluster(ini_solution);
 
+                Repair repair = new Repair();
+                Solution solution_after_repair = repair.InsertCusToSolution(solution_after_destory);
 
 
                 StationPosition sp = new StationPosition();
