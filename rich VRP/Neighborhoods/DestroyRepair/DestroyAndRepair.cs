@@ -194,10 +194,10 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 int pos = FindBstPosition(solution, cus, out pos_route); //路的第几个位置
                 if (pos_route != -1) //能找到一条路
                 {
+                    int idx_veh = solution.fleet.GetVehIdxInFleet(solution.Routes[pos_route].AssignedVeh.VehId);
                     solution.Routes[pos_route].InsertNode(cus, pos);
                     Route nr = solution.Routes[pos_route];
-                    solution.Routes[pos_route].AssignedVeh.VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;                 
-                    int idx_veh = solution.fleet.GetVehIdxInFleet(nr.AssignedVeh.VehId);
+                    solution.Routes[pos_route].AssignedVeh.VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;                           
                     solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
                     Console.WriteLine(solution.SolutionIsFeasible().ToString());
                 }

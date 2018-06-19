@@ -29,7 +29,7 @@ namespace rich_VRP
             Problem.SetNearDistanceCusAndSta(20, 5); //计算每个商户的小邻域
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
-            outfilename = dir + "//" + "test618.txt";
+            outfilename = dir + "//" + "test618-2.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
             for (int i = 0; i < 10000; i++)
             {
@@ -80,7 +80,7 @@ namespace rich_VRP
                 TwoOpt twoopt = new TwoOpt();
                 Relocate relointra = new Relocate();
                 BreakTwoRoute breakOneRoute = new BreakTwoRoute();
-                int outiters = 20;
+                int outiters = 50;
                 while (outiters > 0)
                 {
                     
@@ -249,18 +249,23 @@ namespace rich_VRP
                    
 
 
-                    if (ini_solution.ObjVal<bst_sol.ObjVal)
+                    if (Math.Round(ini_solution.ObjVal,2)+0.001<Math.Round(bst_sol.ObjVal,2))
                     {
                         bst_sol = ini_solution.Copy();
                         outiters++;
                         select_strategy = 1; //换成first improve
                         change_obj = 0;
                         //change_obj = Math.Max(20, change_obj + 5);
+                        if (bst_sol.ObjVal < 283000)
+                        {
+                            bst_sol.PrintResult();
+                            Console.WriteLine(bst_sol.PrintToString());
+                        }
                     }
                     else
                     {
-                        percent_battery = Math.Max(0.6, percent_battery + 0.1);
-                        short_route = Math.Max(5, short_route + 1);
+                        percent_battery = Math.Min(0.6, percent_battery + 0.1);
+                        short_route = Math.Min(5, short_route + 1);
                         select_strategy = rd.Next(2); //bst improve
                         change_obj = Math.Max(-200, change_obj - 20);
 
@@ -274,11 +279,7 @@ namespace rich_VRP
                     sb.Clear();
                     //sb.AppendLine(newcost.ToString("0.00"));
                     //sb.AppendLine(ini_solution.PrintToString());
-                    if (bst_sol.ObjVal < 283000)
-                    {
-                        bst_sol.PrintResult();
-                        Console.WriteLine(bst_sol.PrintToString());
-                    }
+                    
 
                 }
                 

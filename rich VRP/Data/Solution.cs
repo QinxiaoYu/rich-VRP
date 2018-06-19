@@ -67,13 +67,10 @@ namespace OP.Data
             //定位当前线路r对应的车
             Vehicle veh = fleet.GetVehbyID(r.AssignedVeh.VehId);
             int idx_route_veh = r.RouteIndexofVeh; //定位当前路r排在车的第几个trip
-            double nxt_dt = veh.Early_time;
-            if (idx_route_veh > 0)
-            {
-                string pre_route_id = veh.VehRouteList[idx_route_veh - 1];
-                int pre_route_idx_solution = -1;
-                GetRouteByID(pre_route_id, out pre_route_idx_solution);
-                nxt_dt = Routes[pre_route_idx_solution].GetArrivalTime() + Problem.MinWaitTimeAtDepot;
+            double nxt_dt = veh.Early_time; //如果是第一趟，则下一趟的开始时间是480
+            if (idx_route_veh > 0)//如果它不是第一趟，则下一趟开始时间是它的开始时间
+            {             
+                nxt_dt = r.GetDepartureTime();
             }
             for (int i = idx_route_veh+1 ; i < veh.VehRouteList.Count; i++)//更新其后trip的属性
             {
@@ -86,6 +83,13 @@ namespace OP.Data
                 Routes[nxt_route_idx_solution].UpdateServiceBeginningTimes();
                 nxt_dt = Routes[nxt_route_idx_solution].GetArrivalTime() + Problem.MinWaitTimeAtDepot;
 
+            }
+            for (int i = 0; i < idx_route_veh; i++) //更新其前trip的veh的vehroutelist
+            {
+                string pre_route_id = veh.VehRouteList[i];
+                int pre_route_idx_solution = -1;
+                GetRouteByID(pre_route_id, out pre_route_idx_solution);
+                Routes[pre_route_idx_solution].AssignedVeh.VehRouteList.Remove(r.RouteId);
             }
 
             string veh_id = r.AssignedVeh.VehId;
@@ -366,6 +370,8 @@ namespace OP.Data
             if (num_routes == 0)
             {
                 Console.WriteLine("Empty veh:" + veh.VehId.ToString());
+                int pos_veh_fleet = fleet.GetVehIdxInFleet(veh.VehId);
+                fleet.removeVeh(veh.VehId);
                 return 0;
             }
             for (int i = 0; i < veh.VehRouteList.Count; i++)
@@ -414,8 +420,10 @@ namespace OP.Data
 
         public bool SolutionIsFeasible()
         {
+            int cnt_cus = 0;
             foreach (Route route in Routes)
             {
+                cnt_cus += route.getNumofCus();
                 if (!route.IsFeasible())
                 {
                     int range =  route.ViolationOfRange();
@@ -428,6 +436,11 @@ namespace OP.Data
                     return false;
                    
                 }
+            }
+            if (cnt_cus<Problem.Customers.Count)
+            {
+                System.Console.WriteLine("Customer number is less than 1k. it is only  " + cnt_cus);
+                return false;
             }
             return true;
         }
