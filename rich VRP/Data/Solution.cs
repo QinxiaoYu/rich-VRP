@@ -381,7 +381,12 @@ namespace OP.Data
                 int num_nodes = cur_route.RouteList.Count;
                 if (num_nodes == 2)
                 {
+                    if (i==veh.VehRouteList.Count-1)
+                    {
+                        Remove(cur_route);
+                    }
                     Console.WriteLine("Empty Route In Calculate a route objective: " + veh.VehId.ToString() + ";" + cur_route.RouteId + ";" + cur_route.RouteIndexofVeh.ToString());
+                    continue;
                 }
                 var VariableCost = cur_route.routeCost(TransCostRate, ChargeCostRate); //计算单条线路上所有可变成本=等待成本2+运输成本+充电成本
                 veh.tran_cost += VariableCost.Item1;

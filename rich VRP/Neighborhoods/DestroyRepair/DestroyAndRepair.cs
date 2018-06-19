@@ -195,10 +195,17 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 if (pos_route != -1) //能找到一条路
                 {
                     int idx_veh = solution.fleet.GetVehIdxInFleet(solution.Routes[pos_route].AssignedVeh.VehId);
+                    double old_at = solution.Routes[pos_route].GetArrivalTime();
                     solution.Routes[pos_route].InsertNode(cus, pos);
-                    Route nr = solution.Routes[pos_route];
+                    double new_at = solution.Routes[pos_route].GetArrivalTime();
+                    Route nr = solution.Routes[pos_route];                  
                     solution.Routes[pos_route].AssignedVeh.VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;                           
                     solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
+                    bool ShouldTrue = solution.CheckNxtRoutesFeasible(solution.fleet.VehFleet[idx_veh], nr.RouteIndexofVeh, new_at - old_at);
+                    if (ShouldTrue == false)
+                    {
+                        Console.WriteLine("something wrong...");
+                    }
                     Console.WriteLine(solution.SolutionIsFeasible().ToString());
                 }
                 else
@@ -239,10 +246,19 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 int pos = FindBstPosition(solution, cus, out pos_route); //路的第几个位置
                 if (pos_route != -1) //能找到一条路
                 {
+                    int idx_veh = solution.fleet.GetVehIdxInFleet(solution.Routes[pos_route].AssignedVeh.VehId);
+                    double old_at = solution.Routes[pos_route].GetArrivalTime();
                     solution.Routes[pos_route].InsertNode(cus, pos);
+                    double new_at = solution.Routes[pos_route].GetArrivalTime();
                     Route nr = solution.Routes[pos_route];
-                    int idx_veh = solution.fleet.GetVehIdxInFleet(nr.AssignedVeh.VehId);
+                    solution.Routes[pos_route].AssignedVeh.VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
                     solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
+                    bool ShouldTrue = solution.CheckNxtRoutesFeasible(solution.fleet.VehFleet[idx_veh], nr.RouteIndexofVeh, new_at - old_at);
+                    if (ShouldTrue == false)
+                    {
+                        Console.WriteLine("something wrong...");
+                    }
+                    Console.WriteLine(solution.SolutionIsFeasible().ToString());
                 }
                 else
                 {
@@ -310,7 +326,8 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                         if (tmp_r.IsFeasible()) //可行
                         {
                             double delay = tmp_r.GetArrivalTime() - route.GetArrivalTime();
-                            if (solution.CheckNxtRoutesFeasible(veh,tmp_r.RouteIndexofVeh, delay))
+                            Solution new_sol = solution.Copy();
+                            if (new_sol.CheckNxtRoutesFeasible(veh,tmp_r.RouteIndexofVeh, delay))
                             {                            
                                 var newcosts = tmp_r.routeCost();
                                 double new_obj = newcosts.Item1 + newcosts.Item2 + newcosts.Item3;
