@@ -10,24 +10,42 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
     class DestroyAndRepair
     {
         Random rand = new Random();
+        AC AC;
+        List<int> angel = new List<int> { 30, 30, 30, 30, 30, 30, 30, 30, 30, 90 };
 
-        public Solution DR(Solution solution, int minCusNum, int selectstrategy = 0)
+        public Solution DR(Solution solution, int minCusNum, int des_strategy=0, int selectstrategy = 1)
         {
-            solution.printCheckSolution();
-            Console.WriteLine(solution.SolutionIsFeasible().ToString());
+            //solution.printCheckSolution();
+            //Console.WriteLine(solution.SolutionIsFeasible().ToString());
             Solution tmp_sol = solution.Copy();
-            tmp_sol = DestroyShortRoute(tmp_sol, minCusNum);
+            if (des_strategy == 0)
+            {
+                tmp_sol = DestroyShortRoute(tmp_sol, minCusNum);
+            }
+            if (des_strategy == 1)
+            {
+                tmp_sol = destoryBYcluster(tmp_sol);
+            }
            
-            tmp_sol.printCheckSolution();
-            Console.WriteLine(solution.SolutionIsFeasible().ToString());
+            //tmp_sol.printCheckSolution();
+            //Console.WriteLine(solution.SolutionIsFeasible().ToString());
             tmp_sol = RepairToFeasible(tmp_sol);
-            tmp_sol.printCheckSolution();
+            //tmp_sol.printCheckSolution();
             double obj = tmp_sol.CalObjCost();
-            if (obj<solution.ObjVal)
+            if (selectstrategy == 0) //可行
             {
                 solution = tmp_sol;
                 solution.ObjVal = obj;
             }
+            else
+            {
+                if (obj < solution.ObjVal)
+                {
+                    solution = tmp_sol;
+                    solution.ObjVal = obj;
+                }
+            }
+            
             return solution;
         }
 
@@ -345,6 +363,49 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             }
             return idx_pos_route;
         }
+
+
+       
+        public Solution destoryBYcluster(Solution solution)
+        {
+            AC = new AC(angel);
+            if (solution.UnVisitedCus == null)
+            {
+                solution.UnVisitedCus = new List<Customer>();
+            }
+            for (int i = solution.Routes.Count - 1; i > 0; i--)//遍历每一条路
+            {
+                Route route = solution.Routes[i];
+                var costs = route.routeCost();
+                double old_obj = costs.Item1 + costs.Item2 + costs.Item3;
+                int cnt_charge = costs.Item4;
+                //route.RemoveAllSta();
+                int route_cluster = AC.getRouteCluster(route);
+                for (int j = 1; j < route.RouteList.Count - 1; j++)//遍历每一个节点
+                {
+                    AbsNode node = route.RouteList[j];
+                    if (node.Info.Type == 3)
+                    {
+                        continue;
+                    }
+                    int cus_cluster = AC.getCluster(node.Info.Id);
+                    if (cus_cluster < route_cluster-1 || cus_cluster > route_cluster+1)
+                    {
+                        route.Remove((Customer)node);
+                        solution.UnVisitedCus.Add((Customer)node);
+                        Console.WriteLine(node.Info.Id);
+                    }
+                }
+
+                //Route tmp_r = route.InsertSta(cnt_charge, old_obj); //最优的插入充电站遍历
+                int veh_in_fleet_pos = solution.fleet.GetVehIdxInFleet(route.AssignedVeh.VehId);
+                solution.fleet.VehFleet[veh_in_fleet_pos].VehRouteList[route.RouteIndexofVeh] = route.RouteId;
+                solution.Routes[i] = route.Copy();
+                solution.Routes[i].AssignedVeh = solution.fleet.VehFleet[veh_in_fleet_pos];
+            }
+            return solution;
+        }
+
 
 
     }

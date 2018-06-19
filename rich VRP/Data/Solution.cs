@@ -426,6 +426,7 @@ namespace OP.Data
         public bool SolutionIsFeasible()
         {
             int cnt_cus = 0;
+            bool isFeasible = true;
             foreach (Route route in Routes)
             {
                 cnt_cus += route.getNumofCus();
@@ -437,17 +438,17 @@ namespace OP.Data
                     double volume = route.ViolationOfVolume();
                     string txt = string.Format("Range: {0}; Time:{1}; Weight: {2}; Volume:{3}",range,time,weight.ToString("0.00"),volume.ToString("0.00")); 
                     System.Console.WriteLine(route.RouteId+" is not feasible. "+txt);
-                    
-                    return false;
+
+                    isFeasible = false;
                    
                 }
             }
             if (cnt_cus<Problem.Customers.Count)
             {
                 System.Console.WriteLine("Customer number is less than 1k. it is only  " + cnt_cus);
-                return false;
+                isFeasible = false;
             }
-            return true;
+            return isFeasible;
         }
 		public void PrintResult()
 		{

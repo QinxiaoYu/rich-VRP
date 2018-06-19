@@ -175,14 +175,32 @@ namespace rich_VRP.Neighborhoods.Inter
 
                             }
                             //Console.WriteLine(copy_ri.RouteId + "  " + copy_rj.RouteId);
+                            if (copy_ri.RouteList.Count == 2)
+                            {
+                                new_sol.Remove(copy_ri);
+                            }
+                            if (copy_rj.RouteList.Count == 2)
+                            {
+                                new_sol.Remove(copy_rj);
+                            }
+                            //Console.WriteLine(copy_ri.RouteId + "  " + copy_rj.RouteId);
+                            double new_obj_i = 0;
+                            double new_obj_j = 0;
+                            if (new_sol.fleet.GetVehbyID(old_vi.VehId) != null)
+                            {
+                                new_obj_i = new_sol.calculCost(new_sol.fleet.VehFleet[pos_vehi_fleet]);
+                            }
+                            if (new_sol.fleet.GetVehbyID(old_vj.VehId) != null)
+                            {
+                                new_obj_j = new_sol.calculCost(new_sol.fleet.VehFleet[pos_vehj_fleet]);
+                            }
+
                             double new_obj = 0;
                             if (copy_ri.AssignedVeh.VehId==copy_rj.AssignedVeh.VehId)
                             {
-                                new_obj = new_sol.calculCost(new_sol.fleet.VehFleet[pos_vehj_fleet]);
+                                new_obj = new_obj_j;
                             }else
-                            {
-                                double new_obj_i = new_sol.calculCost(new_sol.fleet.VehFleet[pos_vehi_fleet]);
-                                double new_obj_j = new_sol.calculCost(new_sol.fleet.VehFleet[pos_vehj_fleet]);
+                            {                    
                                 new_obj = new_obj_i + new_obj_j;
                             }
 
