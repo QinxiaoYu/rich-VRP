@@ -303,7 +303,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             for (int i = 0; i < solution.Routes.Count; i++)
             {
                 Route route = solution.Routes[i];
-                Vehicle veh = route.AssignedVeh;
+                Vehicle veh = solution.fleet.GetVehbyID(route.AssignedVeh.VehId);
                 double v_route = route.GetTotalVolume();
                 if (v_route + customer.Info.Volume > route.AssignedVehType.Volume)
                 {

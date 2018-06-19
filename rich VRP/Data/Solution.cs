@@ -471,9 +471,9 @@ namespace OP.Data
 			//获取当前时间
 
 			DateTime time = DateTime.Now;
-			string path =  ".//reslut" + time.Month.ToString() + time.Day.ToString() + time.Hour.ToString()+time.Minute.ToString()+time.Second.ToString()+time.Millisecond.ToString() + ".csv";
-            string path_otherinfo = ".//other_reslut" + time.Month.ToString() + time.Day.ToString() + time.Hour.ToString() + time.Minute.ToString() + time.Second.ToString() + time.Millisecond.ToString() + ".csv";
-			using (System.IO.StreamWriter file = new System.IO.StreamWriter(path))
+			string path =  ".//reslut" +ObjVal.ToString("0")+ ".csv";
+            string path_otherinfo = ".//other_reslut" + ObjVal.ToString("0") + ".csv";
+			using (System.IO.StreamWriter file = new System.IO.StreamWriter(path,true))
 			{
 				file.Write(result);
                 file.Flush();
