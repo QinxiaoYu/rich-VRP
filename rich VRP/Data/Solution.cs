@@ -67,13 +67,10 @@ namespace OP.Data
             //定位当前线路r对应的车
             Vehicle veh = fleet.GetVehbyID(r.AssignedVeh.VehId);
             int idx_route_veh = r.RouteIndexofVeh; //定位当前路r排在车的第几个trip
-            double nxt_dt = veh.Early_time;
-            if (idx_route_veh > 0)
-            {
-                string pre_route_id = veh.VehRouteList[idx_route_veh - 1];
-                int pre_route_idx_solution = -1;
-                GetRouteByID(pre_route_id, out pre_route_idx_solution);
-                nxt_dt = Routes[pre_route_idx_solution].GetArrivalTime() + Problem.MinWaitTimeAtDepot;
+            double nxt_dt = veh.Early_time; //如果是第一趟，则下一趟的开始时间是480
+            if (idx_route_veh > 0)//如果它不是第一趟，则下一趟开始时间是它的开始时间
+            {             
+                nxt_dt = r.GetDepartureTime();
             }
             for (int i = idx_route_veh+1 ; i < veh.VehRouteList.Count; i++)//更新其后trip的属性
             {
@@ -86,6 +83,13 @@ namespace OP.Data
                 Routes[nxt_route_idx_solution].UpdateServiceBeginningTimes();
                 nxt_dt = Routes[nxt_route_idx_solution].GetArrivalTime() + Problem.MinWaitTimeAtDepot;
 
+            }
+            for (int i = 0; i < idx_route_veh; i++) //更新其前trip的veh的vehroutelist
+            {
+                string pre_route_id = veh.VehRouteList[i];
+                int pre_route_idx_solution = -1;
+                GetRouteByID(pre_route_id, out pre_route_idx_solution);
+                Routes[pre_route_idx_solution].AssignedVeh.VehRouteList.Remove(r.RouteId);
             }
 
             string veh_id = r.AssignedVeh.VehId;
@@ -367,6 +371,8 @@ namespace OP.Data
             if (num_routes == 0)
             {
                 Console.WriteLine("Empty veh:" + veh.VehId.ToString());
+                int pos_veh_fleet = fleet.GetVehIdxInFleet(veh.VehId);
+                fleet.removeVeh(veh.VehId);
                 return 0;
             }
             for (int i = 0; i < veh.VehRouteList.Count; i++)
@@ -376,7 +382,12 @@ namespace OP.Data
                 int num_nodes = cur_route.RouteList.Count;
                 if (num_nodes == 2)
                 {
+                    if (i==veh.VehRouteList.Count-1)
+                    {
+                        Remove(cur_route);
+                    }
                     Console.WriteLine("Empty Route In Calculate a route objective: " + veh.VehId.ToString() + ";" + cur_route.RouteId + ";" + cur_route.RouteIndexofVeh.ToString());
+                    continue;
                 }
                 var VariableCost = cur_route.routeCost(TransCostRate, ChargeCostRate); //计算单条线路上所有可变成本=等待成本2+运输成本+充电成本
                 veh.tran_cost += VariableCost.Item1;
@@ -415,8 +426,10 @@ namespace OP.Data
 
         public bool SolutionIsFeasible()
         {
+            int cnt_cus = 0;
             foreach (Route route in Routes)
             {
+                cnt_cus += route.getNumofCus();
                 if (!route.IsFeasible())
                 {
                     int range =  route.ViolationOfRange();
@@ -429,6 +442,11 @@ namespace OP.Data
                     return false;
                    
                 }
+            }
+            if (cnt_cus<Problem.Customers.Count)
+            {
+                System.Console.WriteLine("Customer number is less than 1k. it is only  " + cnt_cus);
+                return false;
             }
             return true;
         }
@@ -454,9 +472,9 @@ namespace OP.Data
 			//获取当前时间
 
 			DateTime time = DateTime.Now;
-			string path =  ".//reslut" + time.Month.ToString() + time.Day.ToString() + time.Hour.ToString()+time.Minute.ToString()+time.Second.ToString()+time.Millisecond.ToString() + ".csv";
-            string path_otherinfo = ".//other_reslut" + time.Month.ToString() + time.Day.ToString() + time.Hour.ToString() + time.Minute.ToString() + time.Second.ToString() + time.Millisecond.ToString() + ".csv";
-			using (System.IO.StreamWriter file = new System.IO.StreamWriter(path))
+			string path =  ".//reslut" +ObjVal.ToString("0")+ ".csv";
+            string path_otherinfo = ".//other_reslut" + ObjVal.ToString("0") + ".csv";
+			using (System.IO.StreamWriter file = new System.IO.StreamWriter(path,true))
 			{
 				file.Write(result);
                 file.Flush();

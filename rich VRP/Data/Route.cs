@@ -487,6 +487,18 @@ namespace OP.Data
             return remainBattery;
         }
 
+        internal int getNumofCus()
+        {
+            int cnt = 0;
+            foreach (var node in RouteList)
+            {
+                if (node.Info.Type==2)
+                {
+                    cnt++;
+                }
+            }
+            return cnt;
+        }
 
         internal void InsertCustomer(List<AbsNode> unroutedCustomers)
         {

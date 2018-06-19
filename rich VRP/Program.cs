@@ -29,7 +29,7 @@ namespace rich_VRP
             Problem.SetNearDistanceCusAndSta(20, 5); //计算每个商户的小邻域
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
-            outfilename = dir + "//" + "test618.txt";
+            outfilename = dir + "//" + "test618-2.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
             for (int i = 0; i < 1; i++)
             {
@@ -56,6 +56,7 @@ namespace rich_VRP
                 Solution solution_after_destory = destory.destoryBYcluster(ini_solution);
                 Console.WriteLine(solution_after_destory.SolutionIsFeasible());
                 solution_after_destory.printCheckSolution();
+
 
 
                 Repair repair = new Repair();
@@ -93,6 +94,8 @@ namespace rich_VRP
                     solution_after_repair.PrintResult();
                     //Console.WriteLine(ini_solution.PrintToString());
                 }
+
+                
                 sw.Write(sb);
                 sw.Flush();
             }
