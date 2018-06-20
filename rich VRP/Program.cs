@@ -29,7 +29,7 @@ namespace rich_VRP
             Problem.SetNearDistanceCusAndSta(20, 5); //计算每个商户的小邻域
             string outfilename = null;
             StringBuilder sb = new StringBuilder();
-            outfilename = dir + "//" + "test618-2.txt";
+            outfilename = dir + "//" + "test618.txt";
             StreamWriter sw = new StreamWriter(outfilename, true);
             for (int i = 0; i < 10000; i++)
             {
@@ -38,7 +38,9 @@ namespace rich_VRP
                 //CW4sveh initial = new CW4sveh(); //这个效果次之
                 //CWObjFunc initial = new CWObjFunc(); //这个效果最差
                 //Initialization initial = new Initialization(); //这个效果最好
-                ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut61403229739.csv");
+                ReadInitialSolution initial = new ReadInitialSolution(@"/Users/litterfisher/Desktop/reslut61403229739.csv");
+                //ClusterFirstRouteSecond initial = new ClusterFirstRouteSecond();
+                //initial.cluster_strategy = 3;
 
                 Solution ini_solution = initial.initial_construct();
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
@@ -65,11 +67,6 @@ namespace rich_VRP
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                 Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
 
-                if (newcost2 > 298000)
-                {
-                    continue;
-                }
-
                 Solution bst_sol = ini_solution.Copy();
 
                 double percent_battery = 0.2;
@@ -80,7 +77,7 @@ namespace rich_VRP
                 TwoOpt twoopt = new TwoOpt();
                 Relocate relointra = new Relocate();
                 BreakTwoRoute breakOneRoute = new BreakTwoRoute();
-                int outiters = 50;
+                int outiters = 20;
                 while (outiters > 0)
                 {
                     
@@ -249,23 +246,18 @@ namespace rich_VRP
                    
 
 
-                    if (Math.Round(ini_solution.ObjVal,2)+0.001<Math.Round(bst_sol.ObjVal,2))
+                    if (ini_solution.ObjVal<bst_sol.ObjVal)
                     {
                         bst_sol = ini_solution.Copy();
                         outiters++;
                         select_strategy = 1; //换成first improve
                         change_obj = 0;
                         //change_obj = Math.Max(20, change_obj + 5);
-                        if (bst_sol.ObjVal < 283000)
-                        {
-                            bst_sol.PrintResult();
-                            Console.WriteLine(bst_sol.PrintToString());
-                        }
                     }
                     else
                     {
-                        percent_battery = Math.Min(0.6, percent_battery + 0.1);
-                        short_route = Math.Min(5, short_route + 1);
+                        percent_battery = Math.Max(0.6, percent_battery + 0.1);
+                        short_route = Math.Max(5, short_route + 1);
                         select_strategy = rd.Next(2); //bst improve
                         change_obj = Math.Max(-200, change_obj - 20);
 
@@ -279,7 +271,11 @@ namespace rich_VRP
                     sb.Clear();
                     //sb.AppendLine(newcost.ToString("0.00"));
                     //sb.AppendLine(ini_solution.PrintToString());
-                    
+                    if (bst_sol.ObjVal < 283000)
+                    {
+                        bst_sol.PrintResult();
+                        Console.WriteLine(bst_sol.PrintToString());
+                    }
 
                 }
                 

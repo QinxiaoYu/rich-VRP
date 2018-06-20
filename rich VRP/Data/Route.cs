@@ -541,6 +541,32 @@ namespace OP.Data
             UpdateId();
         }
 
+        public void InsertDepot(Depot newNode,int position)
+        {
+            RouteList.Insert(position, newNode);
+            ServiceBeginingTimes.Insert(position, 0);
+            battery_level.Insert(position, 0);
+            for (int i = position; i < RouteList.Count; i++)
+            {
+                double travelTime = RouteList[i-1].TravelTime(RouteList[i]);
+                double serviceTime = (RouteList[i-1].Info.Type==1)? Problem.MinWaitTimeAtDepot: RouteList[i-1].Info.ServiceTime;  //起终点的servicetime=0
+                ServiceBeginingTimes[i] = Math.Max(RouteList[i].Info.ReadyTime, ServiceBeginingTimes[i - 1] + travelTime + serviceTime);
+
+
+                double travelDistance = RouteList[i-1].TravelDistance(RouteList[i]); //两点之间用电量=行驶距离
+                double remainBattery = battery_level[i - 1] - travelDistance;
+
+                if (RouteList[i].Info.Type == 3 || RouteList[i].Info.Type == 1) //新点是一个充电站或者配送中心
+                {
+                    
+                        remainBattery = this.GetRouteRangeCap();
+
+
+                }
+                battery_level[i] = remainBattery;
+            }
+            UpdateId();
+        }
 
         /// <summary>
         /// 删除某一位置上的顾客，更新服务时间
