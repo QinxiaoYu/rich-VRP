@@ -171,7 +171,7 @@ public class BreakTwoRoute
             ////拆分方法4: 遍历插入配送中心
             if (break_strategy == 4)
             {
-                double old_var_obj_copy = old_var_obj;
+                double old_var_obj_copy = double.MaxValue;
                 Route bst_r1 = null;
                 Route bst_r2 = null;
                 Vehicle bst_v = null;
@@ -179,6 +179,14 @@ public class BreakTwoRoute
                 {
                     Route new_route = copy_old_r.Copy();
                     new_route.InsertNode(Problem.StartDepot, j); //在位置j插入配送中心
+                    if (new_route.ViolationOfTimeWindow()>-1)
+                    {
+                        continue;
+                    }
+                    if (new_route.ViolationOfRange()>-1)
+                    {
+                        new_route = new_route.InsertSta(3, 0);
+                    }
                     if (new_route.IsFeasible())//插入之后各点都可行
                     {
                         Vehicle new_veh = old_v.Copy();
@@ -188,7 +196,7 @@ public class BreakTwoRoute
                         {
                             part_route1.InsertNode(new_route.RouteList[k], k);
                         }
-                        Route part_route2 = new Route(new_veh, new_route.ServiceBeginingTimes[j]);
+                        Route part_route2 = new Route(new_veh, new_route.ServiceBeginingTimes[j]+Problem.MinWaitTimeAtDepot);
                         int cnt = 1;
                         for (int k = j+1; k < new_route.RouteList.Count-1; k++)
                         {
@@ -212,7 +220,8 @@ public class BreakTwoRoute
                 }
                 if (bst_v !=null)
                 {
-                    
+                    bst_r1.RouteIndexofVeh = 0;
+                    bst_r2.RouteIndexofVeh = 1;
                     bst_v.addRoute2Veh(bst_r1);
                     bst_v.addRoute2Veh(bst_r2);
                     bst_r1.RouteAssign2Veh(bst_v);
