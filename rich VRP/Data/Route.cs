@@ -133,7 +133,7 @@ namespace OP.Data
             Route tmp_r = this.Copy();
             if (cnt_charge>3)
             {
-                throw new Exception("一条路上不能多于3个充电站");
+                cnt_charge = 3;
             }
             if (old_obj==0)
             {

@@ -102,7 +102,7 @@ public class BreakTwoRoute
                 new_sol.AddRoute(new_r1);
                 new_sol.AddRoute(new_r2);
                 new_sol.fleet.VehFleet[i] = new_veh.Copy();
-                Console.WriteLine(new_sol.SolutionIsFeasible().ToString());
+                //Console.WriteLine(new_sol.SolutionIsFeasible().ToString());
             }
             //拆分方法2: 一没电就回配送中心 break_strategy = 2
             if (break_strategy  == 2)

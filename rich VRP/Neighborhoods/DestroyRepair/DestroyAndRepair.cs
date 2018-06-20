@@ -100,7 +100,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             {
                 solution.UnVisitedCus = new List<Customer>();
             }
-            for (int i = new_sol.Routes.Count - 1; i > 0; i--)
+            for (int i = new_sol.Routes.Count - 1; i >= 0; i--)
             {
                 Route r = new_sol.Routes[i];
                 double totalWeight = r.GetTotalWeight();
@@ -224,7 +224,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     {
                         Console.WriteLine("something wrong...");
                     }
-                    Console.WriteLine(solution.SolutionIsFeasible().ToString());
+                    //Console.WriteLine(solution.SolutionIsFeasible().ToString());
                 }
                 else
                 {
@@ -248,7 +248,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             }
             //solution.UpdateFirstTripTime();
             //solution.UpdateTripChainTime();
-            Console.WriteLine(solution.SolutionIsFeasible().ToString());
+            //Console.WriteLine(solution.SolutionIsFeasible().ToString());
             return solution;
         }
 
@@ -276,7 +276,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     {
                         Console.WriteLine("something wrong...");
                     }
-                    Console.WriteLine(solution.SolutionIsFeasible().ToString());
+                    //Console.WriteLine(solution.SolutionIsFeasible().ToString());
                 }
                 else
                 {

@@ -97,6 +97,8 @@
     <Compile Include="Neighborhoods\Inter\ShiftInter.cs" />
     <Compile Include="Neighborhoods\Inter\RelocateInSameVeh.cs" />
     <Compile Include="Neighborhoods\Inter\BreakTwoRoutes.cs" />
+    <Compile Include="Constructive\ClusterFirstRouteSecond.cs" />
+    <Compile Include="Utility.cs" />
   </ItemGroup>
   <ItemGroup>
     <None Include="App.config" />

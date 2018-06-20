@@ -33,11 +33,15 @@ namespace rich_VRP.Constructive
             }
 
 
-            public Solution initial_construct()
+            public Solution initial_construct(List<Customer> unroute_cus = null)
             {
                 Solution solution = new Solution();
                 //fleet = solution.fleet;
-                var unroute_cus = new List<Customer>(Problem.Customers); //没有访问的点
+                if (unrouted_Cus==null)
+                {
+                    unroute_cus = new List<Customer>(Problem.Customers); //没有访问的点
+                }
+
                 Vehicle veh = null;
 
                 while (unroute_cus.Count > 0)

@@ -58,6 +58,24 @@ namespace OP.Data
             }
         }
 
+        internal void Merge(Solution part_sol)
+        {
+            for (int i = 0; i < part_sol.fleet.VehFleet.Count; i++)
+            {
+                Vehicle new_v = fleet.addNewVeh(part_sol.fleet.VehFleet[i].TypeId);
+                new_v.VehRouteList = part_sol.fleet.VehFleet[i].VehRouteList; //有可能fleet里的没变
+                for (int j = 0; j < new_v.VehRouteList.Count; j++)
+                {
+                    int pos_route_partsol = -1;
+                    Route new_route = part_sol.GetRouteByID(new_v.VehRouteList[j], out pos_route_partsol);
+                    new_route.AssignedVeh = new_v;
+                    AddRoute(new_route);
+                }
+
+            }
+
+        }
+
         /// <summary>
         /// 从当前解中删除一条线路，并且更新车队中这条线路的信息
         /// </summary>
@@ -97,11 +115,11 @@ namespace OP.Data
             fleet.VehFleet[idx_veh_fleet].VehRouteList.Remove(r.RouteId);//更新车队中该车所存的routelists
             if (fleet.VehFleet[idx_veh_fleet].VehRouteList.Count==0)//如果该车没有其他路径，则删除该车
             {
-                Console.WriteLine("Remove vehicle id =" + fleet.VehFleet[idx_veh_fleet].VehId);
+                //Console.WriteLine("Remove vehicle id =" + fleet.VehFleet[idx_veh_fleet].VehId);
                 fleet.VehFleet.RemoveAt(idx_veh_fleet);
             }
             int idx_route_solution = Routes.FindIndex(a => a.RouteId == r.RouteId);
-            Console.WriteLine("Remove route id = "+r.RouteId);
+            //Console.WriteLine("Remove route id = "+r.RouteId);
             Routes.RemoveAt(idx_route_solution);//从解中删除该路径
           
         }
@@ -385,7 +403,7 @@ namespace OP.Data
                     {
                         Remove(cur_route);
                     }
-                    Console.WriteLine("Empty Route In Calculate a route objective: " + veh.VehId.ToString() + ";" + cur_route.RouteId + ";" + cur_route.RouteIndexofVeh.ToString());
+                    //Console.WriteLine("Empty Route In Calculate a route objective: " + veh.VehId.ToString() + ";" + cur_route.RouteId + ";" + cur_route.RouteIndexofVeh.ToString());
                     continue;
                 }
                 var VariableCost = cur_route.routeCost(TransCostRate, ChargeCostRate); //计算单条线路上所有可变成本=等待成本2+运输成本+充电成本
@@ -445,7 +463,7 @@ namespace OP.Data
             }
             if (cnt_cus<Problem.Customers.Count)
             {
-                System.Console.WriteLine("Customer number is less than 1k. it is only  " + cnt_cus);
+                //System.Console.WriteLine("Customer number is less than 1k. it is only  " + cnt_cus);
                 isFeasible = false;
             }
             return isFeasible;

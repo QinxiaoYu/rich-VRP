@@ -30,11 +30,11 @@ namespace OP.Data
         /// <summary>
         /// 列表记录了每一个点的商户邻域，其商户邻点按照可达性由近至远排序
         /// </summary>
-        public static List<int[]> NearDistanceCus;
+        public static Dictionary<int,int[]> NearDistanceCus;
         /// <summary>
         /// 列表记录了每一个点的充电站邻域，其充电站邻点由近至远排序
         /// </summary>
-        public static List<int[]> NearDistanceSta;
+        public static Dictionary<int, int[]> NearDistanceSta;
 
 
         public static void SetNodes(List<NodeInfo> nodes, string abbr, double t_max, int numV, int numD, int numC, int numS)
@@ -194,8 +194,8 @@ namespace OP.Data
         /// <param name="_numNNSta"></param>
         public static  void SetNearDistanceCusAndSta(int _numNNCus, int _numNNSta)
         {
-            NearDistanceCus = new List<int[]>();
-            NearDistanceSta = new List<int[]>();
+            NearDistanceCus = new Dictionary<int, int[]>();
+            NearDistanceSta = new Dictionary<int, int[]>();
             for (int i = 0; i < AllNodes.Count; i++)
             {
                 var node = AllNodes[i];
@@ -227,7 +227,7 @@ namespace OP.Data
                 {
                     NCus_ID[k] = (int)keyArray.GetValue(k) ;
                 }
-                NearDistanceCus.Add(NCus_ID);
+                NearDistanceCus.Add(node.Id, NCus_ID);
                 neighbours_Distance.Clear();
                 
                 for (int j = 0; j < Stations.Count; j++)
@@ -247,7 +247,7 @@ namespace OP.Data
                 {
                     NSta_ID[k] = (int)keyArray2.GetValue(k);
                 }
-                NearDistanceSta.Add(NSta_ID);
+                NearDistanceSta.Add(node.Id, NSta_ID);
                 neighbours_Distance.Clear();
             }
         }
@@ -371,6 +371,11 @@ namespace OP.Data
             return Problem.GetTravelTimeIJ(Info.Id, destination.Info.Id);
         }
 
+        public double GetAngel(AbsNode destination)
+        {
+            return Problem.GetAngelIJ(Info.Id, destination.Info.Id);
+        }
+
         
         public virtual AbsNode ShallowCopy()
         {
@@ -423,6 +428,7 @@ namespace OP.Data
             return new Customer(Info);
         }
 
+       
     }
     
 
