@@ -38,10 +38,10 @@ namespace rich_VRP
                 //CW4sveh initial = new CW4sveh(); //这个效果次之
                 //CWObjFunc initial = new CWObjFunc(); //这个效果最差
                 //Initialization initial = new Initialization(); //这个效果最好
-                ClusterFirstRouteSecond initial = new ClusterFirstRouteSecond();
-                initial.cluster_strategy = 3;
+                //ClusterFirstRouteSecond initial = new ClusterFirstRouteSecond();
+                //initial.cluster_strategy = 3;
 
-                //ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut278480.csv");
+                ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut278480.csv");
 
                 Solution ini_solution = initial.initial_construct();
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());

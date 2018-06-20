@@ -178,7 +178,7 @@ public class BreakTwoRoute
                 for (int j = 2; j < copy_old_r.RouteList.Count-2; j++)
                 {
                     Route new_route = copy_old_r.Copy();
-                    new_route.InsertNode(Problem.StartDepot, j); //在位置j插入配送中心
+                    new_route.InsertDepot(Problem.StartDepot, j); //在位置j插入配送中心
                     if (new_route.ViolationOfTimeWindow()>-1)
                     {
                         continue;
