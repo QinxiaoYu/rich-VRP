@@ -38,10 +38,10 @@ namespace rich_VRP
                 //CW4sveh initial = new CW4sveh(); //这个效果次之
                 //CWObjFunc initial = new CWObjFunc(); //这个效果最差
                 //Initialization initial = new Initialization(); //这个效果最好
-                //ClusterFirstRouteSecond initial = new ClusterFirstRouteSecond();
-                //initial.cluster_strategy = 3;
+                ClusterFirstRouteSecond initial = new ClusterFirstRouteSecond();
+                initial.cluster_strategy = 3;
 
-                ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut278480.csv");
+                //ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut278480.csv");
 
                 Solution ini_solution = initial.initial_construct();
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
@@ -68,6 +68,8 @@ namespace rich_VRP
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                 Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
 
+                
+
                 //if (newcost2 > 298000)
                 //{
                 //    continue;
@@ -85,6 +87,13 @@ namespace rich_VRP
                 Relocate relointra = new Relocate();
                 BreakTwoRoute breakOneRoute = new BreakTwoRoute();
                 int outiters = 50;
+
+                ini_solution = breakOneRoute.Break(ini_solution, 4);
+                ini_solution.printCheckSolution();
+                double newcost22 = ini_solution.CalObjCost();
+                Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                Console.WriteLine("ObjVal 22 = " + newcost22.ToString("0.00"));
+
                 while (outiters > 0)
                 {
                     

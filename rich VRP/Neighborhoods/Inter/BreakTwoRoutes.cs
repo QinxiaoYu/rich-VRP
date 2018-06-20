@@ -30,12 +30,15 @@ public class BreakTwoRoute
             }
             int pos_route_sol = -1;
             Route old_r = solution.GetRouteByID(old_v.VehRouteList[0], out pos_route_sol);
+
             Route copy_old_r = old_r.Copy();
             copy_old_r.RemoveAllSta();
             if (copy_old_r.RouteList.Count < 4) //只有1个客户，没法break
             {
                 continue;
             }
+            var old_cost = old_r.routeCost();
+            double old_var_obj = old_cost.Item1 + old_cost.Item2 + old_cost.Item3;
             //对这辆车的这条路进行拆分
             //拆分方法1: 断开路径中距离最远的边 break_strategy = 1
             //拆分方法2: 一没电就回配送中心 break_strategy = 2
@@ -107,7 +110,7 @@ public class BreakTwoRoute
             //拆分方法2: 一没电就回配送中心 break_strategy = 2
             if (break_strategy  == 2)
             {
-                int num_cus = copy_old_r.RouteList.Count - 2;
+                int num_cus = copy_old_r.RouteList.Count - 2; //客户的数量，肯定大于1
                 Vehicle new_veh = old_v.Copy();
                 new_veh.VehRouteList.Clear();
                 int tmp_count = 1;
@@ -166,6 +169,65 @@ public class BreakTwoRoute
             //}
 
             ////拆分方法4: 遍历插入配送中心
+            if (break_strategy == 4)
+            {
+                double old_var_obj_copy = double.MaxValue;
+                Route bst_r1 = null;
+                Route bst_r2 = null;
+                Vehicle bst_v = null;
+                for (int j = 2; j < copy_old_r.RouteList.Count-2; j++)
+                {
+                    Route new_route = copy_old_r.Copy();
+                    new_route.InsertDepot(Problem.StartDepot, j); //在位置j插入配送中心
+                    if (new_route.IsFeasible())//插入之后各点都可行
+                    {
+                        Vehicle new_veh = old_v.Copy();
+                        new_veh.VehRouteList.Clear();
+                        Route part_route1 = new Route(new_veh,new_veh.Early_time);
+                        for (int k = 1; k < j; k++)
+                        {
+                            part_route1.InsertNode(new_route.RouteList[k], k);
+                        }
+                        Route part_route2 = new Route(new_veh, new_route.ServiceBeginingTimes[j]+Problem.MinWaitTimeAtDepot);
+                        int cnt = 1;
+                        for (int k = j+1; k < new_route.RouteList.Count-1; k++)
+                        {
+                            part_route2.InsertNode(new_route.RouteList[k], cnt);
+                            cnt++;
+                        }
+                        var new_cost1 =  part_route1.routeCost();
+                        var new_cost2 = part_route2.routeCost();
+                        double new_obj1 = new_cost1.Item1 + new_cost1.Item2 + new_cost1.Item3;
+                        double new_obj2 = new_cost2.Item1 + new_cost2.Item2 + new_cost2.Item3;
+                        double new_var_obj = new_obj1 + new_obj2;
+                        if (new_var_obj<old_var_obj_copy)
+                        {
+                            old_var_obj_copy = new_var_obj;
+                            bst_r1 = part_route1.Copy();
+                            bst_r2 = part_route2.Copy();
+                            bst_v = new_veh.Copy();
+                        }
+                    }
+
+                }
+                if (bst_v !=null)
+                {
+                    bst_r1.RouteIndexofVeh = 0;
+                    bst_v.addRoute2Veh(bst_r1);
+                    bst_r2.RouteIndexofVeh = 1;
+                    bst_v.addRoute2Veh(bst_r2);
+                    bst_r1.RouteAssign2Veh(bst_v);
+                    bst_r2.RouteAssign2Veh(bst_v);
+                    int pos_route_newsol = -1;
+                    Route r = new_sol.GetRouteByID(old_r.RouteId, out pos_route_newsol);
+                    new_sol.Routes.RemoveAt(pos_route_newsol);
+                    new_sol.AddRoute(bst_r1);
+                    new_sol.AddRoute(bst_r2);
+                    new_sol.fleet.VehFleet[i] = bst_v.Copy();
+
+                }
+
+            }
 
         }
         new_sol.printCheckSolution();

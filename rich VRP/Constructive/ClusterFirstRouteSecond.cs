@@ -12,7 +12,7 @@ namespace rich_VRP.Constructive
         List<Customer> unrouteed_cus = new List<Customer>();
         public int cluster_strategy = 1;
 
-        public Solution initial_construct(int cus_threshold = 100)
+        public Solution initial_construct(int cus_threshold = 20)
         {
             Solution solution = new Solution();
             solution.UnVisitedCus = new List<Customer>(Problem.Customers);

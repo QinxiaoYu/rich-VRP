@@ -224,7 +224,16 @@ namespace rich_VRP.Neighborhoods.Inter
             //    Console.WriteLine(bst_sol.CalObjCost());
             //    Console.WriteLine(bst_obj_change);
             //}
-            return bst_sol;
+            //bst_sol.SolutionIsFeasible();
+            if (bst_sol == null)
+            {
+                return solution;
+            }
+            else
+            {
+                return bst_sol;
+            }
+            
             
         }
     }

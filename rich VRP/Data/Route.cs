@@ -480,7 +480,7 @@ namespace OP.Data
             double travelDistance = lastCustomer.TravelDistance(newNode); //两点之间用电量=行驶距离
             double remainBattery = lastRemainBattery - travelDistance;
 
-            if (newNode.Info.Type == 3) //新点是一个充电站
+            if (newNode.Info.Type == 3 ) //新点是一个充电站
             {
                 remainBattery = this.GetRouteRangeCap();
             }         
@@ -541,6 +541,32 @@ namespace OP.Data
             UpdateId();
         }
 
+        public void InsertDepot(Depot newNode,int position)
+        {
+            RouteList.Insert(position, newNode);
+            ServiceBeginingTimes.Insert(position, 0);
+            battery_level.Insert(position, 0);
+            for (int i = position; i < RouteList.Count; i++)
+            {
+                double travelTime = RouteList[i-1].TravelTime(RouteList[i]);
+                double serviceTime = (RouteList[i-1].Info.Type==1)? Problem.MinWaitTimeAtDepot: RouteList[i-1].Info.ServiceTime;  //起终点的servicetime=0
+                ServiceBeginingTimes[i] = Math.Max(RouteList[i].Info.ReadyTime, ServiceBeginingTimes[i - 1] + travelTime + serviceTime);
+
+
+                double travelDistance = RouteList[i-1].TravelDistance(RouteList[i]); //两点之间用电量=行驶距离
+                double remainBattery = battery_level[i - 1] - travelDistance;
+
+                if (RouteList[i].Info.Type == 3 ||( RouteList[i].Info.Type == 1&&i!=RouteList.Count-1)) //新点是一个充电站或者配送中心
+                {
+                    
+                        remainBattery = this.GetRouteRangeCap();
+
+
+                }
+                battery_level[i] = remainBattery;
+            }
+            UpdateId();
+        }
 
         /// <summary>
         /// 删除某一位置上的顾客，更新服务时间
@@ -726,8 +752,7 @@ namespace OP.Data
         public int ViolationOfRange()
         {
             int VioPosition = -1;
-            double CapacityRange = GetRouteRangeCap(); //获取服务该路径的车辆的最大行驶里程
-            double currentRange = CapacityRange; //车辆离开某点时的剩余里程
+           
             for (int i = 0; i < RouteList.Count-1; i++)
             {
                 //if (battery_level[i] < 0)
@@ -735,17 +760,12 @@ namespace OP.Data
                 //    return i;
                 //} 
                 double dis_ij = RouteList[i].TravelDistance(RouteList[i + 1]);
-                currentRange -= dis_ij; //达到j点时的剩余里程
+                double currentRange = battery_level[i]-dis_ij; //达到j点时的剩余里程
 
                 if (currentRange < 0) //如果达到j点时的剩余里程小于0，则返回j点所在点位置
                 {
                     return i + 1;
-                }
-
-                if (RouteList[i + 1].Info.Type == 3)//j点是一个充电站
-                {
-                    currentRange = CapacityRange; //在j点充满电出发
-                }
+                }       
             }
             return VioPosition; 
         }
@@ -774,15 +794,13 @@ namespace OP.Data
         /// <returns>如果有，则返回第一个违反点所在位置，否则返回-1.</returns>
         public int ViolationOfTimeWindow()
         {
-            for (int i = 0 ; i < RouteList.Count-1; ++i)
+            for (int i = 0 ; i < RouteList.Count; ++i)
             {
-                double ArrivalTimeAtj = ServiceBeginingTimes[i]
-                                        + RouteList[i].Info.ServiceTime
-                                                      + RouteList[i].TravelTime(RouteList[i + 1]);
-                if (ArrivalTimeAtj>RouteList[i+1].Info.DueDate)
+                if (ServiceBeginingTimes[i]>RouteList[i].Info.DueDate)
                 {
-                    return i + 1;
-                }                  
+                    return i;
+                }
+                          
             }
             return -1;
         }
