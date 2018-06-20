@@ -38,7 +38,10 @@ namespace rich_VRP
                 //CW4sveh initial = new CW4sveh(); //这个效果次之
                 //CWObjFunc initial = new CWObjFunc(); //这个效果最差
                 //Initialization initial = new Initialization(); //这个效果最好
-                ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut61403229739.csv");
+                //ClusterFirstRouteSecond initial = new ClusterFirstRouteSecond();
+                //initial.cluster_strategy = 3;
+
+                ReadInitialSolution initial = new ReadInitialSolution(@"C:\Users\user\Desktop\Good Solution\reslut278480.csv");
 
                 Solution ini_solution = initial.initial_construct();
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
@@ -65,16 +68,17 @@ namespace rich_VRP
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                 Console.WriteLine("ObjVal 2 = " + newcost2.ToString("0.00"));
 
-                if (newcost2 > 298000)
-                {
-                    continue;
-                }
+                //if (newcost2 > 298000)
+                //{
+                //    continue;
+                //}
 
                 Solution bst_sol = ini_solution.Copy();
 
                 double percent_battery = 0.2;
                 int short_route = 4;
                 int select_strategy = 1; //0: first improve; 1:best improve
+                int des_strategy = 0; //0:删除短路； 1：删除离群点
                 double change_obj = 0;
                 DestroyAndRepair DR = new DestroyAndRepair();
                 TwoOpt twoopt = new TwoOpt();
@@ -111,14 +115,15 @@ namespace rich_VRP
                             {
                                 isWorse = true;
                             }
-                            ini_solution = tmp_sol.Copy();
-                            newcost42 = ini_solution.CalObjCost();
-                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
-                            Console.WriteLine("ObjVal 2opt = " + newcost42.ToString("0.00"));
                             if (isWorse)
                             {
                                 break;
                             }
+                            ini_solution = tmp_sol.Copy();
+                            newcost42 = ini_solution.CalObjCost();
+                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                            Console.WriteLine("ObjVal 2opt = " + newcost42.ToString("0.00"));
+                            
                         }
 
                     }
@@ -135,14 +140,15 @@ namespace rich_VRP
                             {
                                 isWorse = true;
                             }
-                            ini_solution = tmp_sol.Copy();
-                            newcost42 = ini_solution.CalObjCost();
-                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
-                            Console.WriteLine("ObjVal 0-1 shift = " + newcost42.ToString("0.00"));
                             if (isWorse)
                             {
                                 break;
                             }
+                            ini_solution = tmp_sol.Copy();
+                            newcost42 = ini_solution.CalObjCost();
+                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                            Console.WriteLine("ObjVal 0-1 shift = " + newcost42.ToString("0.00"));
+                           
                         }
 
                     }
@@ -158,14 +164,15 @@ namespace rich_VRP
                             {
                                 isWorse = true;
                             }
-                            ini_solution = tmp_sol.Copy();
-                            newcost42 = ini_solution.CalObjCost();
-                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
-                            Console.WriteLine("ObjVal 0-2 shift = " + newcost42.ToString("0.00"));
                             if (isWorse)
                             {
                                 break;
                             }
+                            ini_solution = tmp_sol.Copy();
+                            newcost42 = ini_solution.CalObjCost();
+                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                            Console.WriteLine("ObjVal 0-2 shift = " + newcost42.ToString("0.00"));
+                           
                         }
 
                     }
@@ -181,14 +188,15 @@ namespace rich_VRP
                             {
                                 isWorse = true;
                             }
-                            ini_solution = tmp_sol.Copy();
-                            newcost42 = ini_solution.CalObjCost();
-                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
-                            Console.WriteLine("ObjVal 1-1 swap = " + newcost42.ToString("0.00"));
                             if (isWorse)
                             {
                                 break;
                             }
+                            ini_solution = tmp_sol.Copy();
+                            newcost42 = ini_solution.CalObjCost();
+                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                            Console.WriteLine("ObjVal 1-1 swap = " + newcost42.ToString("0.00"));
+                           
                         }
 
                      }
@@ -203,14 +211,15 @@ namespace rich_VRP
                                 {
                                     isWorse = true;
                                 }
+                                 if (isWorse)
+                                {
+                                    break;
+                                }
                                 ini_solution = tmp_sol.Copy();
                                 newcost42 = ini_solution.CalObjCost();
                                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                                 Console.WriteLine("ObjVal 2-2 swap = " + newcost42.ToString("0.00"));
-                                if (isWorse)
-                                {
-                                    break;
-                                }
+                               
                             }
 
                         }
@@ -228,14 +237,15 @@ namespace rich_VRP
                             {
                                 isWorse = true;
                             }
-                            ini_solution = tmp_sol.Copy();
-                            newcost4 = ini_solution.CalObjCost();
-                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
-                            Console.WriteLine("ObjVal CrossInter = " + newcost4.ToString("0.00"));
                             if (isWorse)
                             {
                                 break;
                             }
+                            ini_solution = tmp_sol.Copy();
+                            newcost4 = ini_solution.CalObjCost();
+                            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                            Console.WriteLine("ObjVal CrossInter = " + newcost4.ToString("0.00"));
+                            
                         }
 
                     }
@@ -265,9 +275,10 @@ namespace rich_VRP
                     else
                     {
                         percent_battery = Math.Min(0.6, percent_battery + 0.1);
-                        short_route = Math.Min(5, short_route + 1);
+                        short_route = Math.Min(7, short_route + 1);
                         select_strategy = rd.Next(2); //bst improve
-                        change_obj = Math.Max(-200, change_obj - 20);
+                        //des_strategy = rd.Next(2);
+                        change_obj = Math.Max(-300, change_obj - 20);
 
                     }
                     ini_solution = breakOneRoute.Break(ini_solution, 1);

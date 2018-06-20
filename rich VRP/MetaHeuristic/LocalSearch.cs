@@ -51,9 +51,9 @@ namespace rich_VRP.Neighborhoods
                 //Console.WriteLine(solution.SolutionIsFeasible().ToString());
                 //Console.WriteLine("ObjDR = " + solution.ObjVal.ToString("0.00"));
 
-                solution = relointra.RelocateIntra(solution, 1, true);//线路内重定位
-                solution.printCheckSolution();
-                double newcost3 = solution.CalObjCost();
+                //solution = relointra.RelocateIntra(solution, 1, true);//线路内重定位
+                //solution.printCheckSolution();
+                //double newcost3 = solution.CalObjCost();
                 //Console.WriteLine(solution.SolutionIsFeasible().ToString());
                 //Console.WriteLine("ObjVal Relocate = " + newcost3.ToString("0.00"));
 
@@ -73,14 +73,15 @@ namespace rich_VRP.Neighborhoods
                         {
                             isWorse = true;
                         }
-                        solution = tmp_sol.Copy();
-                        newcost42 = solution.CalObjCost();
-                        //Console.WriteLine(solution.SolutionIsFeasible().ToString());
-                        //Console.WriteLine("ObjVal 2opt = " + newcost42.ToString("0.00"));
                         if (isWorse)
                         {
                             break;
                         }
+                        solution = tmp_sol.Copy();
+                        newcost42 = solution.CalObjCost();
+                        //Console.WriteLine(solution.SolutionIsFeasible().ToString());
+                        //Console.WriteLine("ObjVal 2opt = " + newcost42.ToString("0.00"));
+                        
                     }
 
                 }
@@ -97,14 +98,15 @@ namespace rich_VRP.Neighborhoods
                         {
                             isWorse = true;
                         }
-                        solution = tmp_sol.Copy();
-                        newcost42 = solution.CalObjCost();
-                        //Console.WriteLine(solution.SolutionIsFeasible().ToString());
-                        //Console.WriteLine("ObjVal 0-1 shift = " + newcost42.ToString("0.00"));
                         if (isWorse)
                         {
                             break;
                         }
+                        solution = tmp_sol.Copy();
+                        newcost42 = solution.CalObjCost();
+                        //Console.WriteLine(solution.SolutionIsFeasible().ToString());
+                        //Console.WriteLine("ObjVal 0-1 shift = " + newcost42.ToString("0.00"));
+                      
                     }
 
                 }
@@ -119,6 +121,10 @@ namespace rich_VRP.Neighborhoods
                         if (tmp_sol.ObjVal >= newcost42)
                         {
                             isWorse = true;
+                        }
+                        if (isWorse)
+                        {
+                            break;
                         }
                         solution = tmp_sol.Copy();
                         newcost42 = solution.CalObjCost();
@@ -143,6 +149,10 @@ namespace rich_VRP.Neighborhoods
                         {
                             isWorse = true;
                         }
+                        if (isWorse)
+                        {
+                            break;
+                        }
                         solution = tmp_sol.Copy();
                         newcost42 = solution.CalObjCost();
                         //Console.WriteLine(solution.SolutionIsFeasible().ToString());
@@ -164,6 +174,10 @@ namespace rich_VRP.Neighborhoods
                         if (tmp_sol.ObjVal >= newcost42)
                         {
                             isWorse = true;
+                        }
+                        if (isWorse)
+                        {
+                            break;
                         }
                         solution = tmp_sol.Copy();
                         newcost42 = solution.CalObjCost();
@@ -189,6 +203,10 @@ namespace rich_VRP.Neighborhoods
                         if (tmp_sol.ObjVal >= newcost4)
                         {
                             isWorse = true;
+                        }
+                        if (isWorse)
+                        {
+                            break;
                         }
                         solution = tmp_sol.Copy();
                         newcost4 = solution.CalObjCost();
