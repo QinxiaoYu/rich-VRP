@@ -45,13 +45,18 @@ namespace rich_VRP
 
                 Solution ini_solution = initial.initial_construct();
                 Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
-                //OriginObjFunc evaluate = new OriginObjFunc();
                 ini_solution.printCheckSolution();
                 double cost = ini_solution.CalObjCost();
                 Console.WriteLine("ObjVal 0 = " + cost.ToString("0.00"));
-                //ini_solution.PrintResult();
                 sb.AppendLine(cost.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());
-                //sb.AppendLine(result);
+
+                VehTypeChangeIntra VTC = new VehTypeChangeIntra();
+                ini_solution = VTC.ChangeToSVeh(ini_solution);
+                double newcost0 = ini_solution.CalObjCost();
+                Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+                Console.WriteLine("ObjVal 1 = " + newcost0.ToString("0.00"));
+
+
 
                 RemoveSta oper = new RemoveSta();
                 bool isIprv = oper.Remove(ini_solution); //删除多余的充电站
@@ -133,7 +138,7 @@ namespace rich_VRP
                             Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                             Console.WriteLine("ObjVal 2opt = " + newcost42.ToString("0.00"));
                             
-                        }
+                            }
 
                     }
 
@@ -158,7 +163,7 @@ namespace rich_VRP
                             Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
                             Console.WriteLine("ObjVal 0-1 shift = " + newcost42.ToString("0.00"));
                            
-                        }
+                            }
 
                     }
            
@@ -290,7 +295,7 @@ namespace rich_VRP
                         change_obj = Math.Max(-300, change_obj - 20);
 
                     }
-                    ini_solution = breakOneRoute.Break(ini_solution, 1);
+                    ini_solution = breakOneRoute.Break(ini_solution, 4);
                     outiters--;
 
                     sb.AppendLine(outiters.ToString() + ": " + bst_sol.ObjVal.ToString("0.00") + ": Route Numbers = " + ini_solution.Routes.Count.ToString() + "Veh Number = " + ini_solution.fleet.VehFleet.Count.ToString());

@@ -45,29 +45,30 @@ namespace rich_VRP.Neighborhoods.Intra
                     double veh_w = old_route.GetTotalWeight();
                     double veh_v = old_route.GetTotalVolume();
                     double veh_l = old_route.GetRouteLength();
-                    //如果线路的里程也小于小车里程，则一定能换成小车
-                    if (veh_w <= sVehType.Weight && veh_v <= sVehType.Volume && veh_l <= sVehType.MaxRange)
+                    //如果超重，则不换
+                    if (veh_w > sVehType.Weight || veh_v > sVehType.Volume || veh_l >sVehType.MaxRange)
                     {
-                        continue;
+                        AllRouteChange = false;
+                        break;
                     }
-                    AllRouteChange = false;
-
                 }
                 if (AllRouteChange==false) //该车上的路线并不能全转换成小车，
                 {
                     continue;
                 }
+                //有可能换
+                int pos_veh_fleet = sol.fleet.GetVehIdxInFleet(veh.VehId);
+                Vehicle new_veh = veh.ChangeToAnotherType();
                 for (int i = 0; i < veh.VehRouteList.Count; i++)//修改车上的每条路
                 {
                     int pos_route_sol = -1;
-                    Route old_route = sol.GetRouteByID(veh.VehRouteList[i], out pos_route_sol);
-                    int pos_veh_fleet = sol.fleet.GetVehIdxInFleet(veh.VehId);
-                    Vehicle new_veh = veh.ChangeToAnotherType();
+                    Route old_route = sol.GetRouteByID(veh.VehRouteList[i], out pos_route_sol);     
                     Route new_route = old_route.ChangeToAnotherType();
                     new_route.AssignedVeh = new_veh;
                     new_sol.Routes[pos_route_sol] = new_route;
-                    new_sol.fleet.VehFleet[pos_veh_fleet] = new_veh;
+
                 }
+                new_sol.fleet.VehFleet[pos_veh_fleet] = new_veh;
 
             }
             new_sol.SolutionIsFeasible();
