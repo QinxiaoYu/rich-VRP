@@ -37,9 +37,9 @@ namespace rich_VRP.Constructive
                     solution.UnVisitedCus.RemoveAll((Customer obj) => obj.Info.Id == cus.Info.Id);
                 }
                 Solution part_sol = cw_ini.initial_construct(unrouteed_cus);
-                Console.WriteLine("part_sol before ls: " + part_sol.CalObjCost().ToString("0.00"));
+                double old_obj = part_sol.CalObjCost();              
                 part_sol = ls.search(part_sol);
-                Console.WriteLine("part_sol after ls: " + part_sol.CalObjCost().ToString("0.00"));
+                Console.WriteLine("part_sol before / after ls: " + old_obj.ToString("0.00") + "  "+ part_sol.CalObjCost().ToString("0.00"));
                 solution.Merge(part_sol);
 
                 unrouteed_cus.Clear();

@@ -42,7 +42,7 @@ namespace rich_VRP.Neighborhoods
             TwoOpt twoopt = new TwoOpt();
             Relocate relointra = new Relocate();
             BreakTwoRoute breakOneRoute = new BreakTwoRoute();
-            int outiters = 10;
+            int outiters = 20;
             while (outiters > 0)
             {
 
@@ -224,8 +224,8 @@ namespace rich_VRP.Neighborhoods
                 {
                     percent_battery = Math.Max(0.6, percent_battery + 0.1);
                     short_route = Math.Max(5, short_route + 1);
-                    select_strategy = 1; //bst improve
-                    change_obj = Math.Max(-200, change_obj - 20);
+                    select_strategy = rd.Next(2); //bst improve
+                    //change_obj = Math.Max(-100, change_obj - 20);
 
                 }
                 solution = breakOneRoute.Break(solution, 1);

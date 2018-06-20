@@ -177,12 +177,21 @@ namespace OP.Data
         {
             //全部成本
             double totalCost = 0;
-
+            List<string> empty_veh_id = new List<string>();
             foreach (var veh in fleet.VehFleet) //遍历每一个被使用的车辆
             {
+                if (veh.getNumofVisRoute()==0)
+                {
+                    empty_veh_id.Add(veh.VehId);
+                    continue;
+                }
                 totalCost += calculCost(veh);
             }
             ObjVal = totalCost;
+            foreach (string  empty_id in empty_veh_id)
+            {
+                fleet.removeVeh(empty_id);
+            }
             return totalCost;
         }
 
@@ -388,8 +397,8 @@ namespace OP.Data
             if (num_routes == 0)
             {
                 Console.WriteLine("Empty veh:" + veh.VehId.ToString());
-                int pos_veh_fleet = fleet.GetVehIdxInFleet(veh.VehId);
-                fleet.removeVeh(veh.VehId);
+                //int pos_veh_fleet = fleet.GetVehIdxInFleet(veh.VehId);
+                //fleet.removeVeh(veh.VehId);
                 return 0;
             }
             for (int i = 0; i < veh.VehRouteList.Count; i++)

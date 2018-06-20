@@ -218,12 +218,12 @@ namespace rich_VRP.Neighborhoods.Inter
                 }//结束对第二条路的枚举
             }//结束对第一路对枚举
 
-            if (bst_sol != null)
-            {
-                Console.WriteLine(solution.CalObjCost());
-                Console.WriteLine(bst_sol.CalObjCost());
-                Console.WriteLine(bst_obj_change);
-            }
+            //if (bst_sol != null)
+            //{
+            //    Console.WriteLine(solution.CalObjCost());
+            //    Console.WriteLine(bst_sol.CalObjCost());
+            //    Console.WriteLine(bst_obj_change);
+            //}
             return bst_sol;
             
         }

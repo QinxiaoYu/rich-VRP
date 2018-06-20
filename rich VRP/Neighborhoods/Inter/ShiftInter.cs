@@ -186,11 +186,11 @@ namespace rich_VRP.Neighborhoods.Inter
                             //Console.WriteLine(copy_ri.RouteId + "  " + copy_rj.RouteId);
                             double new_obj_i = 0;
                             double new_obj_j = 0;
-                            if (new_sol.fleet.GetVehbyID(old_vi.VehId) != null)
+                            if (new_sol.fleet.GetVehbyID(copy_ri.AssignedVeh.VehId) != null)
                             {
                                 new_obj_i = new_sol.calculCost(new_sol.fleet.VehFleet[pos_vehi_fleet]);
                             }
-                            if (new_sol.fleet.GetVehbyID(old_vj.VehId) != null)
+                            if (new_sol.fleet.GetVehbyID(copy_rj.AssignedVeh.VehId) != null)
                             {
                                 new_obj_j = new_sol.calculCost(new_sol.fleet.VehFleet[pos_vehj_fleet]);
                             }
@@ -220,7 +220,7 @@ namespace rich_VRP.Neighborhoods.Inter
                                     {
                                         bst_obj_change = obj_change;
                                         new_sol.ObjVal = solution.ObjVal - obj_change;
-                                        Console.WriteLine(new_sol.ObjVal+"    "+ new_sol.CalObjCost());
+                                        //Console.WriteLine(new_sol.ObjVal+"    "+ new_sol.CalObjCost());
                                         //Console.WriteLine(new_sol.SolutionIsFeasible().ToString());
                                         bst_sol = new_sol.Copy();
                                         
