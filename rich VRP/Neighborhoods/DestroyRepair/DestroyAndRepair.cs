@@ -91,10 +91,6 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
         /// <returns></returns>
         public Solution DestroyWasteRoute(Solution solution, double percent)
         {
-            foreach (var veh in solution.fleet.VehFleet)
-            {
-                Console.WriteLine("in Waste  "+veh.VehId);
-            }
             Solution new_sol = solution.Copy();
             if (solution.UnVisitedCus == null)
             {
@@ -105,8 +101,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 Route r = new_sol.Routes[i];
                 double totalWeight = r.GetTotalWeight();
                 double totalVolume = r.GetTotalVolume();
-                if (totalVolume < percent * Problem.VehTypes[r.AssignedVeh.TypeId - 1].Volume
-                    || totalWeight < percent * Problem.VehTypes[r.AssignedVeh.TypeId - 1].Weight)
+                if (totalWeight < percent * Problem.VehTypes[r.AssignedVeh.TypeId - 1].Weight) //重量小于某一百分比，体积不考虑
                 {
                     solution.Remove(r);
                     foreach (AbsNode cus in r.RouteList)
@@ -197,6 +192,106 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             }//结束对一辆车的遍历         
             return solution;
         }
+
+        /// <summary>
+        /// 如果只充了一次电，回到配送中心剩余电量超过某一百分比，则删除路线上的一些点，使得回到配送中心点电量小于这一百分比
+        /// </summary>
+        /// <returns>The by charge.</returns>
+        /// <param name="solution">Solution.</param>
+        public Solution DestroyByCharge(Solution solution, double battery_percent)
+        {
+            Solution new_sol = solution.Copy();
+            int num_routes = solution.Routes.Count;
+            for (int i = 0; i < num_routes; i++)
+            {
+                Route old_ri = solution.Routes[i];
+                var old_cost = old_ri.routeCost();
+                int cnt_charge = old_cost.Item4;
+                double old_var_cost = old_cost.Item1 + old_cost.Item2 + old_cost.Item3;
+                double cur_battery_depot = old_ri.battery_level[old_ri.RouteList.Count - 1];
+
+                if (cnt_charge==0 || cur_battery_depot<battery_percent*old_ri.AssignedVehType.MaxRange)
+                {
+                    continue;
+                }
+
+                int pos_route_newsol = -1;
+                new_sol.GetRouteByID(old_ri.RouteId, out pos_route_newsol);
+                int pos_veh_newsol = new_sol.fleet.GetVehIdxInFleet(old_ri.AssignedVeh.VehId);
+                Route ri = old_ri.Copy();
+                do
+                {
+                    ri.RemoveAt(ri.RouteList.Count - 2);
+                } while (ri.ViolationOfRange() > -1 || ri.ViolationOfTimeWindow() > -1);
+                ri.AssignedVeh.VehRouteList[ri.RouteIndexofVeh] = ri.RouteId;
+                new_sol.Routes[pos_route_newsol] = ri;
+                new_sol.fleet.VehFleet[pos_veh_newsol].VehRouteList[ri.RouteIndexofVeh] = ri.RouteId;
+            }
+            return new_sol;
+        }
+
+        public Solution DestroyFollowed(Solution solution)
+        {
+            Solution new_sol = solution.Copy();
+            new_sol.UnVisitedCus.AddRange(solution.UnVisitedCus);
+            if (solution.UnVisitedCus.Count > 0)
+            {
+                foreach (Customer cus in solution.UnVisitedCus)
+                {
+                    int[] list_id_neighbor = Problem.GetNearDistanceCus(cus.Info.Id);
+                    foreach (var id in list_id_neighbor)
+                    {
+                        if (rand.NextDouble() < 0.9)
+                        {
+                            if (new_sol.UnVisitedCus.FindIndex(a => a.Info.Id == id) == -1) //不存在该点
+                            {
+                                new_sol.UnVisitedCus.Add(Problem.SearchCusbyId(id));
+                            }
+                        }
+                    }
+                }
+
+            } //将已删除点的部分邻点从原路径中拆除
+
+            for (int i = 0; i < solution.Routes.Count; i++)
+            {
+                List<AbsNode> cus2remove = new List<AbsNode>();
+                for (int j = 1; j < solution.Routes[i].RouteList.Count-1; j++)
+                {
+                    if (new_sol.UnVisitedCus.FindIndex(a => a.Info.Id == solution.Routes[i].RouteList[j].Info.Id)!=-1)
+                    {
+                        cus2remove.Add((AbsNode)solution.Routes[i].RouteList[j]);
+                    }
+                
+                }
+                Route ri = solution.Routes[i].Copy();
+                int pos_route_newsol = -1;
+                int pos_veh_newsol = new_sol.fleet.GetVehIdxInFleet(ri.AssignedVeh.VehId);
+                new_sol.GetRouteByID(solution.Routes[i].RouteId, out pos_route_newsol);
+
+                ri.Remove(cus2remove);
+                if (ri.RouteList.Count==2) //空线路
+                {
+                    new_sol.Remove(ri);
+                }else
+                {
+                    ri.RemoveAllSta();
+                    if (ri.ViolationOfRange()>-1)
+                    {
+                        ri = ri.InsertSta(3, double.MaxValue);
+                    }
+                }
+
+                ri.AssignedVeh.VehRouteList[ri.RouteIndexofVeh] = ri.RouteId;
+                new_sol.Routes[pos_route_newsol] = ri;
+                new_sol.fleet.VehFleet[pos_veh_newsol].VehRouteList[ri.RouteIndexofVeh] = ri.RouteId;
+
+            }
+
+            return new_sol;
+        }
+
+
         /// <summary>
         /// 修复，将未服务商户插回部分解中，此方法返回的解不一定比原解费用低
         /// </summary>
@@ -364,7 +459,56 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             return idx_pos_route;
         }
 
+        private int FindNearestPosition(Solution solution, Customer customer, out int idx_route)
+        {
+            idx_route = -1;
+            int idx_pos_route = -1;
+            double min_obj_change = double.MaxValue;
+            for (int i = 0; i < solution.Routes.Count; i++)
+            {
+                Route route = solution.Routes[i];
+                Vehicle veh = solution.fleet.GetVehbyID(route.AssignedVeh.VehId);
+                double v_route = route.GetTotalVolume();
+                if (v_route + customer.Info.Volume > route.AssignedVehType.Volume)
+                {
+                    continue;
+                }
+                double w_route = route.GetTotalWeight();
+                if (w_route + customer.Info.Weight > route.AssignedVehType.Weight)
+                {
+                    continue;
+                }
+                var costs = route.routeCost();
+                double old_obj = costs.Item1 + costs.Item2 + costs.Item3;
+                for (int j = 1; j < route.RouteList.Count; j++)
+                {
+                    double floattime_j = route.GetFloatTimeAtCus(j);
+                    if (floattime_j > customer.Info.ServiceTime) //某点有浮动时间，才有可能往其前面加入商户
+                    {
+                        Route tmp_r = solution.Routes[i].Copy();
+                        tmp_r.InsertNode(customer, j);
+                        if (tmp_r.IsFeasible()) //可行
+                        {
+                            double delay = tmp_r.GetArrivalTime() - route.GetArrivalTime();
+                            Solution new_sol = solution.Copy();
+                            if (new_sol.CheckNxtRoutesFeasible(veh, tmp_r.RouteIndexofVeh, delay))
+                            {
+                                var newcosts = tmp_r.routeCost();
+                                double new_obj = newcosts.Item1 + newcosts.Item2 + newcosts.Item3;
+                                double obj_change = new_obj - old_obj;
+                                if (obj_change < min_obj_change)
+                                {
+                                    idx_pos_route = j;
+                                    idx_route = i;
+                                }
+                            }
+                        }
+                    }
 
+                }
+            }
+            return idx_pos_route;
+        }
        
         public Solution destoryBYcluster(Solution solution)
         {

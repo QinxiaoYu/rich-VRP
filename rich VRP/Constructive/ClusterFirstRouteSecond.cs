@@ -11,6 +11,7 @@ namespace rich_VRP.Constructive
         Random rd = new Random();
         List<Customer> unrouteed_cus = new List<Customer>();
         public int cluster_strategy = 1;
+        public double time_threshold = 720;
 
         public Solution initial_construct(int cus_threshold = 20)
         {
@@ -32,6 +33,10 @@ namespace rich_VRP.Constructive
                 {
                     unrouteed_cus = Utility.FindCusByAngleAndRadians(cus_threshold, solution.UnVisitedCus);
                 }
+                if (cluster_strategy == 4)
+                {
+                      unrouteed_cus = Utility.FindCusByTime(time_threshold, solution.UnVisitedCus);
+                }
                 foreach (var cus in unrouteed_cus)
                 {
                     solution.UnVisitedCus.RemoveAll((Customer obj) => obj.Info.Id == cus.Info.Id);
@@ -40,6 +45,7 @@ namespace rich_VRP.Constructive
                 double old_obj = part_sol.CalObjCost();              
                 part_sol = ls.search(part_sol);
                 Console.WriteLine("part_sol before / after ls: " + old_obj.ToString("0.00") + "  "+ part_sol.CalObjCost().ToString("0.00"));
+                part_sol.PrintResult();
                 solution.Merge(part_sol);
 
                 unrouteed_cus.Clear();
