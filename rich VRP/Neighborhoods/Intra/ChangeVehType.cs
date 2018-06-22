@@ -65,6 +65,7 @@ namespace rich_VRP.Neighborhoods.Intra
                     int pos_route_sol = -1;
                     Route old_route = sol.GetRouteByID(veh.VehRouteList[i], out pos_route_sol);     
                     Route new_route = old_route.ChangeToAnotherType();
+                    new_route.AssignedVeh = new_veh;
                     if (new_route.ViolationOfRange()>-1) //新线路可能里程超出
                     {
                         new_route = new_route.InsertSta(3, double.MaxValue);
@@ -73,7 +74,7 @@ namespace rich_VRP.Neighborhoods.Intra
                     {
                         break;
                     }
-                    new_route.AssignedVeh = new_veh;
+                    
                     new_veh.VehRouteList[new_route.RouteIndexofVeh] = new_route.RouteId;
                     new_sol.Routes[pos_route_sol] = new_route;
                     new_sol.fleet.VehFleet[pos_veh_fleet] = new_veh;

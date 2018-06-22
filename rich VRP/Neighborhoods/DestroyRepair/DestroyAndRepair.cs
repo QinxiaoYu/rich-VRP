@@ -20,8 +20,9 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             Solution tmp_sol = solution.Copy();
             if (des_strategy == 0)
             {
-                tmp_sol = DestroyShortRoute(tmp_sol, minCusNum);
-                tmp_sol = DestroyWasteRoute(tmp_sol, 0.5);
+                //tmp_sol = DestroyShortRoute(tmp_sol, minCusNum);
+                //tmp_sol = DestroyWasteRoute(tmp_sol, 0.5);
+                tmp_sol = DestroyByCharge(tmp_sol, 0.5);
             }
             if (des_strategy == 1)
             {
@@ -201,7 +202,12 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
         /// <param name="solution">Solution.</param>
         public Solution DestroyByCharge(Solution solution, double battery_percent)
         {
+           
             Solution new_sol = solution.Copy();
+            if (solution.UnVisitedCus == null)
+            {
+                new_sol.UnVisitedCus = new List<Customer>();
+            }
             int num_routes = solution.Routes.Count;
             for (int i = 0; i < num_routes; i++)
             {
@@ -222,7 +228,13 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 Route ri = old_ri.Copy();
                 do
                 {
+                    AbsNode node = ri.RouteList[ri.RouteList.Count - 2];
                     ri.RemoveAt(ri.RouteList.Count - 2);
+                    if (node.Info.Type==2)
+                    {
+                        new_sol.UnVisitedCus.Add((Customer)node);
+                    }
+                    
                 } while (ri.ViolationOfRange() > -1 || ri.ViolationOfTimeWindow() > -1);
                 ri.AssignedVeh.VehRouteList[ri.RouteIndexofVeh] = ri.RouteId;
                 new_sol.Routes[pos_route_newsol] = ri;
