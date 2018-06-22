@@ -51,8 +51,8 @@ namespace rich_VRP.Neighborhoods
                 //Console.WriteLine(solution.SolutionIsFeasible().ToString());
                 //Console.WriteLine("ObjDR = " + solution.ObjVal.ToString("0.00"));
 
-                //solution = relointra.RelocateIntra(solution, 1, true);//线路内重定位
-                //solution.printCheckSolution();
+                solution = relointra.RelocateIntra(solution, 1, true);//线路内重定位
+                solution.printCheckSolution();
                 //double newcost3 = solution.CalObjCost();
                 //Console.WriteLine(solution.SolutionIsFeasible().ToString());
                 //Console.WriteLine("ObjVal Relocate = " + newcost3.ToString("0.00"));

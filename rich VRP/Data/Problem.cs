@@ -279,7 +279,7 @@ namespace OP.Data
         /// <returns></returns>
         public static int[] GetNearDistanceSta(int _cus_id)
         {
-            return NearDistanceSta[_cus_id-1];
+            return NearDistanceSta[_cus_id];
         }
     }
 

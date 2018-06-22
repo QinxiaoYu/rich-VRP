@@ -276,14 +276,12 @@ namespace OP.Data
             List<int> NeighborSta_i = new List<int>();
             List<int> NeighborSta_j = new List<int>();
 
-            if (Node_i.Info.Type==2)
-            {
+            
                 NeighborSta_i = Problem.GetNearDistanceSta(Node_i.Info.Id).ToList();
-            }
-            if (Node_j.Info.Type == 2)
-            {
+            
+            
                 NeighborSta_j = Problem.GetNearDistanceSta(Node_j.Info.Id).ToList();
-            }
+            
 
             List<int> NeighborSta_ij = NeighborSta_i.Intersect(NeighborSta_j).ToList(); 
             if (NeighborSta_ij.Count==0)

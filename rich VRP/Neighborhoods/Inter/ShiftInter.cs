@@ -186,13 +186,15 @@ namespace rich_VRP.Neighborhoods.Inter
                             //Console.WriteLine(copy_ri.RouteId + "  " + copy_rj.RouteId);
                             double new_obj_i = 0;
                             double new_obj_j = 0;
-                            if (new_sol.fleet.GetVehbyID(copy_ri.AssignedVeh.VehId) != null)
+                            Vehicle vi = new_sol.fleet.GetVehbyID(copy_ri.AssignedVeh.VehId);
+                            if (vi != null)
                             {
-                                new_obj_i = new_sol.calculCost(new_sol.fleet.VehFleet[pos_vehi_fleet]);
+                                new_obj_i = new_sol.calculCost(vi);
                             }
-                            if (new_sol.fleet.GetVehbyID(copy_rj.AssignedVeh.VehId) != null)
+                            Vehicle vj = new_sol.fleet.GetVehbyID(copy_rj.AssignedVeh.VehId);
+                            if (vj != null)
                             {
-                                new_obj_j = new_sol.calculCost(new_sol.fleet.VehFleet[pos_vehj_fleet]);
+                                new_obj_j = new_sol.calculCost(vj);
                             }
 
                             double new_obj = 0;

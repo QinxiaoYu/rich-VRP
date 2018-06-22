@@ -460,6 +460,10 @@ namespace OP.Data
                 if (!route.IsFeasible())
                 {
                     int range =  route.ViolationOfRange();
+                    if (range>-1)
+                    {
+                        route.InsertSta(3, double.MaxValue);
+                    }
                     int time = route.ViolationOfTimeWindow();
                     double weight = route.ViolationOfWeight();
                     double volume = route.ViolationOfVolume();
