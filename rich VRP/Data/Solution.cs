@@ -208,7 +208,8 @@ namespace OP.Data
             foreach (Vehicle veh in fleet.VehFleet)
             {
                 sol.fleet.VehFleet.Add(veh.Copy());
-            }            
+            }
+
             return sol;
         }
 

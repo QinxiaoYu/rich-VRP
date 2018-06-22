@@ -62,7 +62,7 @@ public static class Utility
         {
             var cus_i = unVisitedCus[i];          
             double angle = cus_i.GetAngel(Problem.StartDepot);
-            ht_angle.Add(cus_i.Info.Id, angle);      
+            ht_angle.Add(cus_i.Info.Id, angle);
         }
   
 
@@ -149,4 +149,24 @@ public static class Utility
 
         return cluster_cus;
     }
+
+    internal static List<Customer> FindCusByTime(double time_threshold, List<Customer> unVisitedCus)
+    {
+        List<Customer> cluster_cus = new List<Customer>();
+        foreach (Customer cus in unVisitedCus)
+        {
+            if (cus.Info.DueDate<=time_threshold)
+            {
+                cluster_cus.Add(cus);
+            }
+        }
+        if (cluster_cus.Count == 0)
+        {
+            cluster_cus.AddRange(unVisitedCus);
+        }
+        return cluster_cus;
+    }
+
+
+
 }

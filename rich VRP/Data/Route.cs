@@ -67,6 +67,24 @@ namespace OP.Data
             return pos;
         }
 
+        internal int FindLargestIncrementRange()
+        {
+            int pos = -1;
+            double max_range_increment = double.MinValue;
+            for (int i = 1; i < RouteList.Count - 1; i++)
+            {
+                double range_increment = RouteList[i - 1].TravelDistance(RouteList[i]) + RouteList[i].TravelDistance(RouteList[i + 1])
+                                                         - RouteList[i - 1].TravelDistance(RouteList[i + 1]);
+
+                if (range_increment>max_range_increment)
+                {
+                    max_range_increment = range_increment;
+                    pos = i;
+                }
+            }
+            return pos;
+        }
+
         /// <summary>
         /// 在初始化中判断这条线路是否还可以插入
         /// </summary>
