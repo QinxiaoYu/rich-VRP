@@ -32,7 +32,7 @@ namespace rich_VRP.Neighborhoods.Intra
             Solution new_sol = sol.Copy();
             foreach (Vehicle veh in sol.fleet.VehFleet)
             {
-                if (veh.TypeId==1)//小车无需转换
+                if (veh.TypeId==1 || veh.getNumofVisRoute()>1)//小车无需转换
                 {
                     continue;
                 }
@@ -45,8 +45,9 @@ namespace rich_VRP.Neighborhoods.Intra
                     double veh_w = old_route.GetTotalWeight();
                     double veh_v = old_route.GetTotalVolume();
                     double veh_l = old_route.GetRouteLength();
-                    //如果超重，则不换
-                    if (veh_w > sVehType.Weight || veh_v > sVehType.Volume || veh_l >sVehType.MaxRange)
+                    double veh_wait = old_route.GetWaitTime();
+                    //如果超重，或者时间很紧凑 则不换
+                    if (veh_w > sVehType.Weight || veh_v > sVehType.Volume || veh_wait < 30)
                     {
                         AllRouteChange = false;
                         break;
@@ -64,11 +65,20 @@ namespace rich_VRP.Neighborhoods.Intra
                     int pos_route_sol = -1;
                     Route old_route = sol.GetRouteByID(veh.VehRouteList[i], out pos_route_sol);     
                     Route new_route = old_route.ChangeToAnotherType();
+                    if (new_route.ViolationOfRange()>-1) //新线路可能里程超出
+                    {
+                        new_route = new_route.InsertSta(3, double.MaxValue);
+                    }
+                    if (new_route.routecost>30000)
+                    {
+                        break;
+                    }
                     new_route.AssignedVeh = new_veh;
+                    new_veh.VehRouteList[new_route.RouteIndexofVeh] = new_route.RouteId;
                     new_sol.Routes[pos_route_sol] = new_route;
-
+                    new_sol.fleet.VehFleet[pos_veh_fleet] = new_veh;
                 }
-                new_sol.fleet.VehFleet[pos_veh_fleet] = new_veh;
+                
 
             }
             new_sol.SolutionIsFeasible();

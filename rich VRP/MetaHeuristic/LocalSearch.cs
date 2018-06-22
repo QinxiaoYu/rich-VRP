@@ -42,9 +42,12 @@ namespace rich_VRP.Neighborhoods
             TwoOpt twoopt = new TwoOpt();
             Relocate relointra = new Relocate();
             BreakTwoRoute breakOneRoute = new BreakTwoRoute();
+            VehTypeChangeIntra VTC = new VehTypeChangeIntra();
             int outiters = 20;
             while (outiters > 0)
             {
+
+                solution = VTC.ChangeToSVeh(solution);
 
                 solution = DR.DR(solution, short_route);
                 solution.printCheckSolution();

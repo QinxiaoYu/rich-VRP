@@ -504,14 +504,15 @@ namespace OP.Data
 
 			DateTime time = DateTime.Now;
 			string path =  ".//reslut" +ObjVal.ToString("0")+ ".csv";
+
             string path_otherinfo = ".//other_reslut" + ObjVal.ToString("0") + ".csv";
-			using (System.IO.StreamWriter file = new System.IO.StreamWriter(path,true))
+			using (System.IO.StreamWriter file = new System.IO.StreamWriter(path,false))
 			{
 				file.Write(result);
                 file.Flush();
                 file.Close();
 			}
-            using (System.IO.StreamWriter file_ohterinfo = new System.IO.StreamWriter(path_otherinfo))
+            using (System.IO.StreamWriter file_ohterinfo = new System.IO.StreamWriter(path_otherinfo,false))
             {
                 file_ohterinfo.Write(result_otherinfo);
                 file_ohterinfo.Flush();

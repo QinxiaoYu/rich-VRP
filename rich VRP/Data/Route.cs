@@ -824,6 +824,10 @@ namespace OP.Data
             double waittime = 0;
             for (int i = 1; i < this.RouteList.Count - 1; i++)
             {
+                if (RouteIndexofVeh==0 && i==1)
+                {
+                    continue;
+                }
                 double arrivetime = ServiceBeginingTimes[i - 1] + RouteList[i - 1].Info.ServiceTime + RouteList[i - 1].TravelTime(RouteList[i]);
                 double servicestarttime = ServiceBeginingTimes[i];
                 if (arrivetime<servicestarttime)

@@ -46,8 +46,8 @@ namespace rich_VRP.Constructive
 
                 while (unroute_cus.Count > 0)
                 {
-                    int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机）
-                    //int type = 1;
+                    //int type = rand.Next(0, 2) + 1; //随机产生一辆车（类型随机）
+                    int type = 2; //1 小车； 2 大车
                     veh = solution.fleet.addNewVeh(type);
                     double earliest_departure_time =veh.Early_time; //初始化一条线路，该路径的最早出发时间默认为上班时间
                     Route newRoute = new Route(veh, earliest_departure_time); ////////产生一条该车的路径,已经把车分配给了路径
