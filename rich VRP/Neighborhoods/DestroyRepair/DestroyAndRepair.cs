@@ -21,6 +21,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             if (des_strategy == 0)
             {
                 tmp_sol = DestroyShortRoute(tmp_sol, minCusNum);
+                tmp_sol = DestroyWasteRoute(tmp_sol, 0.5);
             }
             if (des_strategy == 1)
             {
@@ -91,10 +92,10 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
         /// <returns></returns>
         public Solution DestroyWasteRoute(Solution solution, double percent)
         {
-            foreach (var veh in solution.fleet.VehFleet)
-            {
-                Console.WriteLine("in Waste  "+veh.VehId);
-            }
+            //foreach (var veh in solution.fleet.VehFleet)
+            //{
+            //    Console.WriteLine("in Waste  "+veh.VehId);
+            //}
             Solution new_sol = solution.Copy();
             if (solution.UnVisitedCus == null)
             {
@@ -105,8 +106,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 Route r = new_sol.Routes[i];
                 double totalWeight = r.GetTotalWeight();
                 double totalVolume = r.GetTotalVolume();
-                if (totalVolume < percent * Problem.VehTypes[r.AssignedVeh.TypeId - 1].Volume
-                    || totalWeight < percent * Problem.VehTypes[r.AssignedVeh.TypeId - 1].Weight)
+                if (totalWeight < percent * Problem.VehTypes[r.AssignedVeh.TypeId - 1].Weight)
                 {
                     solution.Remove(r);
                     foreach (AbsNode cus in r.RouteList)
