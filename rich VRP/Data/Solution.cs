@@ -68,7 +68,7 @@ namespace OP.Data
                 {
                     int pos_route_partsol = -1;
                     Route new_route = part_sol.GetRouteByID(new_v.VehRouteList[j], out pos_route_partsol);
-                    new_route.AssignedVeh = new_v;
+                    new_route.AssignedVehID = new_v.VehId;
                     AddRoute(new_route);
                 }
 
@@ -83,7 +83,7 @@ namespace OP.Data
         internal void Remove(Route r)
         {
             //定位当前线路r对应的车
-            Vehicle veh = fleet.GetVehbyID(r.AssignedVeh.VehId);
+            Vehicle veh = fleet.GetVehbyID(r.AssignedVehID);
             int idx_route_veh = r.RouteIndexofVeh; //定位当前路r排在车的第几个trip
             double nxt_dt = veh.Early_time; //如果是第一趟，则下一趟的开始时间是480
             if (idx_route_veh > 0)//如果它不是第一趟，则下一趟开始时间是它的开始时间
@@ -96,7 +96,6 @@ namespace OP.Data
                 int nxt_route_idx_solution = -1;
                 GetRouteByID(nxt_route_id, out nxt_route_idx_solution);//定位其后trip所在解中的位置
                 Routes[nxt_route_idx_solution].RouteIndexofVeh -= 1;
-                Routes[nxt_route_idx_solution].AssignedVeh.VehRouteList.Remove(r.RouteId);
                 Routes[nxt_route_idx_solution].ServiceBeginingTimes[0] = nxt_dt;
                 Routes[nxt_route_idx_solution].UpdateServiceBeginningTimes();
                 nxt_dt = Routes[nxt_route_idx_solution].GetArrivalTime() + Problem.MinWaitTimeAtDepot;
@@ -107,10 +106,9 @@ namespace OP.Data
                 string pre_route_id = veh.VehRouteList[i];
                 int pre_route_idx_solution = -1;
                 GetRouteByID(pre_route_id, out pre_route_idx_solution);
-                Routes[pre_route_idx_solution].AssignedVeh.VehRouteList.Remove(r.RouteId);
             }
 
-            string veh_id = r.AssignedVeh.VehId;
+            string veh_id = r.AssignedVehID;
             int idx_veh_fleet = fleet.GetVehIdxInFleet(veh_id);
             fleet.VehFleet[idx_veh_fleet].VehRouteList.Remove(r.RouteId);//更新车队中该车所存的routelists
             if (fleet.VehFleet[idx_veh_fleet].VehRouteList.Count==0)//如果该车没有其他路径，则删除该车
@@ -178,20 +176,26 @@ namespace OP.Data
             //全部成本
             double totalCost = 0;
             List<string> empty_veh_id = new List<string>();
-            foreach (var veh in fleet.VehFleet) //遍历每一个被使用的车辆
+
+            for (int i = 0; i < fleet.VehFleet.Count; i++)
             {
+                Vehicle veh = fleet.VehFleet[i];
                 if (veh.getNumofVisRoute()==0)
                 {
                     empty_veh_id.Add(veh.VehId);
-                    continue;
                 }
-                totalCost += calculCost(veh);
             }
-            ObjVal = totalCost;
+           
             foreach (string  empty_id in empty_veh_id)
             {
                 fleet.removeVeh(empty_id);
             }
+            foreach (Vehicle veh in fleet.VehFleet)
+            {
+                totalCost += calculCost(veh);
+            }
+
+            ObjVal = totalCost;
             return totalCost;
         }
 
@@ -524,25 +528,18 @@ namespace OP.Data
         {
             foreach (Route route in Routes)
             {
-                string txt = "";
-                txt += route.RouteId + "  " + route.AssignedVeh.VehId + " ";
-                //Console.Write(route.RouteId + "  " + route.AssignedVeh.VehId + " ");
-                bool isInVeh = false;
-                foreach (string routeid in route.AssignedVeh.VehRouteList)
+                string veh_id = route.AssignedVehID;
+                Vehicle veh = fleet.GetVehbyID(veh_id);
+                if (veh == null)
                 {
-                    if (routeid == route.RouteId)
+                    Console.WriteLine(route.RouteId + "doesnt have a vehicle ");
+                }else
+                {
+                    if (!veh.VehRouteList.Exists(a => a == route.RouteId))
                     {
-                        isInVeh = true;
+                        Console.WriteLine(route.RouteId + "not exists in its vehicle " + veh_id);
                     }
-                    txt += routeid + "  ";
-                    //Console.Write(routeid + "  ");
                 }
-                if (isInVeh == false)
-                {
-                    txt += "Route not in Veh.Routes=======\n";
-                    Console.Write(txt);
-                }
-             
             }
 
             foreach (Vehicle veh in fleet.VehFleet)

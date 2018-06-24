@@ -18,7 +18,7 @@ namespace OP.Data
         /// <summary>
         /// The vehicle assigned to this route
         /// </summary>
-        public Vehicle AssignedVeh { get; set; }
+        public string AssignedVehID { get; set; }
 
         public VehicleType AssignedVehType { get; set; }
         /// <summary>
@@ -100,7 +100,7 @@ namespace OP.Data
             Depot startdepot = Problem.StartDepot;
             Depot enddepot = Problem.EndDepot;
             AssignedVehType = null;
-            AssignedVeh = null;
+            AssignedVehID = null;
             RouteList = new List<AbsNode>();
             ServiceBeginingTimes = new List<double>();
             battery_level = new List<double>();
@@ -183,10 +183,6 @@ namespace OP.Data
                 if (new_obj < old_obj)
                 {
                     bst_route = tmp_route_i.Copy();
-                    if (bst_route.AssignedVeh.VehRouteList.Count!=0)
-                    {
-                        bst_route.AssignedVeh.VehRouteList[bst_route.RouteIndexofVeh] = bst_route.RouteId;
-                    }        
                     bst_route.routecost = new_obj;                            
                     old_obj = new_obj;
                     isFeasible = true;
@@ -215,12 +211,7 @@ namespace OP.Data
                     double new_obj = new_costs.Item1 + new_costs.Item2 + new_costs.Item3;
                     if (new_obj < old_obj)
                     {
-                        bst_route = tmp_route_j.Copy();
-                        if (bst_route.AssignedVeh.VehRouteList.Count != 0)
-                        {
-                            bst_route.AssignedVeh.VehRouteList[bst_route.RouteIndexofVeh] = bst_route.RouteId;
-                        }
-                      
+                        bst_route = tmp_route_j.Copy();           
                         bst_route.routecost = new_obj;
                         old_obj = new_obj;
                         isFeasible = true;
@@ -254,10 +245,6 @@ namespace OP.Data
                         if (new_obj < old_obj)
                         {
                             bst_route = tmp_route_k.Copy();
-                            if (bst_route.AssignedVeh.VehRouteList.Count != 0)
-                            {
-                                bst_route.AssignedVeh.VehRouteList[bst_route.RouteIndexofVeh] = bst_route.RouteId;
-                            }
                             bst_route.routecost = new_obj;
                             old_obj = new_obj;
                             isFeasible = true;
@@ -338,7 +325,7 @@ namespace OP.Data
             Depot startdepot = Problem.StartDepot;
             Depot enddepot = Problem.EndDepot;
             AssignedVehType = vehtype;
-            AssignedVeh = null;
+            AssignedVehID = null;
             RouteList = new List<AbsNode>();
             ServiceBeginingTimes = new List<double>();
             battery_level = new List<double>();
@@ -358,7 +345,7 @@ namespace OP.Data
         {
             Depot startdepot = Problem.StartDepot;
             Depot enddepot = Problem.EndDepot;
-            AssignedVeh = veh;
+            AssignedVehID = veh.VehId;
             AssignedVehType = Problem.VehTypes[veh.TypeId-1];
             
             //Solution = null;
@@ -413,9 +400,7 @@ namespace OP.Data
         /// <param name="veh"></param>
         public void RouteAssign2Veh(Vehicle veh)
         {
-            this.AssignedVeh = veh;
-            this.AssignedVeh.VehRouteList[this.RouteIndexofVeh] = this.RouteId;
-
+            this.AssignedVehID = veh.VehId;
         }
 
         /// <summary>
@@ -719,7 +704,7 @@ namespace OP.Data
         /// <returns></returns>
         public double GetRouteVolumeCap()
         {
-            int vehType = this.AssignedVeh.TypeId;
+            int vehType = this.AssignedVehType.VehTypeID;
             double CapacityVolume = Problem.GetVehTypebyID(vehType).Volume;
             return CapacityVolume;
         }
@@ -757,8 +742,7 @@ namespace OP.Data
         }
         public double GetRouteWeightCap()
         {
-            int vehType = this.AssignedVeh.TypeId;
-            double CapacityWeight = Problem.GetVehTypebyID(vehType).Weight;
+            double CapacityWeight = this.AssignedVehType.Weight;
             return CapacityWeight;
         }
         /// <summary>
@@ -788,8 +772,7 @@ namespace OP.Data
 
         public double GetRouteRangeCap()
         {
-            int vehType = this.AssignedVeh.TypeId;
-            double CapacityRange = Problem.GetVehTypebyID(vehType).MaxRange;
+            double CapacityRange = AssignedVehType.MaxRange;
             return CapacityRange;
         }
 
@@ -922,7 +905,7 @@ namespace OP.Data
                 battery_level = new List<double>(battery_level),
             };
             r.AssignedVehType = this.AssignedVehType;
-            r.AssignedVeh = AssignedVeh.Copy();           
+            r.AssignedVehID = this.AssignedVehID;          
             r.RouteIndexofVeh = this.RouteIndexofVeh;
             r.routecost = this.routecost;
             r.UpdateId();
@@ -956,7 +939,7 @@ namespace OP.Data
                 //}
             }
             TourInfo += string.Format("{0} 点 到达 {1} ,旅途结束。\n", ServiceBeginingTimes[RouteList.Count-1],RouteList[RouteList.Count-1].Info.Id);
-            TourInfo += string.Format("所用车型: {0} id={1}, 重量 ={2} 体积={3}。\n ",this.AssignedVeh.TypeId.ToString(),this.AssignedVeh.VehId, this.GetTotalWeight().ToString(),this.GetTotalVolume().ToString());
+            TourInfo += string.Format("所用车型: {0} id={1}, 重量 ={2} 体积={3}。\n ",this.AssignedVehType.Name ,this.AssignedVehID, this.GetTotalWeight().ToString(),this.GetTotalVolume().ToString());
             //if (printTime)
             //{
             //    return (routeText + "\n" + serviceText+"\n");

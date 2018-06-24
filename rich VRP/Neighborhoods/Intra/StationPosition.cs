@@ -39,13 +39,13 @@ namespace rich_VRP.Neighborhoods.Intra
                     double delay = tmp_r.GetArrivalTime() - r.GetArrivalTime();
                     if (solution.CheckNxtRoutesFeasible(veh,tmp_r.RouteIndexofVeh, delay))
                     {
-                        tmp_r.AssignedVeh.VehRouteList[tmp_r.RouteIndexofVeh] = tmp_r.RouteId;
                         solution.Routes[pos] = tmp_r.Copy();
                         solution.fleet.VehFleet[i].VehRouteList[tmp_r.RouteIndexofVeh] = tmp_r.RouteId;                    
                     }
                 }
             }
             solution.UpdateTripChainTime();
+            solution.SolutionIsFeasible();
             return solution;
         }
     }

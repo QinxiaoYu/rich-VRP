@@ -43,10 +43,10 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 }
 
                 //Route tmp_r = route.InsertSta(cnt_charge, old_obj); //最优的插入充电站遍历
-                int veh_in_fleet_pos = solution.fleet.GetVehIdxInFleet(route.AssignedVeh.VehId);
+                int veh_in_fleet_pos = solution.fleet.GetVehIdxInFleet(route.AssignedVehID);
                 solution.fleet.VehFleet[veh_in_fleet_pos].VehRouteList[route.RouteIndexofVeh] = route.RouteId;
                 solution.Routes[i] = route.Copy();
-                solution.Routes[i].AssignedVeh = solution.fleet.VehFleet[veh_in_fleet_pos];
+                solution.Routes[i].AssignedVehID = solution.fleet.VehFleet[veh_in_fleet_pos].VehId;
             }
             return solution;
         }

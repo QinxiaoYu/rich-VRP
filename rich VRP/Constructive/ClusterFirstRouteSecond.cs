@@ -19,6 +19,8 @@ namespace rich_VRP.Constructive
             solution.UnVisitedCus = new List<Customer>(Problem.Customers);
             Initialization cw_ini = new Initialization();
             LocalSearch ls = new LocalSearch();
+            ls.stop_criteria = 10;
+            ls.restart_criteria = 10;
             while(solution.UnVisitedCus.Count>0)
             {
                 if (cluster_strategy==1)
@@ -42,8 +44,9 @@ namespace rich_VRP.Constructive
                     solution.UnVisitedCus.RemoveAll((Customer obj) => obj.Info.Id == cus.Info.Id);
                 }
                 Solution part_sol = cw_ini.initial_construct(unrouteed_cus);
-                double old_obj = part_sol.CalObjCost();              
-                part_sol = ls.search(part_sol);
+                double old_obj = part_sol.CalObjCost();      
+                        
+                part_sol = ls.search(part_sol,null,false);
                 Console.WriteLine("part_sol before / after ls: " + old_obj.ToString("0.00") + "  "+ part_sol.CalObjCost().ToString("0.00"));
                 part_sol.PrintResult();
                 solution.Merge(part_sol);

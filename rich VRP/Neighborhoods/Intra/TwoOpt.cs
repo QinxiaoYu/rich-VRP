@@ -13,7 +13,7 @@ namespace rich_VRP.Neighborhoods.Intra
     class TwoOpt
     {
         //进行路径间的交换，活动
-        public List<Route> intraChange(Route originRoute, Vehicle vehicle, List<Route> routesList)
+        public List<Route> intraChange(Route originRoute, Vehicle vehicle, List<Route> routesList, double change_obj_threshold =0)
         {
             double ccr = Problem.VehTypes[vehicle.TypeId - 1].ChargeCostRate;
             double tcr = Problem.VehTypes[vehicle.TypeId - 1].VariableCost;
@@ -79,12 +79,10 @@ namespace rich_VRP.Neighborhoods.Intra
                         }
 
                     }
-                    if (tempCost < bestCost)
+                    if (tempCost-bestCost < change_obj_threshold)
                     {
                         //替换路径
                         BestRoute = tempRoute.Copy();
-                        BestRoute.AssignedVeh.VehRouteList[BestRoute.RouteIndexofVeh] = tempRoute.RouteId;
-
                     }
                 }
             }
@@ -94,7 +92,7 @@ namespace rich_VRP.Neighborhoods.Intra
         }
 
         //转入solution的中的fleet,对里面的每一辆车中的路径进行变异
-        public Solution intarChange(Solution solution)
+        public Solution intarChange(Solution solution, double change_obj_threshold)
         {
             for (int v = 0; v < solution.fleet.VehFleet.Count; v++)
             {
@@ -116,7 +114,7 @@ namespace rich_VRP.Neighborhoods.Intra
                 for (int i = 0; i < routesList.Count; i++)
                 {
                     //routesList[i] = intraChange(routesList[i], routesList, vehicle);
-                    routesList = intraChange(routesList[i], vehicle, routesList);
+                    routesList = intraChange(routesList[i], vehicle, routesList,change_obj_threshold);
                 }
 
                 //将优化的路替换solution中route,修改fleet中的vehicle           
@@ -130,6 +128,7 @@ namespace rich_VRP.Neighborhoods.Intra
                 }
 
             }
+            solution.SolutionIsFeasible();
             return solution;
 
         }

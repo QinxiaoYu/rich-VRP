@@ -33,17 +33,17 @@ namespace rich_VRP.Neighborhoods.Inter
             for (int i = 0; i < num_route_sol - 1; i++) //第一条路
             {
                 Route r_i = solution.Routes[i].Copy();
-                Vehicle v_i = solution.fleet.GetVehbyID(solution.Routes[i].AssignedVeh.VehId);
+                Vehicle v_i = solution.fleet.GetVehbyID(solution.Routes[i].AssignedVehID);
                 double old_r1 = solution.calculCost(v_i);
                 //double old_ri_obj = r_i.AssignedVeh.calculCost();
                 r_i.RemoveAllSta();
                 for (int j = i + 1; j < num_route_sol; j++) //第二条路
                 {
                     Route r_j = solution.Routes[j].Copy();
-                    Vehicle v_j = solution.fleet.GetVehbyID(solution.Routes[j].AssignedVeh.VehId);
+                    Vehicle v_j = solution.fleet.GetVehbyID(solution.Routes[j].AssignedVehID);
                     double old_r2 = solution.calculCost(v_j);                  
                     //double old_rj_obj = r_j.AssignedVeh.calculCost();
-                    if (r_i.AssignedVeh.VehId == r_j.AssignedVeh.VehId) //如果两条路属于同一辆车，则不交换
+                    if (r_i.AssignedVehID== r_j.AssignedVehID) //如果两条路属于同一辆车，则不交换
                     {
                         continue;
                     }
@@ -89,11 +89,11 @@ namespace rich_VRP.Neighborhoods.Inter
                             }
                             if (copy_ri.ViolationOfRange() > -1)
                             {
-                                copy_ri = copy_ri.InsertSta(3);
+                                copy_ri = copy_ri.InsertSta(3,double.MaxValue);
                             }
                             if (copy_rj.ViolationOfRange() > -1)
                             {
-                                copy_rj = copy_rj.InsertSta(3);
+                                copy_rj = copy_rj.InsertSta(3,double.MaxValue);
                             }
 
 
@@ -102,12 +102,10 @@ namespace rich_VRP.Neighborhoods.Inter
                             {
                                 continue;
                             }
-                            copy_ri.AssignedVeh.VehRouteList[copy_ri.RouteIndexofVeh] = copy_ri.RouteId;
-                            copy_rj.AssignedVeh.VehRouteList[copy_rj.RouteIndexofVeh] = copy_rj.RouteId;
                             new_sol.Routes[i] = copy_ri.Copy();
                             new_sol.Routes[j] = copy_rj.Copy();
-                            Vehicle new_veh_i = new_sol.fleet.GetVehbyID(r_i.AssignedVeh.VehId);
-                            Vehicle new_veh_j = new_sol.fleet.GetVehbyID(r_j.AssignedVeh.VehId);
+                            Vehicle new_veh_i = new_sol.fleet.GetVehbyID(r_i.AssignedVehID);
+                            Vehicle new_veh_j = new_sol.fleet.GetVehbyID(r_j.AssignedVehID);
                             int idx_vehi_fleet = new_sol.fleet.GetVehIdxInFleet(new_veh_i.VehId);
                             int idx_vehj_fleet = new_sol.fleet.GetVehIdxInFleet(new_veh_j.VehId);
                             new_sol.fleet.VehFleet[idx_vehi_fleet].VehRouteList[r_i.RouteIndexofVeh] = copy_ri.RouteId;                          
@@ -157,7 +155,7 @@ namespace rich_VRP.Neighborhoods.Inter
                                 new_obj_j = new_sol.calculCost(new_sol.fleet.VehFleet[idx_vehj_fleet]);
                             }                        
                             double obj_change = (old_r1 + old_r2) - (new_obj_i + new_obj_j);
-                            if (obj_change> change_obj_threshold)//如果变好
+                            if (obj_change> change_obj_threshold)//change_obj_threshold>0, 变好； 否则，变差
                             {
                                 if (select_strategy == 0)//first improvement
                                 {
@@ -187,6 +185,11 @@ namespace rich_VRP.Neighborhoods.Inter
             //    //Console.WriteLine(bst_sol.CalObjCost());
             //    //Console.WriteLine(bst_obj_change);
             //}
+            if (bst_sol!=null)
+            {
+                bst_sol.SolutionIsFeasible();
+            }
+
             return bst_sol;
             
         }

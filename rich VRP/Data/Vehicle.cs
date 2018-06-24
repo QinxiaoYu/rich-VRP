@@ -316,11 +316,14 @@ namespace OP.Data
 		/// <param name="_vehid">Veh's id.</param>
 		public Vehicle GetVehbyID(string _vehid)
 		{
-			foreach (Vehicle veh in VehFleet) {
-				if (veh.VehId == _vehid) {
-					return veh;
-				}
-			}
+            for (int i = 0; i < VehFleet.Count; i++)
+            {
+                Vehicle vehicle = VehFleet[i];
+                if (vehicle.VehId==_vehid)
+                {
+                    return vehicle;
+                }
+            }
 			return null;
 		}
 

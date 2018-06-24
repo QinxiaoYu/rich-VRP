@@ -11,7 +11,7 @@ public class BreakTwoRoute
         rd = new Random();
     }
     /// <summary>
-    /// 对这辆车的这条路进行拆分
+    /// 对路进行拆分，遍历车，多于一条路的，路上只有1个点的不拆；不一定变好
     /// </summary>
     /// <param name="solution"></param>
     /// <param name="break_strategy">拆分方法1: 断开路径中距离最远的边 break_strategy = 1
@@ -185,7 +185,7 @@ public class BreakTwoRoute
                     }
                     if (new_route.ViolationOfRange()>-1)
                     {
-                        new_route = new_route.InsertSta(3, 0);
+                        new_route = new_route.InsertSta(3, double.MaxValue);
                     }
                     if (new_route.IsFeasible())//插入之后各点都可行
                     {
@@ -239,6 +239,7 @@ public class BreakTwoRoute
 
         }
         new_sol.printCheckSolution();
+        new_sol.SolutionIsFeasible();
         return new_sol;
 
     }

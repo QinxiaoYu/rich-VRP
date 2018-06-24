@@ -41,14 +41,14 @@ namespace rich_VRP.Neighborhoods.Inter
             {
                
                 Route r_i = solution.Routes[i].Copy();
-                Vehicle v_i = solution.fleet.GetVehbyID(solution.Routes[i].AssignedVeh.VehId);
+                Vehicle v_i = solution.fleet.GetVehbyID(solution.Routes[i].AssignedVehID);
                 double old_r1 = solution.calculCost(v_i);
                 //double old_ri_obj = r_i.AssignedVeh.calculCost();
                 r_i.RemoveAllSta();
                 for (int j = i + 1; j < num_route_sol; j++) //第二条路
                 {
                     Route r_j = solution.Routes[j].Copy();
-                    Vehicle v_j = solution.fleet.GetVehbyID(solution.Routes[j].AssignedVeh.VehId);
+                    Vehicle v_j = solution.fleet.GetVehbyID(solution.Routes[j].AssignedVehID);
                     solution.printCheckSolution();
                     double old_r2 = solution.calculCost(v_j);
                     //double old_rj_obj = r_j.AssignedVeh.calculCost();
@@ -125,11 +125,11 @@ namespace rich_VRP.Neighborhoods.Inter
                             }
                             if (copy_ri.ViolationOfRange() > -1)
                             {
-                                copy_ri = copy_ri.InsertSta(3);
+                                copy_ri = copy_ri.InsertSta(3,double.MaxValue);
                             }
                             if (copy_rj.ViolationOfRange() > -1)
                             {
-                                copy_rj = copy_rj.InsertSta(3);
+                                copy_rj = copy_rj.InsertSta(3, double.MaxValue);
                             }
 
 
@@ -138,8 +138,6 @@ namespace rich_VRP.Neighborhoods.Inter
                             {
                                 continue;
                             }
-                            copy_ri.AssignedVeh.VehRouteList[copy_ri.RouteIndexofVeh] = copy_ri.RouteId;
-                            copy_rj.AssignedVeh.VehRouteList[copy_rj.RouteIndexofVeh] = copy_rj.RouteId;
                             new_sol.Routes[i] = copy_ri.Copy();
                             new_sol.Routes[j] = copy_rj.Copy();
                           
@@ -227,10 +225,11 @@ namespace rich_VRP.Neighborhoods.Inter
             //bst_sol.SolutionIsFeasible();
             if (bst_sol == null)
             {
-                return solution;
+                return null;
             }
             else
             {
+                bst_sol.SolutionIsFeasible();
                 return bst_sol;
             }
             

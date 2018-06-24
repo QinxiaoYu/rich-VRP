@@ -14,7 +14,14 @@ namespace rich_VRP.Neighborhoods.Intra
         {
             rd = new Random();
         }
-        public Solution RelocateIntra(Solution solution, int select_strategy = 1, bool rand = false)
+        /// <summary>
+        /// Relocates the intra.
+        /// </summary>
+        /// <returns>The intra.</returns>
+        /// <param name="solution">Solution.</param>
+        /// <param name="select_strategy">Select strategy.</param>
+        /// <param name="rand">If set to <c>true</c> rand.</param>
+        public Solution RelocateIntra(Solution solution, int select_strategy = 1, bool rand = false, double change_obj_threshold =0)
         {
             //Solution bst_sol = solution.Copy();
             double bst_obj_change = 0;
@@ -37,14 +44,12 @@ namespace rich_VRP.Neighborhoods.Intra
                     if (rand)
                     {
                         tmp_r = RandRelocateIntra(tmp_r);
-                        tmp_r.AssignedVeh.VehRouteList[j] = tmp_r.RouteId;
                         new_sol.fleet.VehFleet[i].VehRouteList[j] = tmp_r.RouteId;
                         new_sol.Routes[pos_route_sol] = tmp_r.Copy();
                     }
                     else
                     {
                         tmp_r = DeterRelocateInRoute(tmp_r);//对当前路径进行重定位遍历，返回一个不比原来差的解
-                        tmp_r.AssignedVeh.VehRouteList[j] = tmp_r.RouteId;
                         new_sol.fleet.VehFleet[i].VehRouteList[j] = tmp_r.RouteId;
                         new_sol.Routes[pos_route_sol] = tmp_r.Copy();
                     }
@@ -63,7 +68,7 @@ namespace rich_VRP.Neighborhoods.Intra
 
                 double new_obj = new_sol.calculCost(new_sol.fleet.VehFleet[i]);
                 double obj_change = old_obj - new_obj;
-                if (obj_change > 0)
+                if (obj_change > change_obj_threshold)
                 {
                     if (select_strategy == 0)//first improvement
                     {
@@ -78,7 +83,7 @@ namespace rich_VRP.Neighborhoods.Intra
                         }
                     }
                 }
-                if (obj_change<=0)//没变好，再变回来...
+                if (obj_change<=change_obj_threshold)//没变好，再变回来...
                 {                
                     for (int j = 0; j < num_routes_veh; j++)//遍历车i下的所有路线
                     {
@@ -90,6 +95,7 @@ namespace rich_VRP.Neighborhoods.Intra
                     }
                 }                          
             }//结束对所有车的遍历
+            new_sol.SolutionIsFeasible();
             return new_sol;
         }
 
@@ -127,7 +133,7 @@ namespace rich_VRP.Neighborhoods.Intra
                     {
                         continue;
                     }
-                    tmp_route_j = tmp_route_j.InsertSta(cnt_charge+1,old_obj); //检查充电站，并返回更优的路线
+                    tmp_route_j = tmp_route_j.InsertSta(3,old_obj); //检查充电站，并返回更优的路线
                     if (tmp_route_j.IsFeasible())
                     {
                         old_obj = tmp_route_j.routecost;
@@ -183,7 +189,8 @@ namespace rich_VRP.Neighborhoods.Intra
                 }//结束遍历每一个可插入位置
                 copy_route = bst_route.Copy();
                 
-            }// 结束遍历每个待插入点    
+            }// 结束遍历每个待插入点   
+
             return bst_route;
         }
     }

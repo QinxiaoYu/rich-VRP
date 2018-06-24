@@ -20,15 +20,24 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             Solution tmp_sol = solution.Copy();
             if (des_strategy == 0)
             {
-                //tmp_sol = DestroyShortRoute(tmp_sol, minCusNum);
-                //tmp_sol = DestroyWasteRoute(tmp_sol, 0.5);
                 tmp_sol = DestroyByCharge(tmp_sol, 0.5);
+                tmp_sol = DestroyFollowed(tmp_sol);
             }
             if (des_strategy == 1)
             {
+                tmp_sol = DestroyShortRoute(tmp_sol, minCusNum);
+                tmp_sol = DestroyFollowed(tmp_sol);
+            }
+            if (des_strategy == 2)
+            {
                 tmp_sol = destoryBYcluster(tmp_sol);
             }
-           
+            if (des_strategy == 4)
+            {
+                tmp_sol = DestroyWasteRoute(tmp_sol, 0.3);
+                tmp_sol = DestroyFollowed(tmp_sol);
+            }
+
             //tmp_sol.printCheckSolution();
             //Console.WriteLine(solution.SolutionIsFeasible().ToString());
             tmp_sol = RepairToFeasible(tmp_sol);
@@ -47,7 +56,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     solution.ObjVal = obj;
                 }
             }
-            
+            solution.SolutionIsFeasible();
             return solution;
         }
 
@@ -103,7 +112,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 Route r = new_sol.Routes[i];
                 double totalWeight = r.GetTotalWeight();
                 double totalVolume = r.GetTotalVolume();
-                if (totalWeight < percent * Problem.VehTypes[r.AssignedVeh.TypeId - 1].Weight) //重量小于某一百分比，体积不考虑
+                if (totalWeight < percent * r.AssignedVehType.Weight) //重量小于某一百分比，体积不考虑
                 {
                     solution.Remove(r);
                     foreach (AbsNode cus in r.RouteList)
@@ -185,7 +194,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                         }
                         if (!route.IsFeasible())
                         {
-                            route =  route.InsertSta(3);
+                            route =  route.InsertSta(3,double.MaxValue);
                         }
                         solution.Routes[pos_route_sol] = route;
                         solution.fleet.VehFleet[i].VehRouteList[j] = route.RouteId;
@@ -224,7 +233,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
 
                 int pos_route_newsol = -1;
                 new_sol.GetRouteByID(old_ri.RouteId, out pos_route_newsol);
-                int pos_veh_newsol = new_sol.fleet.GetVehIdxInFleet(old_ri.AssignedVeh.VehId);
+                int pos_veh_newsol = new_sol.fleet.GetVehIdxInFleet(old_ri.AssignedVehID);
                 Route ri = old_ri.Copy();
                 do
                 {
@@ -236,16 +245,20 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     }
                     
                 } while (ri.ViolationOfRange() > -1 || ri.ViolationOfTimeWindow() > -1);
-                ri.AssignedVeh.VehRouteList[ri.RouteIndexofVeh] = ri.RouteId;
+                if (ri.RouteList.Count>2)
+                {
                 new_sol.Routes[pos_route_newsol] = ri;
                 new_sol.fleet.VehFleet[pos_veh_newsol].VehRouteList[ri.RouteIndexofVeh] = ri.RouteId;
+                }
             }
+
             return new_sol;
         }
 
         public Solution DestroyFollowed(Solution solution)
         {
             Solution new_sol = solution.Copy();
+            new_sol.UnVisitedCus = new List<Customer>();
             new_sol.UnVisitedCus.AddRange(solution.UnVisitedCus);
             if (solution.UnVisitedCus.Count > 0)
             {
@@ -254,7 +267,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     int[] list_id_neighbor = Problem.GetNearDistanceCus(cus.Info.Id);
                     foreach (var id in list_id_neighbor)
                     {
-                        if (rand.NextDouble() < 0.9)
+                        if (rand.NextDouble() < 0.5)
                         {
                             if (new_sol.UnVisitedCus.FindIndex(a => a.Info.Id == id) == -1) //不存在该点
                             {
@@ -277,27 +290,27 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     }
                 
                 }
-                Route ri = solution.Routes[i].Copy();
+                string ri_id = solution.Routes[i].RouteId;
                 int pos_route_newsol = -1;
-                int pos_veh_newsol = new_sol.fleet.GetVehIdxInFleet(ri.AssignedVeh.VehId);
-                new_sol.GetRouteByID(solution.Routes[i].RouteId, out pos_route_newsol);
+                Route ri = new_sol.GetRouteByID(ri_id, out pos_route_newsol).Copy();
+                int pos_veh_newsol = new_sol.fleet.GetVehIdxInFleet(ri.AssignedVehID);
 
                 ri.Remove(cus2remove);
-                if (ri.RouteList.Count==2) //空线路
+                if (ri.RouteList.Count == 2) //空线路
                 {
-                    new_sol.Remove(ri);
-                }else
+                    new_sol.Remove(solution.Routes[i]);
+                    //new_sol.fleet.VehFleet[pos_veh_newsol].VehRouteList.Remove(solution.Routes[i].RouteId);
+                }
+                else
                 {
                     ri.RemoveAllSta();
-                    if (ri.ViolationOfRange()>-1)
+                    if (ri.ViolationOfRange() > -1)
                     {
                         ri = ri.InsertSta(3, double.MaxValue);
                     }
+                    new_sol.Routes[pos_route_newsol] = ri;
+                    new_sol.fleet.VehFleet[pos_veh_newsol].VehRouteList[ri.RouteIndexofVeh] = ri.RouteId;
                 }
-
-                ri.AssignedVeh.VehRouteList[ri.RouteIndexofVeh] = ri.RouteId;
-                new_sol.Routes[pos_route_newsol] = ri;
-                new_sol.fleet.VehFleet[pos_veh_newsol].VehRouteList[ri.RouteIndexofVeh] = ri.RouteId;
 
             }
 
@@ -320,12 +333,11 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 int pos = FindBstPosition(solution, cus, out pos_route); //路的第几个位置
                 if (pos_route != -1) //能找到一条路
                 {
-                    int idx_veh = solution.fleet.GetVehIdxInFleet(solution.Routes[pos_route].AssignedVeh.VehId);
+                    int idx_veh = solution.fleet.GetVehIdxInFleet(solution.Routes[pos_route].AssignedVehID);
                     double old_at = solution.Routes[pos_route].GetArrivalTime();
                     solution.Routes[pos_route].InsertNode(cus, pos);
                     double new_at = solution.Routes[pos_route].GetArrivalTime();
-                    Route nr = solution.Routes[pos_route];                  
-                    solution.Routes[pos_route].AssignedVeh.VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;                           
+                    Route nr = solution.Routes[pos_route];                                       
                     solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
                     bool ShouldTrue = solution.CheckNxtRoutesFeasible(solution.fleet.VehFleet[idx_veh], nr.RouteIndexofVeh, new_at - old_at);
                     if (ShouldTrue == false)
@@ -343,7 +355,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     newRoute.InsertNode(cus, 1);
                     veh.addRoute2Veh(newRoute);//把路分配给车
                     
-                    if (newRoute.ViolationOfRange()>0)
+                    if (newRoute.ViolationOfRange()>-1)
                     {
                         newRoute = newRoute.InsertSta(3,double.MaxValue);
                     }
@@ -372,12 +384,11 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 int pos = FindBstPosition(solution, cus, out pos_route); //路的第几个位置
                 if (pos_route != -1) //能找到一条路
                 {
-                    int idx_veh = solution.fleet.GetVehIdxInFleet(solution.Routes[pos_route].AssignedVeh.VehId);
+                    int idx_veh = solution.fleet.GetVehIdxInFleet(solution.Routes[pos_route].AssignedVehID);
                     double old_at = solution.Routes[pos_route].GetArrivalTime();
                     solution.Routes[pos_route].InsertNode(cus, pos);
                     double new_at = solution.Routes[pos_route].GetArrivalTime();
                     Route nr = solution.Routes[pos_route];
-                    solution.Routes[pos_route].AssignedVeh.VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
                     solution.fleet.VehFleet[idx_veh].VehRouteList[nr.RouteIndexofVeh] = nr.RouteId;
                     bool ShouldTrue = solution.CheckNxtRoutesFeasible(solution.fleet.VehFleet[idx_veh], nr.RouteIndexofVeh, new_at - old_at);
                     if (ShouldTrue == false)
@@ -392,7 +403,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                     Vehicle veh = solution.fleet.addNewVeh(type);
                     Route newRoute = new Route(veh,veh.Early_time);
                     newRoute.InsertNode(cus, 1);
-                    if (newRoute.ViolationOfRange() > 0)
+                    if (newRoute.ViolationOfRange() > -1)
                     {
                         newRoute = newRoute.InsertSta(3, double.MaxValue);
                     }
@@ -429,7 +440,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             for (int i = 0; i < solution.Routes.Count; i++)
             {
                 Route route = solution.Routes[i];
-                Vehicle veh = solution.fleet.GetVehbyID(route.AssignedVeh.VehId);
+                Vehicle veh = solution.fleet.GetVehbyID(route.AssignedVehID);
                 double v_route = route.GetTotalVolume();
                 if (v_route + customer.Info.Volume > route.AssignedVehType.Volume)
                 {
@@ -480,7 +491,7 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
             for (int i = 0; i < solution.Routes.Count; i++)
             {
                 Route route = solution.Routes[i];
-                Vehicle veh = solution.fleet.GetVehbyID(route.AssignedVeh.VehId);
+                Vehicle veh = solution.fleet.GetVehbyID(route.AssignedVehID);
                 double v_route = route.GetTotalVolume();
                 if (v_route + customer.Info.Volume > route.AssignedVehType.Volume)
                 {
@@ -555,10 +566,10 @@ namespace rich_VRP.Neighborhoods.DestroyRepair
                 }
 
                 //Route tmp_r = route.InsertSta(cnt_charge, old_obj); //最优的插入充电站遍历
-                int veh_in_fleet_pos = solution.fleet.GetVehIdxInFleet(route.AssignedVeh.VehId);
+                int veh_in_fleet_pos = solution.fleet.GetVehIdxInFleet(route.AssignedVehID);
                 solution.fleet.VehFleet[veh_in_fleet_pos].VehRouteList[route.RouteIndexofVeh] = route.RouteId;
                 solution.Routes[i] = route.Copy();
-                solution.Routes[i].AssignedVeh = solution.fleet.VehFleet[veh_in_fleet_pos];
+                solution.Routes[i].AssignedVehID = solution.fleet.VehFleet[veh_in_fleet_pos].VehId;
             }
             return solution;
         }

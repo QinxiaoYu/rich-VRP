@@ -33,7 +33,7 @@ namespace rich_VRP.Neighborhoods.Inter
                 solution.printCheckSolution();
                 //Console.WriteLine(solution.SolutionIsFeasible());
                 Route old_ri = solution.Routes[i].Copy();
-                Vehicle old_vi = solution.fleet.GetVehbyID(old_ri.AssignedVeh.VehId); 
+                Vehicle old_vi = solution.fleet.GetVehbyID(old_ri.AssignedVehID); 
                 double old_obj_vi = solution.calculCost(old_vi); //第一条路所在车的总费用
                 old_ri.RemoveAllSta();
                 for (int j = 0; j < num_route_sol; j++) //第二条路
@@ -49,7 +49,7 @@ namespace rich_VRP.Neighborhoods.Inter
                     {
                         continue;
                     }
-                    Vehicle old_vj = solution.fleet.GetVehbyID(old_rj.AssignedVeh.VehId);
+                    Vehicle old_vj = solution.fleet.GetVehbyID(old_rj.AssignedVehID);
                     double old_obj = old_obj_vi; //两条路涉及到两辆车所对应到总费用
                     if (old_vj.VehId!=old_vi.VehId) //如果两条路在同一辆车，则只有一辆车de费用
                     {
@@ -124,11 +124,11 @@ namespace rich_VRP.Neighborhoods.Inter
                             }
                             if (copy_ri.ViolationOfRange() > -1)
                             {
-                                copy_ri = copy_ri.InsertSta(3);
+                                copy_ri = copy_ri.InsertSta(3,double.MaxValue);
                             }
                             if (copy_rj.ViolationOfRange() > -1)
                             {
-                                copy_rj = copy_rj.InsertSta(3);
+                                copy_rj = copy_rj.InsertSta(3,double.MaxValue);
                             }
 
 
@@ -141,12 +141,10 @@ namespace rich_VRP.Neighborhoods.Inter
                             //改动后的两条路是可行的，进一步检查是否影响它俩所在的路径链
                             Solution new_sol = solution.Copy();
 
-                            copy_ri.AssignedVeh.VehRouteList[copy_ri.RouteIndexofVeh] = copy_ri.RouteId;
-                            copy_rj.AssignedVeh.VehRouteList[copy_rj.RouteIndexofVeh] = copy_rj.RouteId;
                             new_sol.Routes[i] = copy_ri.Copy();
                             new_sol.Routes[j] = copy_rj.Copy();
-                            int pos_vehi_fleet = new_sol.fleet.GetVehIdxInFleet(copy_ri.AssignedVeh.VehId);
-                            int pos_vehj_fleet = new_sol.fleet.GetVehIdxInFleet(copy_rj.AssignedVeh.VehId);
+                            int pos_vehi_fleet = new_sol.fleet.GetVehIdxInFleet(copy_ri.AssignedVehID);
+                            int pos_vehj_fleet = new_sol.fleet.GetVehIdxInFleet(copy_rj.AssignedVehID);
                             
                             new_sol.fleet.VehFleet[pos_vehi_fleet].VehRouteList[copy_ri.RouteIndexofVeh] = copy_ri.RouteId;
                             new_sol.fleet.VehFleet[pos_vehj_fleet].VehRouteList[copy_rj.RouteIndexofVeh] = copy_rj.RouteId;
@@ -186,19 +184,19 @@ namespace rich_VRP.Neighborhoods.Inter
                             //Console.WriteLine(copy_ri.RouteId + "  " + copy_rj.RouteId);
                             double new_obj_i = 0;
                             double new_obj_j = 0;
-                            Vehicle vi = new_sol.fleet.GetVehbyID(copy_ri.AssignedVeh.VehId);
+                            Vehicle vi = new_sol.fleet.GetVehbyID(copy_ri.AssignedVehID);
                             if (vi != null)
                             {
                                 new_obj_i = new_sol.calculCost(vi);
                             }
-                            Vehicle vj = new_sol.fleet.GetVehbyID(copy_rj.AssignedVeh.VehId);
+                            Vehicle vj = new_sol.fleet.GetVehbyID(copy_rj.AssignedVehID);
                             if (vj != null)
                             {
                                 new_obj_j = new_sol.calculCost(vj);
                             }
 
                             double new_obj = 0;
-                            if (copy_ri.AssignedVeh.VehId==copy_rj.AssignedVeh.VehId)
+                            if (copy_ri.AssignedVehID==copy_rj.AssignedVehID)
                             {
                                 new_obj = new_obj_j;
                             }else
@@ -237,10 +235,11 @@ namespace rich_VRP.Neighborhoods.Inter
             }//结束对第一路对枚举
             if (bst_sol == null)
             {
-                return solution;
+                return bst_sol;
             }
             else
             {
+                bst_sol.SolutionIsFeasible();
                 return bst_sol;
             }
         }

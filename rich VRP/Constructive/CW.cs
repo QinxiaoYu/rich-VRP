@@ -58,7 +58,6 @@ namespace rich_VRP.Constructive
                         newRoute = BIA(newRoute, unroute_cus, out unroute_cus);
                         if (newRoute.RouteList.Count > 2)//此路线插入customer了
                         {
-                            newRoute.AssignedVeh.VehRouteList.Add(newRoute.RouteId);
                             veh.addRoute2Veh(newRoute);//将路径加入到vehicle中
                             solution.AddRoute(newRoute);
                             if (unroute_cus.Count == 0)//是否还有未插入的点
@@ -102,7 +101,7 @@ namespace rich_VRP.Constructive
 
                 double insert_feasible = violation_volume + violation_weight;//只有体积和重量限制没有违反才能继续往路径里插入新的点
                 Route best_route = route;
-                while (insert_feasible == 0)
+                while (insert_feasible == 0.0)
                 {
                     double best_cost = double.MaxValue; //一个无穷大的数
                     //double alefa = rand.NextDouble(); //产生0~1的随机数，评价标准的参数
@@ -165,7 +164,7 @@ namespace rich_VRP.Constructive
                                 double waittime_after_insert = cur_route.GetWaitTime();
                                 double add_waittime = waittime_after_insert - waittime_before_insert;//增加的等待时间
                                                                                                      //double add_waittime = 0;
-                                double TransCostRate = Problem.GetVehTypebyID(cur_route.AssignedVeh.TypeId).VariableCost;//行驶费率
+                                double TransCostRate = cur_route.AssignedVehType.VariableCost;//行驶费率
                                 double cost = TransCostRate * (add_distance - alefa * insertcus_dis) + Problem.WaitCostRate * add_waittime;//评价插入质量的标准
                                 if (cost < best_cost)
                                 {
