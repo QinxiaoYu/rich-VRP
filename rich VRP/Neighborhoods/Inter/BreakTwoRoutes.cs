@@ -232,7 +232,7 @@ public class BreakTwoRoute
                     }
 
                 }
-                if (bst_v !=null && rd.NextDouble()>0.5)
+                if (bst_v !=null && rd.NextDouble()>0.4)
                 {
                     bst_r1.RouteIndexofVeh = 0;
                     bst_v.addRoute2Veh(bst_r1);
