@@ -309,12 +309,62 @@ namespace rich_VRP.Neighborhoods
 
         internal Solution Perturb(Solution solution)
         {
-            
+            double obj_val = solution.ObjVal;
+
             solution = breakOneRoute.Break(solution, 4);
+            if (solution.CalObjCost()!=obj_val)
+            {
+                if (rd.NextDouble()>0.4)
+                {
+                    return solution;
+                }
+                
+            }
             solution = breakOneRoute.Break(solution, 2);
-            solution = breakOneRoute.Break(solution, 1);       
+            if (solution.CalObjCost() != obj_val)
+            {
+                if (rd.NextDouble() > 0.4)
+                {
+                    return solution;
+                }
+
+            }
+            solution = breakOneRoute.Break(solution, 1);
+            if (solution.CalObjCost() != obj_val)
+            {
+                if (rd.NextDouble() > 0.4)
+                {
+                    return solution;
+                }
+
+            }
             solution = VTC.ChangeToLVehWithLessCharge(solution);
-            solution = VTC.ChangeToSVehWithoutCharge(solution);
+            if (solution.CalObjCost() != obj_val)
+            {
+                if (rd.NextDouble() > 0.4)
+                {
+                    return solution;
+                }
+
+            }
+            solution = VTC.ChangeToSVehWithCharge(solution);
+            if (solution.CalObjCost() != obj_val)
+            {
+                if (rd.NextDouble() > 0.4)
+                {
+                    return solution;
+                }
+
+            }
+            solution = DR.DR(solution, 5, 1, 0);//删除短路，可能变差
+            if (solution.CalObjCost() != obj_val)
+            {
+                if (rd.NextDouble() > 0.4)
+                {
+                    return solution;
+                }
+
+            }
             return solution;
         }
     }
