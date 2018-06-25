@@ -9,6 +9,7 @@ namespace rich_VRP.Neighborhoods.Intra
 {
     class VehTypeChangeIntra
     {
+        Random rd = new Random();
         /// <summary>
         /// Changes to LV eh.
         /// </summary>
@@ -16,7 +17,7 @@ namespace rich_VRP.Neighborhoods.Intra
         /// <param name="sol">Sol.</param>
         //public Solution ChangeToLVeh(Solution sol)
         //{
-            
+
         //}
 
         /// <summary>
@@ -32,7 +33,7 @@ namespace rich_VRP.Neighborhoods.Intra
             Solution new_sol = sol.Copy();
             foreach (Vehicle veh in sol.fleet.VehFleet)
             {
-                if (veh.TypeId==1)//小车无需转换
+                if (veh.TypeId == 1)//小车无需转换
                 {
                     continue;
                 }
@@ -53,7 +54,7 @@ namespace rich_VRP.Neighborhoods.Intra
                         break;
                     }
                 }
-                if (AllRouteChange==false) //该车上的路线并不能全转换成小车，
+                if (AllRouteChange == false) //该车上的路线并不能全转换成小车，
                 {
                     continue;
                 }
@@ -63,9 +64,9 @@ namespace rich_VRP.Neighborhoods.Intra
                 for (int i = 0; i < veh.VehRouteList.Count; i++)//修改车上的每条路
                 {
                     int pos_route_sol = -1;
-                    Route old_route = sol.GetRouteByID(veh.VehRouteList[i], out pos_route_sol);     
+                    Route old_route = sol.GetRouteByID(veh.VehRouteList[i], out pos_route_sol);
                     Route new_route = old_route.ChangeToAnotherType();
-                    new_route.AssignedVehID= new_veh.VehId;
+                    new_route.AssignedVehID = new_veh.VehId;
                     new_veh.VehRouteList[new_route.RouteIndexofVeh] = new_route.RouteId;
                     new_sol.Routes[pos_route_sol] = new_route;
                     new_sol.fleet.VehFleet[pos_veh_fleet] = new_veh;
@@ -139,7 +140,49 @@ namespace rich_VRP.Neighborhoods.Intra
             new_sol.SolutionIsFeasible();
             return new_sol;
         }
+
+        public Solution ChangeToLVehWithLessCharge(Solution sol)
+        {
+            VehicleType LVehType = Problem.GetVehTypebyID(2);
+
+            Solution new_sol = sol.Copy();
+            foreach (Vehicle veh in sol.fleet.VehFleet)
+            {
+                if (veh.TypeId == 2 || veh.getNumofVisRoute() > 1)//大车或者车上线路大于1条的跳过
+                {
+                    continue;
+                }
+                int pos_route_sol = -1;
+                Route old_r = sol.GetRouteByID(veh.VehRouteList[0], out pos_route_sol);
+                var costs_old_r = old_r.routeCost();
+                int cnt_charge = costs_old_r.Item4;
+                double old_l = old_r.GetRouteLength();
+                if (cnt_charge == 0 || old_l > cnt_charge * LVehType.MaxRange) //小车没充电 或者充完电所跑里程大于大车里程 跳过
+                {
+                    continue;
+                }
+                Vehicle old_v = sol.fleet.GetVehbyID(old_r.AssignedVehID);
+                int pos_veh_fleet = sol.fleet.GetVehIdxInFleet(old_v.VehId);
+                Vehicle new_v = old_v.ChangeToAnotherType();
+                Route new_r = old_r.ChangeToAnotherType();
+                new_r = new_r.InsertSta(3, double.MaxValue);
+                if (new_r.routecost > 30000) //换成大车后，没有合适的充电方案，impossible
+                {
+                    continue;
+                }
+                if (rd.NextDouble()>0.3)
+                {
+                    continue;
+                }
+                new_r.RouteAssign2Veh(new_v);
+                new_v.VehRouteList[new_r.RouteIndexofVeh] = new_r.RouteId;
+                new_sol.Routes[pos_route_sol] = new_r.Copy();
+                new_sol.fleet.VehFleet[pos_veh_fleet] = new_v.Copy();
+                Console.WriteLine(new_r.RouteId);
+            }
+            new_sol.SolutionIsFeasible();
+            new_sol.printCheckSolution();
+            return new_sol;
+        }
     }
-
-
 }

@@ -167,6 +167,20 @@ namespace OP.Data
                     tmp_r.RemoveAt(k);
                 }
             }
+
+            if (tmp_r.IsFeasible())
+            {
+                var new_costs = tmp_r.routeCost();
+                double new_obj = new_costs.Item1 + new_costs.Item2 + new_costs.Item3;
+                tmp_r.routecost = new_obj;
+                return tmp_r;
+            }
+
+            if (cnt_charge == 0)
+            {
+                bst_route.routecost = double.MaxValue;
+                return bst_route;
+            }
                        
             bool isFeasible = false;
             //1个充电站    

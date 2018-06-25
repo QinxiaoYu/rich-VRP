@@ -9,6 +9,8 @@ using rich_VRP.Neighborhoods.DestroyRepair;
 using rich_VRP.Neighborhoods.Inter;
 using rich_VRP.Neighborhoods.Intra;
 using rich_VRP.Neighborhoods.Remove;
+using rich_VRP.Constructive;
+using System.IO;
 
 namespace rich_VRP.Neighborhoods
 {
@@ -227,6 +229,7 @@ namespace rich_VRP.Neighborhoods
                     if (current_cost < bst_sol.ObjVal) //比全局优
                     {
                         bst_sol = solution.Copy();
+                        bst_sol.ObjVal = current_cost;
                         bst_Unimprove = 0;
                         cnt_improve_pertur = 0;
                         cnt_improve_restart = 0;
@@ -248,7 +251,7 @@ namespace rich_VRP.Neighborhoods
                 {
                     change_obj = Math.Min(100, change_obj + 20);
                     select_strategy = 0;
-                    //cnt_improve_pertur++;
+                    cnt_improve_pertur++;
                     cnt_improve_restart++;
                     bst_Unimprove++;
                     if (cnt_improve_pertur > perturb_criteria)
@@ -264,7 +267,7 @@ namespace rich_VRP.Neighborhoods
 
                     if (cnt_improve_restart > restart_criteria)
                     {
-                        solution = Restart(solution);
+                        solution = Restart();
                         change_obj = 0;
                         select_strategy = 1;
                         cnt_improve_pertur = 0;
@@ -287,36 +290,31 @@ namespace rich_VRP.Neighborhoods
             return bst_sol;
         }
 
-        internal Solution Restart(Solution solution)
+        internal Solution Restart()
         {
-            int restart_sel = rd.Next(5);
-            switch (restart_sel)
-            {
-                case 0:
-                    solution = DR.DR(solution,6,0,0); //删除充电
-                    break;
-                case 1:
-                    solution = breakOneRoute.Break(solution, 1);
-                break;
-                case 2:
-                    solution = breakOneRoute.Break(solution, 4);
-                break;
-                case 3:
-                    solution = DR.DR(solution, 4, 1, 0); //删除短路
-                    break;
-                case 4:
-                    solution = DR.DR(solution, 6, 2, 0);
-                    break;
-                default:
-                    solution = VTC.ChangeToSVehWithCharge(solution);
-                    break;
-            }
+            String path = @"C:\Users\user\Desktop\Good Solution\solution pool";
+            var files = Directory.GetFiles(path, "*.csv");
+            int cnt_files = files.Length;
+            int rand_file = rd.Next(cnt_files);
+            string file_name = files[rand_file];
+            ReadInitialSolution initial = new ReadInitialSolution(file_name);
 
-            return solution;
+            Solution ini_solution = initial.initial_construct();
+            Console.WriteLine(ini_solution.SolutionIsFeasible().ToString());
+            ini_solution.printCheckSolution();
+            double cost = ini_solution.CalObjCost();
+            Console.WriteLine("ObjVal 0 = " + cost.ToString("0.00"));
+            return ini_solution;
         }
 
         internal Solution Perturb(Solution solution)
         {
+            
+            solution = breakOneRoute.Break(solution, 4);
+            solution = breakOneRoute.Break(solution, 2);
+            solution = breakOneRoute.Break(solution, 1);       
+            solution = VTC.ChangeToLVehWithLessCharge(solution);
+            solution = VTC.ChangeToSVehWithoutCharge(solution);
             return solution;
         }
     }

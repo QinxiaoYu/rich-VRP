@@ -30,7 +30,6 @@ public class BreakTwoRoute
             }
             int pos_route_sol = -1;
             Route old_r = solution.GetRouteByID(old_v.VehRouteList[0], out pos_route_sol);
-
             Route copy_old_r = old_r.Copy();
             copy_old_r.RemoveAllSta();
             if (copy_old_r.RouteList.Count < 4) //只有1个客户，没法break
@@ -110,6 +109,10 @@ public class BreakTwoRoute
             //拆分方法2: 一没电就回配送中心 break_strategy = 2
             if (break_strategy  == 2)
             {
+                if (old_cost.Item4==0) //这条线路没有充电
+                {
+                    continue;
+                }
                 int num_cus = copy_old_r.RouteList.Count - 2; //客户的数量，肯定大于1
                 Vehicle new_veh = old_v.Copy();
                 new_veh.VehRouteList.Clear();
@@ -122,11 +125,14 @@ public class BreakTwoRoute
                 while (tmp_count<=num_cus)
                 {
                     int nxt_pos = new_r.RouteList.Count - 1;
+                    double charge_back2depot = copy_old_r.RouteList[tmp_count].TravelDistance(Problem.EndDepot);
                     double nxt_charge = new_r.RouteList[nxt_pos-1].TravelDistance(copy_old_r.RouteList[tmp_count]);
-                    if (tmp_battery-nxt_charge>0)
+                    double depot_charge = tmp_battery - nxt_charge - charge_back2depot;
+                    if (depot_charge>0)
                     {
-                        new_r.InsertNode(copy_old_r.RouteList[i], nxt_pos);
+                        new_r.InsertNode(copy_old_r.RouteList[tmp_count], nxt_pos);
                         tmp_count++;
+                        tmp_battery = tmp_battery - nxt_charge;
 
                     }
                     //跑到下一个将回不到充电站，就此结束此线路
@@ -144,14 +150,22 @@ public class BreakTwoRoute
                         list_routes_changed.Add(copy_new_r);
                         //下一趟开始时间窗不可行，也不行
                         nxt_dt = copy_new_r.GetArrivalTime() + Problem.MinWaitTimeAtDepot;
-                        if (nxt_dt> copy_old_r.RouteList[tmp_count].Info.DueDate)
+                        if (nxt_dt + Problem.StartDepot.TravelTime(copy_old_r.RouteList[tmp_count]) > copy_old_r.RouteList[tmp_count].Info.DueDate)
                         {
                             isSucc = false;
                             break;
                         }
                         new_r = new Route(new_veh, nxt_dt);
+                        tmp_battery = copy_old_r.AssignedVehType.MaxRange;
                     }
                 }
+                if (new_r.ViolationOfTimeWindow()>-1 || isSucc==false)
+                {
+                    continue;
+                }
+                new_veh.addRoute2Veh(new_r);
+                new_r.RouteAssign2Veh(new_veh);
+                list_routes_changed.Add(new_r);
                 if (isSucc)
                 {
                     new_sol.Routes.RemoveAt(pos_route_sol);
@@ -218,7 +232,7 @@ public class BreakTwoRoute
                     }
 
                 }
-                if (bst_v !=null)
+                if (bst_v !=null && rd.NextDouble()>0.5)
                 {
                     bst_r1.RouteIndexofVeh = 0;
                     bst_v.addRoute2Veh(bst_r1);

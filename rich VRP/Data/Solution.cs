@@ -508,9 +508,9 @@ namespace OP.Data
 			//获取当前时间
 
 			DateTime time = DateTime.Now;
-			string path =  ".//reslut" +ObjVal.ToString("0")+ ".csv";
+			string path = "C://Users//user//Desktop//Good Solution//solution pool//reslut" + ObjVal.ToString("0")+ ".csv";
 
-            string path_otherinfo = ".//other_reslut" + ObjVal.ToString("0") + ".csv";
+            string path_otherinfo = "C://Users//user//Desktop//Good Solution//other_reslut" + ObjVal.ToString("0") + ".csv";
 			using (System.IO.StreamWriter file = new System.IO.StreamWriter(path,false))
 			{
 				file.Write(result);
